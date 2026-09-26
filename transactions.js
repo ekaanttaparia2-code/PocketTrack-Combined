@@ -336,6 +336,30 @@ function openCommandHubModal(){
           <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'भाषा (Language)' : 'Language & Region'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'हिंदी, English + 6 और' : 'Hindi, English + 6 more'}</span>
         </div>
+
+        <div onclick="closeCommandHubModal();if(typeof openFireRunwayModal==='function')openFireRunwayModal();" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.4);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🔥</div>
+          <strong style="display:block;font-size:14px;color:#fbbf24;">${isHi ? 'FIRE व इमरजेंसी रनवे' : 'FIRE & Runway Horizon'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? '4% नियम व वित्तीय आज़ादी' : 'Survival months & FI target'}</span>
+        </div>
+
+        <div onclick="closeCommandHubModal();if(typeof openWealthSimulatorModal==='function')openWealthSimulatorModal();" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">📈</div>
+          <strong style="display:block;font-size:14px;color:#34d399;">${isHi ? 'वेल्थ व SIP सिम्युलेटर' : 'Wealth & SIP Simulator'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'चक्रवृद्धि विकास प्रोजेक्टर' : 'Compound growth projector'}</span>
+        </div>
+
+        <div onclick="closeCommandHubModal();if(typeof openDebtPayoffModal==='function')openDebtPayoffModal();" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🎯</div>
+          <strong style="display:block;font-size:14px;color:#f87171;">${isHi ? 'कर्ज मुक्ति (Debt Payoff)' : 'Debt Payoff Strategist'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'एवलांच व स्नोबॉल विधि' : 'Avalanche vs Snowball'}</span>
+        </div>
+
+        <div onclick="closeCommandHubModal();if(typeof restartOnboarding==='function')restartOnboarding();" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🎓</div>
+          <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'टूर दोबारा देखें' : 'Replay Finny Tour'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'ऑनबोर्डिंग व 50/30/20' : 'Interactive wizard'}</span>
+        </div>
       </div>
 
       <div style="display:flex;gap:10px;">
