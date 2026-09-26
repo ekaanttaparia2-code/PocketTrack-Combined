@@ -35,11 +35,11 @@
     var wIdx = path.indexOf('/website');
     if (wIdx !== -1) {
       var repo = path.substring(0, wIdx);
-      loc.replace((repo ? repo : '') + '/app.html');
+      loc.replace((repo ? repo : '') + '/app.html' + loc.search + loc.hash);
       return;
     }
-    var repoPath = path.substring(0, path.lastIndexOf('/'));
-    loc.replace((repoPath ? repoPath : '') + '/app.html');
+    var cleanPath = path.replace(/\/index\.html$/i, '').replace(/\/+$/, '');
+    loc.replace((cleanPath ? cleanPath : '') + '/app.html' + loc.search + loc.hash);
   } catch (e) {}
 })();
 
@@ -61,8 +61,8 @@ function launchPocketTrackApp(e) {
     loc.href = (repo ? repo : '') + '/app.html';
     return false;
   }
-  var repoPath = path.substring(0, path.lastIndexOf('/'));
-  loc.href = (repoPath ? repoPath : '') + '/app.html';
+  var cleanPath = path.replace(/\/index\.html$/i, '').replace(/\/+$/, '');
+  loc.href = (cleanPath ? cleanPath : '') + '/app.html';
   return false;
 }
 </script>
