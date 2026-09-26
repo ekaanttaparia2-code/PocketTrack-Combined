@@ -49,6 +49,9 @@ function updateHeaderStats(){
   if (typeof window.FinnyMascot !== 'undefined' && window.FinnyMascot.render) {
     try { window.FinnyMascot.render(); } catch(e) {}
   }
+  if (typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
+    try { window.Envelopes.render(); } catch(e) {}
+  }
 }
 window.updateHeaderStats = updateHeaderStats;
 
