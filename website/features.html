@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Features & Intelligence — PocketTrack</title>
+<meta name="description" content="Explore PocketTrack's Phase 4 Smart Context Engine, Voice Money Log, P2P Debt Ledger, and Splitwise Spaces."/>
+<link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../icons.css">
+<link rel="stylesheet" href="style.css">
+<script>
+function launchPocketTrackApp(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  var loc = window.location;
+  if (loc.protocol === 'file:') {
+    var p = loc.pathname;
+    loc.href = (p.indexOf('/website/') !== -1 || p.indexOf('\\website\\') !== -1) ? '../app.html' : 'app.html';
+    return false;
+  }
+  var path = loc.pathname || '/';
+  var wIdx = path.indexOf('/website');
+  if (wIdx !== -1) {
+    var repo = path.substring(0, wIdx);
+    loc.href = (repo ? repo : '') + '/app.html';
+    return false;
+  }
+  var repoPath = path.substring(0, path.lastIndexOf('/'));
+  loc.href = (repoPath ? repoPath : '') + '/app.html';
+  return false;
+}
+</script>
+<style>
+.flow-card {
+  background: rgba(18, 12, 43, 0.85);
+  border: 1px solid var(--border-glass);
+  border-radius: 24px;
+  padding: 28px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(20px);
+}
+.flow-step-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--primary-bright);
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.soundwave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  width: fit-content;
+  margin: 16px 0;
+}
+.wave-bar {
+  width: 4px;
+  background: var(--primary-bright);
+  border-radius: 4px;
+  animation: soundwave 1.2s infinite ease-in-out alternate;
+}
+.wave-bar:nth-child(2) { animation-delay: -0.2s; height: 28px; }
+.wave-bar:nth-child(3) { animation-delay: -0.4s; height: 36px; }
+.wave-bar:nth-child(4) { animation-delay: -0.6s; height: 20px; }
+.wave-bar:nth-child(5) { animation-delay: -0.8s; height: 32px; }
+.wave-bar:nth-child(6) { animation-delay: -1.0s; height: 16px; }
+@keyframes soundwave {
+  0% { height: 8px; }
+  100% { height: 34px; }
+}
+.intent-badge {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar-live">
+  <span>⚡ Phase 4 Smart Context Engine is live!</span>
+  <span>·</span>
+  <span>🟢 4,820+ Active Trackers Today</span>
+  <span>·</span>
+  <span>100% Free &amp; Offline Ready</span>
+</div>
+
+<div class="aurora-bg">
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+  <div class="aurora-orb orb-3"></div>
+</div>
+
+<div class="container">
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="../icon-192.png" alt="PocketTrack" class="nav-logo">
+      <span class="nav-title">PocketTrack</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="features.html" class="nav-link active">Features</a></li>
+      <li><a href="pricing.html" class="nav-link">Pricing &amp; Simulator</a></li>
+      <li><a href="privacy.html" class="nav-link">Privacy</a></li>
+      <li><a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:10px 22px;font-size:14px;">Launch App →</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="pill-badge">⚡ Architecture of Modern Wealth</div>
+      <h1 class="hero-title">Features designed for how real Indians spend.</h1>
+      <p class="hero-desc">Every tool in PocketTrack is built around one premise: zero manual friction, maximum clarity, and 100% data ownership.</p>
+      
+      <div class="hero-cta-group">
+        <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:16px 36px;"><i class="ti ti-sparkles"></i> Try All Features in Web App</a>
+        <a href="#intent-engine" class="btn btn-glass" style="padding:16px 28px;">Explore Intent Engine ↓</a>
+      </div>
+    </section>
+
+    <!-- Stage 1: Smart Context & Intent Engine -->
+    <section id="intent-engine" class="reality-section" style="padding-top:20px;">
+      <div class="section-head">
+        <div class="pill-badge">⚡ The Crown Jewel</div>
+        <h2 class="section-title">Phase 4 Smart Context Engine</h2>
+        <p class="section-subtitle">Type or speak naturally. PocketTrack calculates relationships, category semantics, and past debt balance in milliseconds.</p>
+      </div>
+
+      <div class="flow-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:14px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <span class="flow-step-badge">STAGE 1: INPUT PARSING</span>
+            <h3 style="font-size:24px;font-family:'Space Grotesk',sans-serif;">Natural Language to Structured Action</h3>
+          </div>
+          <span class="intent-badge">✓ 99.4% Parsing Accuracy</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:18px;">
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">You Say or Type:</div>
+            <div style="font-size:16px;font-weight:700;color:var(--primary-bright);margin-bottom:14px;">"Paid 1200 to Rahul for Goa trip dinner"</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Smart Engine Detects:</div>
+            <ul style="list-style:none;font-size:13px;display:flex;flex-direction:column;gap:6px;color:var(--accent-green);">
+              <li>👤 <b>Person:</b> Rahul (Matched to Ledger)</li>
+              <li>👥 <b>Space:</b> Goa Trip (Shared Event)</li>
+              <li>🍔 <b>Category:</b> Food / Dining (Auto-tagged)</li>
+              <li>💰 <b>Amount:</b> ₹1,200</li>
+            </ul>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">You Say or Type:</div>
+            <div style="font-size:16px;font-weight:700;color:var(--secondary);margin-bottom:14px;">"Netflix recharge 499 paid"</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Smart Engine Detects:</div>
+            <ul style="list-style:none;font-size:13px;display:flex;flex-direction:column;gap:6px;color:var(--accent-amber);">
+              <li>🔁 <b>Recurring:</b> Monthly Subscription</li>
+              <li>⚠️ <b>Leak Radar:</b> Checks if active/unused</li>
+              <li>📺 <b>Category:</b> Entertainment &amp; Subs</li>
+              <li>💰 <b>Amount:</b> ₹499</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage 2: Natural Speech Recognition -->
+    <section class="reality-section" style="padding-top:20px;">
+      <div class="section-head">
+        <div class="pill-badge">🎙️ Zero-Typing Speed</div>
+        <h2 class="section-title">Voice-First Money Logging</h2>
+        <p class="section-subtitle">Hands full with groceries or driving? Tap the floating purple mic and speak in Hindi, English, or Hinglish.</p>
+      </div>
+
+      <div class="flow-card" style="text-align:center;max-width:800px;margin:0 auto 40px;">
+        <div class="soundwave" style="margin:10px auto 20px;">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <h3 style="font-size:22px;font-family:'Space Grotesk',sans-serif;margin-bottom:10px;">"Paanwadi ko 50 rupees diye" → Auto ₹50 Expense</h3>
+        <p style="font-size:14px;color:var(--text-muted);max-width:540px;margin:0 auto 20px;">Web Speech API integrated with local number extraction. No audio is ever recorded or uploaded to servers — speech-to-text happens entirely inside your browser!</p>
+        <span class="intent-badge">🔒 100% Client-Side Audio Privacy</span>
+      </div>
+    </section>
+
+    <!-- Stage 3: P2P Debt Ledger & Splitwise Spaces -->
+    <section class="superpowers-section">
+      <div class="section-head">
+        <div class="pill-badge">📑 P2P Debt Ledger &amp; Spaces</div>
+        <h2 class="section-title">Zero awkward money conversations</h2>
+        <p class="section-subtitle">Keep track of money lent to friends and shared flatmate bills without messy group chats.</p>
+      </div>
+
+      <div class="grid-features">
+        <div class="card-glass">
+          <div class="card-icon-wrap">🤝</div>
+          <h3 class="card-title">Net Friend Balance Cards</h3>
+          <p class="card-text">Know the exact net position for every friend. If Rahul owes you ₹1,000 for dinner and you owe him ₹300 for cab, PocketTrack shows a single clean: <b>Rahul owes you ₹700</b>.</p>
+        </div>
+
+        <div class="card-glass">
+          <div class="card-icon-wrap">📉</div>
+          <h3 class="card-title">Greedy Debt Simplification</h3>
+          <p class="card-text">On group trips with 6 people, instead of 15 confusing cross-transfers, our graph settlement engine collapses debts into just 2 simple payments.</p>
+        </div>
+
+        <div class="card-glass">
+          <div class="card-icon-wrap">🧾</div>
+          <h3 class="card-title">Instant Settlement Receipts</h3>
+          <p class="card-text">Tap "Settle Up" to clear balances with 1 click. Generates clear summary statements you can share directly to WhatsApp or UPI.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage 4: Virality & Behavioral Intelligence -->
+    <section class="superpowers-section">
+      <div class="section-head">
+        <div class="pill-badge">🧬 Behavioral Intelligence &amp; Virality</div>
+        <h2 class="section-title">Finance designed to be shared, not feared</h2>
+        <p class="section-subtitle">Discover who you are with money and share your monthly financial milestone stories.</p>
+      </div>
+
+      <div class="grid-features">
+        <div class="card-glass" style="border-color:rgba(244,63,94,0.4);background:rgba(244,63,94,0.06);">
+          <div class="card-icon-wrap" style="background:rgba(244,63,94,0.25);">🎬</div>
+          <h3 class="card-title">Monthly Money Wrapped™</h3>
+          <p class="card-text">Swipeable Instagram-story cards calculating your opportunity costs — <i>"Your Swiggy spend = 1 iPhone 16 Pro"</i> — with direct 1-tap social share.</p>
+        </div>
+
+        <div class="card-glass" style="border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.06);">
+          <div class="card-icon-wrap" style="background:rgba(52,211,153,0.25);">🧬</div>
+          <h3 class="card-title">Financial DNA™ Profiler</h3>
+          <p class="card-text">Behavioral economics engine classifying you into 1 of 6 money personalities (Strategist, Social Spender, Leaker, etc.) with custom daily habits.</p>
+        </div>
+
+        <div class="card-glass" style="border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.06);">
+          <div class="card-icon-wrap" style="background:rgba(139,92,246,0.25);">👥</div>
+          <h3 class="card-title">Multi-Member Shared Portfolios</h3>
+          <p class="card-text">Live shared pool for roommates, couples, or trips with top switcher bar, auto-split balances, and instant WhatsApp settlement summaries.</p>
+        </div>
+
+        <div class="card-glass" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.06);">
+          <div class="card-icon-wrap" style="background:rgba(16,185,129,0.25);">🎯</div>
+          <h3 class="card-title">Safe-to-Spend Daily Radar</h3>
+          <p class="card-text">Daily burn meter calculating exact allowance based on remaining days in the month so you know what you can spend today without stress.</p>
+        </div>
+
+        <div class="card-glass" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.06);">
+          <div class="card-icon-wrap" style="background:rgba(251,191,36,0.25);">⚡</div>
+          <h3 class="card-title">1-Tap UPI QR Generator</h3>
+          <p class="card-text">Instant scannable QR code compatible with GPay, PhonePe, Paytm, CRED, and BHIM for painless in-person settlement.</p>
+        </div>
+
+        <div class="card-glass" style="border-color:rgba(6,182,212,0.4);background:rgba(6,182,212,0.06);">
+          <div class="card-icon-wrap" style="background:rgba(6,182,212,0.25);">🎯</div>
+          <h3 class="card-title">Goal &amp; SIP Wealth Compounding</h3>
+          <p class="card-text">Interactive timeline simulator for laptops, trips, or emergency funds with 12% CAGR growth projections pinned to your home dashboard.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage 5: UPI Clipboard & True Offline Sync -->
+    <section class="reality-section" style="padding-top:20px;">
+      <div class="section-head">
+        <div class="pill-badge">☁️ Offline-First Architecture</div>
+        <h2 class="section-title">Works at 35,000 feet without WiFi</h2>
+        <p class="section-subtitle">How PocketTrack ensures you never lose a single rupee of data, even on subways or flights.</p>
+      </div>
+
+      <div class="flow-card">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;">
+          <div>
+            <h4 style="font-size:18px;color:var(--primary-bright);margin-bottom:8px;">1. Instant Local Write</h4>
+            <p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;">Every transaction is written to your browser's sandboxed IndexedDB storage in under 5 milliseconds with zero latency.</p>
+          </div>
+          <div>
+            <h4 style="font-size:18px;color:var(--accent-cyan);margin-bottom:8px;">2. Pending Queue Guard</h4>
+            <p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;">If you're offline, changes enter a persistent sync queue protected against page refreshes or device restarts.</p>
+          </div>
+          <div>
+            <h4 style="font-size:18px;color:var(--accent-green);margin-bottom:8px;">3. Zero-Conflict Cloud Merge</h4>
+            <p style="font-size:13.5px;color:var(--text-muted);line-height:1.6;">The instant an internet connection returns, changes batch-sync to Google Firebase Firestore with automatic timestamp resolution.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-banner">
+      <h2 style="font-size:clamp(32px, 4.5vw, 48px);font-family:'Space Grotesk',sans-serif;margin-bottom:16px;">Ready to experience zero-friction finance?</h2>
+      <p style="font-size:18px;color:var(--text-muted);max-width:600px;margin:0 auto 32px;">No credit card or setup fee. Open the app and start in 30 seconds.</p>
+      <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:18px 44px;font-size:17px;"><i class="ti ti-rocket"></i> Launch Free Web App Now</a>
+    </section>
+  </main>
+
+  <footer class="footer-site">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="pricing.html">Pricing &amp; Simulator</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="#" onclick="launchPocketTrackApp(event);return false;">Launch App</a>
+    </div>
+    <p>© 2026 PocketTrack. Built for financial freedom. Synced securely to Google Cloud.</p>
+  </footer>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

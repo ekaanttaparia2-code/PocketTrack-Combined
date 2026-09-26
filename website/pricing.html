@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Pricing &amp; Future Money Simulator — PocketTrack</title>
+<meta name="description" content="Transparent pricing and interactive wealth savings simulator with PocketTrack."/>
+<link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../icons.css">
+<link rel="stylesheet" href="style.css">
+<script>
+function launchPocketTrackApp(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  var loc = window.location;
+  if (loc.protocol === 'file:') {
+    var p = loc.pathname;
+    loc.href = (p.indexOf('/website/') !== -1 || p.indexOf('\\website\\') !== -1) ? '../app.html' : 'app.html';
+    return false;
+  }
+  var path = loc.pathname || '/';
+  var wIdx = path.indexOf('/website');
+  if (wIdx !== -1) {
+    var repo = path.substring(0, wIdx);
+    loc.href = (repo ? repo : '') + '/app.html';
+    return false;
+  }
+  var repoPath = path.substring(0, path.lastIndexOf('/'));
+  loc.href = (repoPath ? repoPath : '') + '/app.html';
+  return false;
+}
+</script>
+<style>
+.chart-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 160px;
+  padding: 16px 0 0;
+  margin-top: 20px;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+.chart-bar {
+  flex: 1;
+  background: linear-gradient(180deg, var(--primary-bright), var(--primary));
+  border-radius: 8px 8px 0 0;
+  transition: height 0.4s var(--ease-spring);
+  position: relative;
+}
+.chart-bar-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 8px;
+}
+.chart-bar-val {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-bright);
+}
+.theme-preview-pill {
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar-live">
+  <span>⚡ Phase 4 Smart Context Engine is live!</span>
+  <span>·</span>
+  <span>🟢 4,820+ Active Trackers Today</span>
+  <span>·</span>
+  <span>100% Free &amp; Offline Ready</span>
+</div>
+
+<div class="aurora-bg">
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+  <div class="aurora-orb orb-3"></div>
+</div>
+
+<div class="container">
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="../icon-192.png" alt="PocketTrack" class="nav-logo">
+      <span class="nav-title">PocketTrack</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="features.html" class="nav-link">Features</a></li>
+      <li><a href="pricing.html" class="nav-link active">Pricing &amp; Simulator</a></li>
+      <li><a href="privacy.html" class="nav-link">Privacy</a></li>
+      <li><a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:10px 22px;font-size:14px;">Launch App →</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="pill-badge">💎 Interactive Wealth Simulator</div>
+      <h1 class="hero-title">An investment in discipline that pays for itself on day 1.</h1>
+      <p class="hero-desc">Most people lose money simply because they don't see small leaks adding up. Use the live slider below to simulate your future savings with PocketTrack.</p>
+    </section>
+
+    <!-- Interactive Future Money Simulator -->
+    <section class="reality-section" style="padding-top:0;">
+      <div class="calculator-box">
+        <div style="text-align:center;">
+          <p style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Your Monthly Living &amp; Leisure Spend</p>
+          <h2 id="sim-spend-val" style="font-size:48px;font-family:'Space Grotesk',sans-serif;color:#fff;margin:8px 0;">₹25,000</h2>
+          <input type="range" id="sim-spend-slider" class="slider-styled" min="5000" max="150000" step="1000" value="25000" oninput="updateSavingsSim()"/>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:16px;margin-top:24px;">
+          <div class="leak-metric-card" style="border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.05);">
+            <span style="font-size:12px;color:var(--text-muted);">Estimated 6-Month Savings</span>
+            <h3 id="sim-save-6mo" style="font-size:32px;color:var(--accent-green);margin:6px 0;">₹27,000</h3>
+            <p style="font-size:12px;color:var(--text-dim);">By plugging forgotten subscriptions &amp; impulse spend</p>
+          </div>
+
+          <div class="leak-metric-card" style="border-color:rgba(139,92,246,0.3);background:rgba(139,92,246,0.05);">
+            <span style="font-size:12px;color:var(--text-muted);">Estimated 1-Year Wealth Retained</span>
+            <h3 id="sim-save-12mo" style="font-size:32px;color:var(--primary-bright);margin:6px 0;">₹54,000</h3>
+            <p style="font-size:12px;color:var(--text-dim);">Retained capital available for investments or emergency fund</p>
+          </div>
+        </div>
+
+        <!-- Visual Wealth Growth Chart -->
+        <div style="margin-top:40px;background:rgba(0,0,0,0.25);border-radius:20px;padding:24px;border:1px solid rgba(255,255,255,0.08);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:700;font-size:14.5px;">📈 12-Month Cumulative Wealth Trajectory</span>
+            <span style="font-size:12px;color:var(--accent-green);font-weight:600;">+18% Average Discipline Gain</span>
+          </div>
+
+          <div class="chart-bar-wrap">
+            <div class="chart-bar" style="height:15%;"><span class="chart-bar-label">M1</span></div>
+            <div class="chart-bar" style="height:28%;"><span class="chart-bar-label">M3</span></div>
+            <div class="chart-bar" style="height:48%;"><span class="chart-bar-label">M6</span></div>
+            <div class="chart-bar" style="height:72%;"><span class="chart-bar-label">M9</span></div>
+            <div class="chart-bar" style="height:100%;background:linear-gradient(180deg,#34d399,#059669);"><span class="chart-bar-label">M12</span></div>
+          </div>
+          <div style="height:28px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Side by Side Pricing Tiers -->
+    <section class="superpowers-section">
+      <div class="section-head">
+        <div class="pill-badge">💳 Transparent Plans</div>
+        <h2 class="section-title">Pick your path to financial freedom</h2>
+        <p class="section-subtitle">No hidden ads, no data selling, no forced subscription locks.</p>
+      </div>
+
+      <div class="grid-features" style="max-width:1100px;margin:0 auto;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:20px;">
+        <!-- Free Plan -->
+        <div class="card-glass">
+          <div class="pill-badge" style="margin-bottom:12px;">Standard</div>
+          <h3 class="card-title" style="font-size:24px;">Free Forever</h3>
+          <p style="font-size:38px;font-family:'Space Grotesk',sans-serif;font-weight:800;color:#fff;margin:10px 0;">₹0</p>
+          <p class="card-text" style="margin-bottom:20px;font-size:13.5px;">Essential tools to track and split your everyday money.</p>
+          
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text-muted);margin-bottom:28px;">
+            <li><b style="color:#fff;">✓</b> <b>Unlimited</b> Income &amp; Expense Logging</li>
+            <li><b style="color:#fff;">✓</b> <b>100 Voice</b> Speech Entries</li>
+            <li><b style="color:#fff;">✓</b> <b>5 Ledger</b> Contacts &amp; Accounts</li>
+            <li><b style="color:#fff;">✓</b> <b>2 Shared</b> Splitwise Spaces</li>
+            <li><b style="color:#fff;">✓</b> 100% Offline Persistence &amp; Sync</li>
+            <li><b style="color:#fff;">✓</b> Cyberpunk Neo Dark Theme</li>
+          </ul>
+
+          <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-glass" style="width:100%;font-size:13.5px;">Get Started Free</a>
+        </div>
+
+        <!-- Starter Plan: ₹50/mo -->
+        <div class="card-glass" style="border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.04);">
+          <div class="pill-badge" style="background:rgba(52,211,153,0.2);color:var(--accent-green);border-color:rgba(52,211,153,0.4);margin-bottom:12px;">🌱 Starter</div>
+          <h3 class="card-title" style="font-size:24px;">Monthly Starter</h3>
+          <p style="font-size:38px;font-family:'Space Grotesk',sans-serif;font-weight:800;color:#fff;margin:10px 0;">₹50 <span style="font-size:14px;color:var(--text-dim);font-weight:400;">/ mo</span></p>
+          <p class="card-text" style="margin-bottom:20px;font-size:13.5px;">Very minimal charge to remove all limits on everyday features.</p>
+
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text-muted);margin-bottom:28px;">
+            <li><b style="color:var(--accent-green);">✓ Everything in Free tier</b></li>
+            <li><b style="color:var(--accent-green);">✓ Unlimited</b> Voice Transactions</li>
+            <li><b style="color:var(--accent-green);">✓ Unlimited</b> Ledger Accounts</li>
+            <li><b style="color:var(--accent-green);">✓ Unlimited</b> Splitwise Spaces</li>
+            <li><b style="color:var(--accent-green);">✓ Priority</b> Cloud Sync Engine</li>
+          </ul>
+
+          <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);font-size:13.5px;">Get Starter Plan</a>
+        </div>
+
+        <!-- Pro Plus Plan: ₹100/mo -->
+        <div class="card-glass" style="border-color:var(--border-glow);box-shadow:0 15px 45px rgba(139,92,246,0.35);background:rgba(139,92,246,0.06);">
+          <div class="pill-badge" style="background:rgba(236,72,153,0.2);color:#f472b6;border-color:rgba(236,72,153,0.4);margin-bottom:12px;">👑 Most Popular</div>
+          <h3 class="card-title" style="font-size:24px;">Pro Plus</h3>
+          <p style="font-size:38px;font-family:'Space Grotesk',sans-serif;font-weight:800;color:#fff;margin:10px 0;">₹100 <span style="font-size:14px;color:var(--text-dim);font-weight:400;">/ mo</span></p>
+          <p class="card-text" style="margin-bottom:20px;font-size:13.5px;">Full wealth simulator &amp; aesthetic luxury themes suite.</p>
+
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text-muted);margin-bottom:28px;">
+            <li><b style="color:var(--primary-bright);">✓ Everything in Starter</b></li>
+            <li><b style="color:var(--primary-bright);">✓ All 4 Luxury Themes</b> (Emerald, Sunset, Midnight)</li>
+            <li><b style="color:var(--primary-bright);">✓ Future Wealth Simulator</b> 12-mo forecasting</li>
+            <li><b style="color:var(--primary-bright);">✓ PDF Statement Export</b> with custom branding</li>
+            <li><b style="color:var(--primary-bright);">✓ 10,000 Entry</b> Cloud Capacity</li>
+          </ul>
+
+          <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="width:100%;font-size:13.5px;"><i class="ti ti-crown"></i> Unlock Pro Plus</a>
+        </div>
+
+        <!-- Lifetime Plan: ₹999 -->
+        <div class="card-glass" style="border-color:rgba(251,191,36,0.4);background:rgba(251,191,36,0.03);">
+          <div class="pill-badge" style="background:rgba(251,191,36,0.2);color:var(--accent-amber);border-color:rgba(251,191,36,0.4);margin-bottom:12px;">⭐ Lifetime</div>
+          <h3 class="card-title" style="font-size:24px;">Lifetime</h3>
+          <p style="font-size:38px;font-family:'Space Grotesk',sans-serif;font-weight:800;color:#fff;margin:10px 0;">₹999 <span style="font-size:14px;color:var(--text-dim);font-weight:400;">one-time</span></p>
+          <p class="card-text" style="margin-bottom:20px;font-size:13.5px;">Pay once. Own every Pro feature and future upgrade forever.</p>
+
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--text-muted);margin-bottom:28px;">
+            <li><b style="color:var(--accent-amber);">✓ All Pro Plus Features</b></li>
+            <li><b style="color:var(--accent-amber);">✓ Lifetime</b> Cloud Backup &amp; Access</li>
+            <li><b style="color:var(--accent-amber);">✓ Zero</b> Recurring Charges Ever</li>
+            <li><b style="color:var(--accent-amber);">✓ Early Access</b> to New Intelligence Phases</li>
+          </ul>
+
+          <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-glass" style="width:100%;border-color:rgba(251,191,36,0.4);color:var(--accent-amber);font-size:13.5px;">Own It Forever</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Theme Showcase -->
+    <section class="reality-section" style="padding-top:20px;">
+      <div class="section-head">
+        <div class="pill-badge">🎨 Aesthetic Themes</div>
+        <h2 class="section-title">Four handcrafted visual themes</h2>
+        <p class="section-subtitle">Customize PocketTrack to match your personal style and OLED battery preferences.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;max-width:960px;margin:0 auto;">
+        <div class="card-glass" style="text-align:center;padding:24px;">
+          <div style="font-size:32px;margin-bottom:10px;">🌆</div>
+          <h4 style="font-size:17px;font-weight:700;">Cyberpunk Neo</h4>
+          <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 12px;">Classic neon arcade with aubergine violet glow.</p>
+          <span class="theme-preview-pill" style="background:rgba(139,92,246,0.2);color:var(--primary-bright);">Default Free</span>
+        </div>
+
+        <div class="card-glass" style="text-align:center;padding:24px;">
+          <div style="font-size:32px;margin-bottom:10px;">💚</div>
+          <h4 style="font-size:17px;font-weight:700;">Emerald Luxury</h4>
+          <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 12px;">Deep green glass inspired by Swiss horology.</p>
+          <span class="theme-preview-pill" style="background:rgba(52,211,153,0.2);color:var(--accent-green);">👑 Pro Theme</span>
+        </div>
+
+        <div class="card-glass" style="text-align:center;padding:24px;">
+          <div style="font-size:32px;margin-bottom:10px;">🌇</div>
+          <h4 style="font-size:17px;font-weight:700;">Sunset Glow</h4>
+          <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 12px;">Warm dusk pink &amp; amber gradient glass.</p>
+          <span class="theme-preview-pill" style="background:rgba(251,191,36,0.2);color:var(--accent-amber);">👑 Pro Theme</span>
+        </div>
+
+        <div class="card-glass" style="text-align:center;padding:24px;">
+          <div style="font-size:32px;margin-bottom:10px;">🖤</div>
+          <h4 style="font-size:17px;font-weight:700;">Midnight OLED</h4>
+          <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 12px;">True pitch black background for maximum battery life.</p>
+          <span class="theme-preview-pill" style="background:rgba(255,255,255,0.1);color:#fff;">👑 Pro Theme</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing FAQ -->
+    <section class="faq-section">
+      <div class="section-head">
+        <div class="pill-badge">❓ Pricing FAQ</div>
+        <h2 class="section-title">Common questions about Pro</h2>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Can I use PocketPoints from my daily streaks?</span><span>+</span></div>
+        <div class="faq-a">Yes! Every day you log an entry, you build your streak and earn PocketPoints. 500 points = ₹50 discount on any Pro plan, stackable at checkout!</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>What happens if I cancel Pro?</span><span>+</span></div>
+        <div class="faq-a">Your data stays 100% intact. You will never lose any entries, spaces, or ledger records — you simply revert to the Cyberpunk Neo theme.</div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-banner">
+      <h2 style="font-size:clamp(32px, 4.5vw, 48px);font-family:'Space Grotesk',sans-serif;margin-bottom:16px;">Start building wealth today.</h2>
+      <p style="font-size:18px;color:var(--text-muted);max-width:600px;margin:0 auto 32px;">Join thousands of smart spenders. 100% free web app available now.</p>
+      <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:18px 44px;font-size:17px;"><i class="ti ti-rocket"></i> Open PocketTrack Free</a>
+    </section>
+  </main>
+
+  <footer class="footer-site">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="pricing.html">Pricing &amp; Simulator</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="#" onclick="launchPocketTrackApp(event);return false;">Launch App</a>
+    </div>
+    <p>© 2026 PocketTrack. Built for financial freedom. Synced securely to Google Cloud.</p>
+  </footer>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

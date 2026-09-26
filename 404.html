@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PocketTrack — Redirecting...</title>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      var segments = path.split('/').filter(Boolean);
+      
+      // If deployed on GitHub Pages (e.g. /repo-name/something)
+      if (segments.length > 0 && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+        var repoName = segments[0];
+        if (repoName !== 'website' && repoName !== 'index.html' && repoName !== 'landing.html' && repoName !== 'app.html') {
+          window.location.replace('/' + repoName + '/app.html');
+          return;
+        }
+      }
+      
+      // Default redirect
+      window.location.replace('app.html');
+    })();
+  </script>
+</head>
+<body style="background:#0e0924;color:#f5f3ff;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:20px;">
+  <div style="max-width:400px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:30px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="font-size:42px;margin-bottom:12px;">🚀</div>
+    <h2 style="font-size:20px;margin-bottom:10px;color:#fff;">Taking you to PocketTrack...</h2>
+    <p style="font-size:13px;color:#b9aee3;line-height:1.5;margin-bottom:20px;">If you are not redirected automatically, tap the button below.</p>
+    <a href="app.html" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;text-decoration:none;border-radius:12px;font-weight:600;font-size:14px;">Open PocketTrack App →</a>
+  </div>
+</body>
+</html>
+

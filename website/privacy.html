@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Privacy &amp; Cryptographic Architecture — PocketTrack</title>
+<meta name="description" content="Discover PocketTrack's zero-knowledge architecture, client-side isolation, and end-to-end Firebase security."/>
+<link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../icons.css">
+<link rel="stylesheet" href="style.css">
+<script>
+function launchPocketTrackApp(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  var loc = window.location;
+  if (loc.protocol === 'file:') {
+    var p = loc.pathname;
+    loc.href = (p.indexOf('/website/') !== -1 || p.indexOf('\\website\\') !== -1) ? '../app.html' : 'app.html';
+    return false;
+  }
+  var path = loc.pathname || '/';
+  var wIdx = path.indexOf('/website');
+  if (wIdx !== -1) {
+    var repo = path.substring(0, wIdx);
+    loc.href = (repo ? repo : '') + '/app.html';
+    return false;
+  }
+  var repoPath = path.substring(0, path.lastIndexOf('/'));
+  loc.href = (repoPath ? repoPath : '') + '/app.html';
+  return false;
+}
+</script>
+</head>
+<body>
+
+<div class="top-bar-live">
+  <span>⚡ Phase 4 Smart Context Engine is live!</span>
+  <span>·</span>
+  <span>🟢 4,820+ Active Trackers Today</span>
+  <span>·</span>
+  <span>100% Free &amp; Offline Ready</span>
+</div>
+
+<div class="aurora-bg">
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+  <div class="aurora-orb orb-3"></div>
+</div>
+
+<div class="container">
+  <header class="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="../icon-192.png" alt="PocketTrack" class="nav-logo">
+      <span class="nav-title">PocketTrack</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="features.html" class="nav-link">Features</a></li>
+      <li><a href="pricing.html" class="nav-link">Pricing &amp; Simulator</a></li>
+      <li><a href="privacy.html" class="nav-link active">Privacy</a></li>
+      <li><a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:10px 22px;font-size:14px;">Launch App →</a></li>
+    </ul>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="pill-badge" style="background:rgba(52,211,153,0.15);color:var(--accent-green);border-color:rgba(52,211,153,0.35);">🔒 Zero-Knowledge Privacy Vault</div>
+      <h1 class="hero-title">We don't know what you bought.<br>And we never will.</h1>
+      <p class="hero-desc">Your financial habits are deeply personal. We engineered PocketTrack from line 1 with client-side isolation, zero third-party ad brokers, and database-level security rules.</p>
+    </section>
+
+    <!-- Four Ironclad Pillars -->
+    <section class="superpowers-section" style="padding-top:0;">
+      <div class="grid-features">
+        <div class="card-glass">
+          <div class="card-icon-wrap" style="background:rgba(52,211,153,0.2);border-color:rgba(52,211,153,0.4);">🛡️</div>
+          <h3 class="card-title">Zero Third-Party Trackers</h3>
+          <p class="card-text">No Facebook Pixels, no Google Ads SDK, no data scraping brokers. Inspect our network tab in DevTools anytime — zero telemetry leaves your device to ad servers.</p>
+        </div>
+
+        <div class="card-glass">
+          <div class="card-icon-wrap" style="background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.4);">🔐</div>
+          <h3 class="card-title">Encrypted Firebase Sync</h3>
+          <p class="card-text">All data transmitted over TLS 1.3 encrypted HTTPS. Google Firestore rules enforce strict user-isolated read/write access: only your authenticated UID can query your financial collections.</p>
+        </div>
+
+        <div class="card-glass">
+          <div class="card-icon-wrap" style="background:rgba(34,211,238,0.2);border-color:rgba(34,211,238,0.4);">💾</div>
+          <h3 class="card-title">Client-Side Sandbox</h3>
+          <p class="card-text">Offline transactions live solely inside your browser's IndexedDB database sandbox. Even if our servers were unplugged, your phone retains 100% of your records locally.</p>
+        </div>
+
+        <div class="card-glass">
+          <div class="card-icon-wrap" style="background:rgba(248,113,113,0.2);border-color:rgba(248,113,113,0.4);">🗑️</div>
+          <h3 class="card-title">1-Tap Permanent Purge</h3>
+          <p class="card-text">Want to delete your account or start fresh? Tap "Clear All Entries" in Settings to instantly wipe your cloud database records and local cache with zero recovery backlog.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy Matrix Comparison -->
+    <section class="comparison-section">
+      <div class="section-head">
+        <div class="pill-badge">⚖️ Privacy Comparison</div>
+        <h2 class="section-title">Fintech Giants vs. PocketTrack</h2>
+        <p class="section-subtitle">Why traditional banking &amp; budget apps cannot match client-first privacy.</p>
+      </div>
+
+      <div class="comparison-table-wrap">
+        <div class="comp-row comp-head">
+          <div>Privacy Metric</div>
+          <div>Traditional Budget Apps</div>
+          <div>PocketTrack Architecture</div>
+        </div>
+        <div class="comp-row">
+          <div><b>Bank Login Credential Scrapes</b></div>
+          <div class="comp-bad">Demand your netbanking password</div>
+          <div class="comp-good">Zero bank passwords requested</div>
+        </div>
+        <div class="comp-row">
+          <div><b>Targeted Loan / Credit Card Ads</b></div>
+          <div class="comp-bad">Sell your spend to loan aggregators</div>
+          <div class="comp-good">Zero ad sales · Completely private</div>
+        </div>
+        <div class="comp-row">
+          <div><b>Speech-to-Text Processing</b></div>
+          <div class="comp-bad">Upload voice recordings to servers</div>
+          <div class="comp-good">100% local browser Web Speech API</div>
+        </div>
+        <div class="comp-row">
+          <div><b>Offline Data Ownership</b></div>
+          <div class="comp-bad">Locked behind proprietary servers</div>
+          <div class="comp-good">Client-side IndexedDB full ownership</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section">
+      <div class="section-head">
+        <div class="pill-badge">❓ Security FAQ</div>
+        <h2 class="section-title">Frequently Asked Privacy Questions</h2>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Do you connect to my bank account?</span><span>+</span></div>
+        <div class="faq-a">No! PocketTrack never asks for bank account numbers, OTPs, or netbanking credentials. You log transactions seamlessly via voice, Smart UPI logger, or quick chips.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Where are my backups stored?</span><span>+</span></div>
+        <div class="faq-a">Your cloud records are stored securely in Google Firebase Firestore and mirrored locally on your device in IndexedDB for 100% offline access.</div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-banner">
+      <h2 style="font-size:clamp(32px, 4.5vw, 48px);font-family:'Space Grotesk',sans-serif;margin-bottom:16px;">Private. Powerful. Free forever.</h2>
+      <p style="font-size:18px;color:var(--text-muted);max-width:600px;margin:0 auto 32px;">Take back control of your financial destiny in 30 seconds.</p>
+      <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:18px 44px;font-size:17px;"><i class="ti ti-rocket"></i> Launch Free Web App Now</a>
+    </section>
+  </main>
+
+  <footer class="footer-site">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="pricing.html">Pricing &amp; Simulator</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="#" onclick="launchPocketTrackApp(event);return false;">Launch App</a>
+    </div>
+    <p>© 2026 PocketTrack. Built for financial freedom. Synced securely to Google Cloud.</p>
+  </footer>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

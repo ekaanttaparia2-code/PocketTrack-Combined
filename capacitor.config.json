@@ -1,0 +1,21 @@
+{
+  "appId": "app.vercel.pockettrack_bay.twa",
+  "appName": "PocketTrack",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://pockettrack-bay.vercel.app",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#070414",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#070414"
+    }
+  }
+}
