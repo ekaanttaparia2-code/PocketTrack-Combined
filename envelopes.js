@@ -53,6 +53,7 @@
     var entries = [];
     if (typeof window.mainEntries === 'function') entries = window.mainEntries();
     else if (Array.isArray(window.entries)) entries = window.entries;
+    if (!Array.isArray(entries)) entries = [];
 
     var curMonth = new Date().toISOString().slice(0, 7);
     var monthIncome = entries
@@ -91,6 +92,7 @@
     var entries = [];
     if (typeof window.mainEntries === 'function') entries = window.mainEntries();
     else if (Array.isArray(window.entries)) entries = window.entries;
+    if (!Array.isArray(entries)) entries = [];
 
     var curMonth = new Date().toISOString().slice(0, 7);
     var monthExpenses = entries.filter(function(e) {

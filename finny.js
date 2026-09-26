@@ -291,6 +291,7 @@
         entries = [];
       }
     }
+    if (!Array.isArray(entries)) entries = [];
 
     var today = new Date().toISOString().slice(0, 10);
     var todayEntries = entries.filter(function(e) {

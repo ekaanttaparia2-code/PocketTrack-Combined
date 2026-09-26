@@ -123,7 +123,7 @@
         '<h2 style="font-size:20px;font-weight:700;color:#fff;margin:0 0 6px;">' +
           (isHi ? 'अपने पैसे को लेकर कितना तनाव है?' : 'How stressed do you feel about money?') +
         '</h2>' +
-        '<p style="font-size:13px;color:#34d399;font-weight:600;margin:0 0 16px;">' +
+        '<p id="ob-stress-label" style="font-size:13px;color:#34d399;font-weight:600;margin:0 0 16px;">' +
           (isHi ? curStress.labelHi : curStress.labelEn) +
         '</p>' +
         '<div style="width:100%;max-width:320px;margin:0 auto 20px;">' +
@@ -182,7 +182,7 @@
 
       incomePresets.forEach(function(p) {
         var active = state.monthlyIncome === p.val;
-        html += '<button type="button" class="ob-preset-chip ' + (active ? 'active' : '') + '" onclick="window.setObIncome(' + p.val + ')">' + p.label + '</button>';
+        html += '<button type="button" class="ob-preset-chip ' + (active ? 'active' : '') + '" onclick="window.selectObIncomePreset(' + p.val + ')">' + p.label + '</button>';
       });
 
       html += '</div></div>' +
@@ -324,7 +324,22 @@
   // ── Handlers & Navigation ───────────────────────────────────
   window.updateObStress = function(val) {
     state.stressLevel = parseInt(val, 10) || 3;
-    renderSlide();
+    var stressConfig = [
+      { pose: 'celebrating', emotion: 'enjoying', labelEn: '1/5: Totally Zen & In Control', labelHi: '1/5: बिल्कुल तनावमुक्त और सुरक्षित' },
+      { pose: 'greeting', emotion: 'smile', labelEn: '2/5: Doing Fine, Need Optimization', labelHi: '2/5: सब ठीक, थोड़ी बचत बेहतर करनी है' },
+      { pose: 'notetaking', emotion: 'neutral', labelEn: '3/5: Money Slipping Away by Month-End', labelHi: '3/5: महीने के अंत में पैसे कम पड़ते हैं' },
+      { pose: 'thinking', emotion: 'sad', labelEn: '4/5: Constantly Worried About Bills', labelHi: '4/5: बिल और खर्चों की लगातार चिंता' },
+      { pose: 'thinking', emotion: 'very_sad', labelEn: '5/5: Overwhelmed by Money Stress', labelHi: '5/5: अत्यधिक वित्तीय तनाव' }
+    ];
+    var cur = stressConfig[state.stressLevel - 1] || stressConfig[2];
+    var wrap = document.getElementById('ob-stress-svg-wrap');
+    var lbl = document.getElementById('ob-stress-label');
+    if (wrap && lbl) {
+      wrap.innerHTML = getFinnySVG(cur.pose, cur.emotion, 100);
+      lbl.textContent = (getLang() === 'hi') ? cur.labelHi : cur.labelEn;
+    } else {
+      renderSlide();
+    }
   };
 
   window.toggleObTrigger = function(trigId) {
@@ -339,7 +354,23 @@
 
   window.setObIncome = function(val) {
     state.monthlyIncome = Math.max(0, parseInt(val, 10) || 0);
-    renderSlide();
+    var chips = document.querySelectorAll('.ob-preset-chip');
+    if (chips && chips.length) {
+      chips.forEach(function(chip, idx) {
+        var p = incomePresets[idx];
+        if (p) {
+          if (p.val === state.monthlyIncome) chip.classList.add('active');
+          else chip.classList.remove('active');
+        }
+      });
+    }
+  };
+
+  window.selectObIncomePreset = function(val) {
+    state.monthlyIncome = val;
+    var input = document.getElementById('ob-income-input');
+    if (input) input.value = val;
+    window.setObIncome(val);
   };
 
   window.setObGoal = function(goalId) {
