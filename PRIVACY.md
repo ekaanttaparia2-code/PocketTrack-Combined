@@ -6,7 +6,7 @@ PocketTrack ("we", "us", "our") is committed to protecting your personal data in
 
 ### 1. Data Fiduciary
 - **Entity:** PocketTrack Technologies
-- **Email:** `privacy@pockettrack.in` / `grievance@pockettrack.in`
+- **Email:** `ekanttaparia2@gmail.com`
 
 ### 2. What Data We Collect
 - **Identifiers:** Email and unique Firebase user UID for authentication.
@@ -29,6 +29,6 @@ Under the DPDP Act 2023, you have the right to:
 - Seek grievance redressal.
 
 ### 6. Grievance Officer Contact
-- **Email:** `grievance@pockettrack.in`
-- **General Support:** `support@pockettrack.in`
+- **Email:** `ekanttaparia2@gmail.com`
+- **General Support:** `ekanttaparia2@gmail.com`
 - **SLA:** Acknowledged within 24 hours; resolved within 7 business days.

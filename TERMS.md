@@ -17,7 +17,7 @@ You are solely responsible for maintaining the confidentiality of your login cre
 - **Pro Monthly:** ₹99/month
 - **Pro Annual:** ₹799/year
 - **Pro Lifetime:** ₹1,999 one-time
-- **7-Day Refund Guarantee:** We provide a 100% no-questions-asked refund within 7 days of purchase. Contact `support@pockettrack.in` with your registered email.
+- **7-Day Refund Guarantee:** We provide a 100% no-questions-asked refund within 7 days of purchase. Contact `ekanttaparia2@gmail.com` with your registered email.
 
 ### 5. Data Ownership & 1-Tap Permanent Purge (DPDP Act 2023)
 You retain 100% ownership of your data. Under the Digital Personal Data Protection Act, 2023, you have the right to summary access, data correction, grievance redressal, and permanent erasure. You can purge all cloud and local records at any time using the in-app "Delete Account & All Data" feature in Settings.
@@ -30,6 +30,6 @@ PocketTrack is provided "as is" and "as available" without warranty of any kind.
 
 ### 8. Governing Law & Grievance Redressal
 These terms are governed by the laws of India. For any complaints or inquiries:
-- **Grievance Officer:** `grievance@pockettrack.in`
-- **Support Team:** `support@pockettrack.in`
+- **Grievance Officer:** `ekanttaparia2@gmail.com`
+- **Support Team:** `ekanttaparia2@gmail.com`
 - **SLA:** Acknowledgment within 24 hours, resolution within 7 business days.

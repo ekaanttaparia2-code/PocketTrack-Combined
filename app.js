@@ -2671,8 +2671,8 @@ window.openSupportModal = function(){
         <strong style="font-size:13px;color:#c4b5fd;display:block;margin-bottom:6px;">⚖️ ${isHi ? 'शिकायत अधिकारी (Grievance Officer)' : 'Dedicated Grievance Officer'}:</strong>
         <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.5;">
           ${isHi ? 'डेटा गोपनीयता, अधिकार या सेवा से संबंधित किसी भी शिकायत के लिए:' : 'For data privacy, statutory rights, or service inquiries:'}<br>
-          📧 <a href="mailto:grievance@pockettrack.in" style="color:var(--accent-green,#34d399);text-decoration:underline;">grievance@pockettrack.in</a><br>
-          💬 <a href="mailto:support@pockettrack.in" style="color:#c4b5fd;text-decoration:underline;">support@pockettrack.in</a>
+          📧 <a href="mailto:ekanttaparia2@gmail.com" style="color:var(--accent-green,#34d399);text-decoration:underline;">ekanttaparia2@gmail.com</a><br>
+          💬 <a href="mailto:ekanttaparia2@gmail.com" style="color:#c4b5fd;text-decoration:underline;">ekanttaparia2@gmail.com</a>
         </p>
         <span style="display:block;font-size:11px;color:var(--text-dim,#94a3b8);margin-top:6px;">⏱️ ${isHi ? '24 घंटे में पावती · 7 व्यावसायिक दिनों में समाधान' : 'Acknowledgment within 24h · Resolution within 7 business days.'}</span>
       </div>
