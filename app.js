@@ -2775,9 +2775,20 @@ window.setAppMode = function(mode, save = true) {
   const iconEl = document.getElementById('mode-icon');
   const labelEl = document.getElementById('mode-label');
 
+  // Immediately hide/show horizontal scrolls and widgets on the front page
+  const ticker = document.getElementById('hub-floating-ticker');
+  if (ticker) ticker.style.display = isSimple ? 'none' : '';
+  const portBar = document.getElementById('portfolio-switcher-bar');
+  if (portBar) portBar.style.display = isSimple ? 'none' : '';
+  const moreCard = document.getElementById('more-features-card');
+  if (moreCard) moreCard.style.display = isSimple ? 'none' : '';
+  const mascot = document.getElementById('finny-mascot-slot');
+  if (mascot) mascot.style.display = isSimple ? 'none' : '';
+
   if (isSimple) {
     if (iconEl) iconEl.textContent = '👴';
     if (labelEl) labelEl.textContent = 'Simple';
+    if (typeof window.switchActiveWallet === 'function') window.switchActiveWallet('all');
     if (save) {
       localStorage.setItem('pockettrack_app_mode', 'simple');
       if (typeof toast === 'function') toast('Switched to Simple Mode (40+)', 'success');
@@ -2790,6 +2801,13 @@ window.setAppMode = function(mode, save = true) {
       if (typeof toast === 'function') toast('Switched to Power Mode', 'success');
     }
   }
+
+  if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+  if (typeof updateHeaderStats === 'function') updateHeaderStats();
+  if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+  if (typeof renderEntries === 'function') renderEntries();
+  if (typeof renderBudgetEditor === 'function') renderBudgetEditor();
+  if (typeof renderReport === 'function') renderReport();
 };
 
 window.toggleAppMode = function() {

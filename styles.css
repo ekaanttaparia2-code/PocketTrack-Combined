@@ -2577,14 +2577,20 @@ textarea{
 /* Simple Senior (40+) Mode Optimizations */
 .app-mode-simple .home-power-widgets-row,
 .app-mode-simple #home-daily-burn-slot,
+.app-mode-simple #home-envelopes-slot,
 .app-mode-simple #home-dna-slot,
 .app-mode-simple #home-goal-slot,
+.app-mode-simple #home-vault-slot,
 .app-mode-simple #home-wrapped-slot,
 .app-mode-simple #portfolio-switcher-bar,
 .app-mode-simple .stat-pills,
 .app-mode-simple #header-stat-pills,
 .app-mode-simple #more-features-card,
-.app-mode-simple .home-power-hub-section {
+.app-mode-simple .home-power-hub-section,
+.app-mode-simple #hub-floating-ticker,
+.app-mode-simple .hub-ticker-wrapper,
+.app-mode-simple .hub-ticker-row,
+.app-mode-simple #finny-mascot-slot {
   display: none !important;
 }
 

@@ -33,6 +33,14 @@
       var labelEl = document.getElementById('mode-label');
       if (iconEl) iconEl.textContent = isSimple ? '👴' : '⚡';
       if (labelEl) labelEl.textContent = isSimple ? 'Simple' : 'Power';
+      var ticker = document.getElementById('hub-floating-ticker');
+      if (ticker) ticker.style.display = isSimple ? 'none' : '';
+      var portBar = document.getElementById('portfolio-switcher-bar');
+      if (portBar) portBar.style.display = isSimple ? 'none' : '';
+      var moreCard = document.getElementById('more-features-card');
+      if (moreCard) moreCard.style.display = isSimple ? 'none' : '';
+      var mascot = document.getElementById('finny-mascot-slot');
+      if (mascot) mascot.style.display = isSimple ? 'none' : '';
     }
     function setAppMode(mode, save) {
       if (save === undefined) save = true;
