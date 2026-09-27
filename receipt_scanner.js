@@ -7,6 +7,8 @@
   let ocrWorker = null;
   let isScanning = false;
   let lastScannedData = null;
+  let activeCameraStream = null;
+  let currentFacingMode = 'environment';
 
   // Top known merchant directory for instant high-confidence classification in India & globally
   const KNOWN_MERCHANTS = [
@@ -93,7 +95,6 @@
       input.type = 'file';
       input.id = 'receipt-scanner-input';
       input.accept = 'image/*';
-      input.setAttribute('capture', 'environment');
       input.style.display = 'none';
       input.addEventListener('change', function () {
         if (this.files && this.files[0]) {
@@ -105,11 +106,19 @@
     return input;
   }
 
-  // Public entry trigger
-  window.triggerReceiptScanner = function () {
+  // Trigger file selection from device storage / gallery
+  window.triggerFileInput = function () {
+    stopLiveCamera();
     const input = getFileInput();
     input.value = '';
     input.click();
+  };
+
+  // Public entry trigger: opens live camera viewfinder directly
+  window.triggerReceiptScanner = function () {
+    const modal = ensureScannerModal();
+    modal.style.display = 'flex';
+    startLiveCamera();
   };
 
   // Image pre-processing for higher OCR accuracy on faded / thermal receipts
@@ -300,7 +309,7 @@
       modal = document.createElement('div');
       modal.id = 'receipt-scanner-modal-backdrop';
       modal.style.cssText = `
-        position: fixed; inset: 0; background: rgba(7, 4, 20, 0.88);
+        position: fixed; inset: 0; background: rgba(7, 4, 20, 0.92);
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         z-index: 999999; display: none; align-items: center; justify-content: center;
         padding: 16px; animation: fadeIn 0.2s ease;
@@ -308,48 +317,82 @@
       modal.innerHTML = `
         <div class="card" style="
           max-width: 480px; width: 100%; background: linear-gradient(165deg, #171133, #0d0922);
-          border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 26px; padding: 22px;
+          border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 26px; padding: 20px;
           box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85); position: relative; overflow: hidden;
         ">
           <!-- Close button -->
           <button type="button" onclick="closeReceiptScannerModal()" style="
             position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.08);
             border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%;
-            cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10;
+            cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 20;
           ">✕</button>
 
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <div style="width:38px;height:38px;border-radius:12px;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);display:flex;align-items:center;justify-content:center;font-size:20px;">📷</div>
             <div>
-              <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;color:#fff;">Smart Receipt Scanner</h3>
-              <p style="margin:2px 0 0;font-size:11.5px;color:var(--text-dim,#a1a1aa);">100% on-device OCR · Instant extraction</p>
+              <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;color:#fff;">Smart Receipt Camera</h3>
+              <p style="margin:2px 0 0;font-size:11.5px;color:var(--text-dim,#a1a1aa);">Live camera scan · 100% on-device OCR</p>
             </div>
           </div>
 
           <!-- Viewfinder Frame -->
           <div id="receipt-viewfinder" style="
-            position: relative; width: 100%; height: 260px; border-radius: 18px;
-            background: #000; overflow: hidden; border: 1.5px dashed rgba(56,189,248,0.5);
-            display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+            position: relative; width: 100%; height: 280px; border-radius: 18px;
+            background: #000; overflow: hidden; border: 1.5px solid rgba(56,189,248,0.35);
+            display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
           ">
+            <!-- Video stream -->
+            <video id="receipt-camera-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+
+            <!-- Image Preview when photo captured or uploaded -->
             <img id="receipt-preview-img" style="max-width:100%;max-height:100%;object-fit:contain;display:none;" alt="Receipt Preview"/>
             
+            <!-- Reticle Alignment Guides -->
+            <div id="receipt-reticle" style="position:absolute;inset:18px;pointer-events:none;display:none;z-index:4;">
+              <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #38bdf8;border-left:3px solid #38bdf8;border-top-left-radius:8px;box-shadow:-2px -2px 10px rgba(56,189,248,0.5);"></div>
+              <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #38bdf8;border-right:3px solid #38bdf8;border-top-right-radius:8px;box-shadow:2px -2px 10px rgba(56,189,248,0.5);"></div>
+              <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #38bdf8;border-left:3px solid #38bdf8;border-bottom-left-radius:8px;box-shadow:-2px 2px 10px rgba(56,189,248,0.5);"></div>
+              <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #38bdf8;border-right:3px solid #38bdf8;border-bottom-right-radius:8px;box-shadow:2px 2px 10px rgba(56,189,248,0.5);"></div>
+              
+              <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.68);backdrop-filter:blur(6px);padding:4px 12px;border-radius:14px;font-size:11px;color:#e0f2fe;font-weight:600;white-space:nowrap;letter-spacing:0.2px;border:1px solid rgba(56,189,248,0.35);">
+                Align receipt inside frame
+              </div>
+            </div>
+
+            <!-- Shutter Flash Overlay -->
+            <div id="receipt-camera-flash" style="position:absolute;inset:0;background:#ffffff;opacity:0;pointer-events:none;transition:opacity 0.15s ease;z-index:9;"></div>
+
             <!-- Scanning Laser Line -->
             <div id="receipt-scanner-laser" style="
               position: absolute; left: 0; right: 0; height: 3px;
               background: linear-gradient(90deg, transparent, #38bdf8, #a855f7, #38bdf8, transparent);
               box-shadow: 0 0 12px #38bdf8, 0 0 25px #a855f7;
               animation: scannerLaserSweep 2s ease-in-out infinite alternate;
-              z-index: 5; display: none;
+              z-index: 6; display: none;
             "></div>
 
             <div id="receipt-placeholder-text" style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;">
-              Preparing document...
+              Connecting to camera...
             </div>
           </div>
 
+          <!-- Live Camera Controls (Shutter, Gallery, Flip) -->
+          <div id="receipt-camera-controls" style="display:none;align-items:center;justify-content:space-around;padding:6px 12px 10px;">
+            <button type="button" onclick="triggerFileInput()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:14px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s ease;">
+              <span>📁</span><span>Gallery</span>
+            </button>
+
+            <button type="button" id="receipt-shutter-btn" onclick="captureCameraPhoto()" style="width:64px;height:64px;border-radius:50%;background:#ffffff;border:4px solid #38bdf8;box-shadow:0 0 24px rgba(56,189,248,0.7);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.92)'" ontouchend="this.style.transform='scale(1)'" title="Capture and Scan">
+              <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#818cf8);"></div>
+            </button>
+
+            <button type="button" id="receipt-flip-btn" onclick="flipCameraFacingMode()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:14px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s ease;">
+              <span>🔄</span><span>Flip</span>
+            </button>
+          </div>
+
           <!-- Progress / Status bar -->
-          <div id="receipt-status-section" style="margin-bottom:14px;">
+          <div id="receipt-status-section" style="margin-bottom:14px;display:none;">
             <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#38bdf8;font-weight:600;margin-bottom:6px;">
               <span id="receipt-status-label">Initializing OCR engine...</span>
               <span id="receipt-status-percent">0%</span>
@@ -398,9 +441,9 @@
           </div>
 
           <!-- Bottom Action Buttons -->
-          <div id="receipt-actions-scan" style="display:flex;gap:10px;">
+          <div id="receipt-actions-scan" style="display:none;display:flex;gap:10px;">
             <button type="button" class="btn" onclick="closeReceiptScannerModal()" style="flex:1;border-radius:14px;padding:12px;font-size:12.5px;">Cancel</button>
-            <button type="button" class="btn primary" onclick="triggerReceiptScanner()" style="flex:1.4;border-radius:14px;padding:12px;font-size:12.5px;font-weight:700;">🔄 Pick Another</button>
+            <button type="button" class="btn primary" onclick="startLiveCamera()" style="flex:1.4;border-radius:14px;padding:12px;font-size:12.5px;font-weight:700;">📷 Retake / Camera</button>
           </div>
 
           <div id="receipt-actions-result" style="display:none;display:flex;gap:10px;">
@@ -450,21 +493,165 @@
     return modal;
   }
 
+  // Live Camera Viewfinder logic
+  async function startLiveCamera() {
+    ensureScannerModal();
+    const video = document.getElementById('receipt-camera-video');
+    const previewImg = document.getElementById('receipt-preview-img');
+    const laser = document.getElementById('receipt-scanner-laser');
+    const reticle = document.getElementById('receipt-reticle');
+    const placeholder = document.getElementById('receipt-placeholder-text');
+    const cameraControls = document.getElementById('receipt-camera-controls');
+    const statusSection = document.getElementById('receipt-status-section');
+    const resultCard = document.getElementById('receipt-result-card');
+    const actionsScan = document.getElementById('receipt-actions-scan');
+    const actionsResult = document.getElementById('receipt-actions-result');
+
+    if (previewImg) previewImg.style.display = 'none';
+    if (laser) laser.style.display = 'none';
+    if (statusSection) statusSection.style.display = 'none';
+    if (resultCard) resultCard.style.display = 'none';
+    if (actionsScan) actionsScan.style.display = 'none';
+    if (actionsResult) actionsResult.style.display = 'none';
+    if (placeholder) {
+      placeholder.innerHTML = 'Connecting to camera...';
+      placeholder.style.display = 'block';
+    }
+
+    stopLiveCamera();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      handleCameraFallback('Live camera access is not supported by this browser. You can select an image file directly.');
+      return;
+    }
+
+    try {
+      let stream = null;
+      try {
+        // Preferred facing mode (environment for rear camera)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: currentFacingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        });
+      } catch (modeErr) {
+        // Fallback to any camera available (e.g. desktop webcam)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
+
+      activeCameraStream = stream;
+      if (video) {
+        video.srcObject = stream;
+        video.style.display = 'block';
+        await video.play();
+      }
+
+      if (placeholder) placeholder.style.display = 'none';
+      if (reticle) reticle.style.display = 'block';
+      if (cameraControls) cameraControls.style.display = 'flex';
+
+    } catch (err) {
+      console.warn('Live camera access error:', err);
+      handleCameraFallback(err.name === 'NotAllowedError'
+        ? 'Camera permission was denied. Please allow camera access in browser settings, or select a photo from your device.'
+        : 'Could not activate camera. You can choose an image file from your device.');
+    }
+  }
+
+  function stopLiveCamera() {
+    if (activeCameraStream) {
+      try {
+        activeCameraStream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+      activeCameraStream = null;
+    }
+    const video = document.getElementById('receipt-camera-video');
+    if (video) {
+      try {
+        video.pause();
+        video.srcObject = null;
+      } catch (e) {}
+      video.style.display = 'none';
+    }
+    const reticle = document.getElementById('receipt-reticle');
+    if (reticle) reticle.style.display = 'none';
+    const cameraControls = document.getElementById('receipt-camera-controls');
+    if (cameraControls) cameraControls.style.display = 'none';
+  }
+
+  function handleCameraFallback(msg) {
+    stopLiveCamera();
+    const placeholder = document.getElementById('receipt-placeholder-text');
+    const cameraControls = document.getElementById('receipt-camera-controls');
+    if (cameraControls) cameraControls.style.display = 'none';
+
+    if (placeholder) {
+      placeholder.innerHTML = `
+        <div style="padding:16px 20px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:8px;">📷</div>
+          <div style="font-weight:700;color:#fff;font-size:14px;margin-bottom:6px;">Camera Access</div>
+          <div style="font-size:12px;color:var(--text-dim,#a1a1aa);line-height:1.4;margin-bottom:14px;">${escapeHTML(msg)}</div>
+          <button type="button" class="btn primary" onclick="triggerFileInput()" style="border-radius:12px;padding:9px 18px;font-size:12.5px;font-weight:600;">
+            📁 Pick Receipt File
+          </button>
+        </div>
+      `;
+      placeholder.style.display = 'block';
+    }
+  }
+
+  window.startLiveCamera = startLiveCamera;
+  window.stopLiveCamera = stopLiveCamera;
+
+  window.flipCameraFacingMode = function () {
+    currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+    startLiveCamera();
+  };
+
+  window.captureCameraPhoto = function () {
+    const video = document.getElementById('receipt-camera-video');
+    if (!video || !activeCameraStream) {
+      triggerFileInput();
+      return;
+    }
+
+    const flash = document.getElementById('receipt-camera-flash');
+    if (flash) {
+      flash.style.opacity = '0.9';
+      setTimeout(() => { flash.style.opacity = '0'; }, 150);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    stopLiveCamera();
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    processReceiptSource(dataUrl);
+  };
+
   window.closeReceiptScannerModal = function () {
+    stopLiveCamera();
     const modal = document.getElementById('receipt-scanner-modal-backdrop');
     if (modal) modal.style.display = 'none';
     isScanning = false;
   };
 
-  // Main processing pipeline
-  async function processReceiptFile(file) {
-    if (!file || !file.type.startsWith('image/')) {
-      if (typeof toast === 'function') toast('Please select a valid image of a receipt or bill', 'error');
-      return;
-    }
-
+  // Main processing pipeline (supports DataURL string, Blob, or File)
+  async function processReceiptSource(source) {
     const modal = ensureScannerModal();
     modal.style.display = 'flex';
+
+    stopLiveCamera();
 
     const previewImg = document.getElementById('receipt-preview-img');
     const laser = document.getElementById('receipt-scanner-laser');
@@ -476,8 +663,9 @@
     const resultCard = document.getElementById('receipt-result-card');
     const actionsScan = document.getElementById('receipt-actions-scan');
     const actionsResult = document.getElementById('receipt-actions-result');
+    const cameraControls = document.getElementById('receipt-camera-controls');
 
-    // Reset UI state
+    if (cameraControls) cameraControls.style.display = 'none';
     statusSection.style.display = 'block';
     resultCard.style.display = 'none';
     actionsScan.style.display = 'flex';
@@ -490,8 +678,13 @@
     statusPercent.textContent = '10%';
     progressBar.style.width = '10%';
 
-    const objectUrl = URL.createObjectURL(file);
-    previewImg.src = objectUrl;
+    let objectUrlToRevoke = null;
+    if (typeof source === 'string') {
+      previewImg.src = source;
+    } else if (source instanceof Blob || source instanceof File) {
+      objectUrlToRevoke = URL.createObjectURL(source);
+      previewImg.src = objectUrlToRevoke;
+    }
 
     await new Promise(r => { previewImg.onload = r; });
 
@@ -558,6 +751,10 @@
           badge.style.background = 'rgba(251,191,36,0.15)';
           if (typeof toast === 'function') toast('Could not auto-detect total. Please confirm amount.', 'info');
         }
+
+        if (objectUrlToRevoke) {
+          try { URL.revokeObjectURL(objectUrlToRevoke); } catch (e) {}
+        }
       }, 400);
 
     } catch (err) {
@@ -567,6 +764,14 @@
       statusLabel.style.color = '#f87171';
       if (typeof toast === 'function') toast('Could not read image clearly. Try a clearer photo.', 'error');
     }
+  }
+
+  function processReceiptFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      if (typeof toast === 'function') toast('Please select a valid image of a receipt or bill', 'error');
+      return;
+    }
+    processReceiptSource(file);
   }
 
   // Apply parsed receipt details into Transaction Composer modal
