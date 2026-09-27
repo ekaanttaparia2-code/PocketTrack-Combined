@@ -443,7 +443,14 @@ function openCommandHubModal(){
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'DPDP, नियम व संपर्क' : 'DPDP 2023, Terms & Help'}</span>
         </div>
 
-        <!-- 18. Delete Account (Purge Data) -->
+        <!-- 18. Install App (PWA) -->
+        <div id="hub-install-app-item" onclick="closeCommandHubModal();if(typeof promptInstallApp==='function')promptInstallApp();" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">📲</div>
+          <strong style="display:block;font-size:14px;color:#34d399;">${isHi ? 'ऐप इंस्टॉल करें (PWA)' : 'Install App (PWA)'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'होम स्क्रीन पर जोड़ें' : 'Add to home screen'}</span>
+        </div>
+
+        <!-- 19. Delete Account (Purge Data) -->
         <div onclick="closeCommandHubModal();if(typeof deleteAccountAndPurgeData==='function')deleteAccountAndPurgeData();" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">🗑️</div>
           <strong style="display:block;font-size:14px;color:#f87171;">${isHi ? 'खाता व डेटा हटाएं' : 'Delete Account'}</strong>

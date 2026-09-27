@@ -2719,11 +2719,12 @@ if('serviceWorker' in navigator){
 let deferredPrompt=null;
 function refreshInstallButton(){
   const btn=document.getElementById('install-app-btn');
-  if(!btn) return;
+  const hubItem=document.getElementById('hub-install-app-item');
   const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
   const show = !standalone && (deferredPrompt || ios);
-  btn.style.display = show ? 'inline-flex' : 'none';
+  if(btn) btn.style.display = show ? 'inline-flex' : 'none';
+  if(hubItem) hubItem.style.display = show ? 'block' : 'none';
 }
 window.addEventListener('beforeinstallprompt',(e)=>{
   e.preventDefault();
