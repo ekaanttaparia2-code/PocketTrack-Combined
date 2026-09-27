@@ -20,6 +20,16 @@ function authAction(mode){
     errEl.style.display='block';
     return;
   }
+  if (mode === 'signup') {
+    const consent = document.getElementById('auth-consent-check');
+    if (consent && !consent.checked) {
+      errEl.textContent = currentLang === 'hi' 
+        ? 'कृपया जारी रखने के लिए नियम व शर्तों और गोपनीयता नीति (18+) को स्वीकार करें।' 
+        : 'Please accept the Terms of Service & Privacy Policy (18+) to create an account.';
+      errEl.style.display = 'block';
+      return;
+    }
+  }
   setAuthButtonsLoading(true);
   const action = mode==='login'
     ? auth.signInWithEmailAndPassword(email,pass)

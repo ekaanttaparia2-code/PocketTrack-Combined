@@ -438,6 +438,24 @@ function openCommandHubModal(){
           <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'टूर दोबारा देखें' : 'Replay Finny Tour'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'ऑनबोर्डिंग व 50/30/20' : 'Interactive wizard'}</span>
         </div>
+
+        <!-- 17. Help & Grievance Support -->
+        <div onclick="closeCommandHubModal();if(typeof openSupportModal==='function')openSupportModal();" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🛡️</div>
+          <strong style="display:block;font-size:14px;color:#c4b5fd;">${isHi ? 'सहायता व कानूनी' : 'Support & Legal'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'DPDP, नियम व संपर्क' : 'DPDP 2023, Terms & Help'}</span>
+        </div>
+
+        <!-- 18. Delete Account (Purge Data) -->
+        <div onclick="closeCommandHubModal();if(typeof deleteAccountAndPurgeData==='function')deleteAccountAndPurgeData();" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🗑️</div>
+          <strong style="display:block;font-size:14px;color:#f87171;">${isHi ? 'खाता व डेटा हटाएं' : 'Delete Account'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'स्थायी 1-टैप डेटा पर्ज' : '1-Tap Permanent Purge'}</span>
+        </div>
+      </div>
+
+      <div style="margin:14px 0 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:10px 12px;font-size:11px;color:var(--text-dim,#94a3b8);line-height:1.5;">
+        ⚖️ <b>${isHi ? 'कानूनी अस्वीकरण' : 'Legal Disclaimer'}:</b> ${isHi ? 'PocketTrack एक व्यक्तिगत व्यय ट्रैकर है और प्रमाणित वित्तीय या निवेश सलाह प्रदान नहीं करता है। सभी भविष्यवाणियां गणितीय सिमुलेशन हैं।' : 'PocketTrack is a personal expense tracking and budgeting tool and does not provide certified financial or investment advice. All projections are educational mathematical simulations.'}
       </div>
 
       <div style="display:flex;gap:10px;">

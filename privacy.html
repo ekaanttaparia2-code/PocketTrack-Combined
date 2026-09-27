@@ -5,29 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Privacy Policy &amp; DPDP Act 2023 Compliance — PocketTrack</title>
 <meta name="description" content="Read PocketTrack's Privacy Policy. Compliant with India's Digital Personal Data Protection Act (DPDP Act 2023). Zero-knowledge storage, 1-tap data purge."/>
-<link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../icons.css">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="icons.css">
+<link rel="stylesheet" href="website/style.css">
 <script>
 function launchPocketTrackApp(e) {
   if (e && e.preventDefault) e.preventDefault();
-  var loc = window.location;
-  if (loc.protocol === 'file:') {
-    var p = loc.pathname;
-    loc.href = (p.indexOf('/website/') !== -1 || p.indexOf('\\website\\') !== -1) ? '../app.html' : 'app.html';
-    return false;
-  }
-  var path = loc.pathname || '/';
-  var wIdx = path.indexOf('/website');
-  if (wIdx !== -1) {
-    var repo = path.substring(0, wIdx);
-    loc.href = (repo ? repo : '') + '/app.html';
-    return false;
-  }
-  var repoPath = path.substring(0, path.lastIndexOf('/'));
-  loc.href = (repoPath ? repoPath : '') + '/app.html';
+  window.location.href = 'app.html';
   return false;
 }
 </script>
@@ -51,16 +37,16 @@ function launchPocketTrackApp(e) {
 <div class="container">
   <header class="navbar">
     <a href="index.html" class="nav-brand">
-      <img src="../icon-192.png" alt="PocketTrack" class="nav-logo">
+      <img src="icon-192.png" alt="PocketTrack" class="nav-logo">
       <span class="nav-title">PocketTrack</span>
     </a>
     <ul class="nav-links">
       <li><a href="index.html" class="nav-link">Home</a></li>
-      <li><a href="features.html" class="nav-link">Features</a></li>
-      <li><a href="pricing.html" class="nav-link">Pricing &amp; Simulator</a></li>
+      <li><a href="website/features.html" class="nav-link">Features</a></li>
+      <li><a href="website/pricing.html" class="nav-link">Pricing &amp; Simulator</a></li>
       <li><a href="privacy.html" class="nav-link active">Privacy</a></li>
       <li><a href="terms.html" class="nav-link">Terms</a></li>
-      <li><a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:10px 22px;font-size:14px;">Launch App →</a></li>
+      <li><a href="app.html" class="btn btn-primary" style="padding:10px 22px;font-size:14px;">Launch App →</a></li>
     </ul>
   </header>
 
@@ -213,24 +199,24 @@ function launchPocketTrackApp(e) {
     <section class="cta-banner">
       <h2 style="font-size:clamp(32px, 4.5vw, 48px);font-family:'Space Grotesk',sans-serif;margin-bottom:16px;">Private. Powerful. Free forever.</h2>
       <p style="font-size:18px;color:var(--text-muted);max-width:600px;margin:0 auto 32px;">Take back control of your financial destiny in 30 seconds.</p>
-      <a href="#" onclick="launchPocketTrackApp(event);return false;" class="btn btn-primary" style="padding:18px 44px;font-size:17px;"><i class="ti ti-rocket"></i> Launch Free Web App Now</a>
+      <a href="app.html" class="btn btn-primary" style="padding:18px 44px;font-size:17px;"><i class="ti ti-rocket"></i> Launch Free Web App Now</a>
     </section>
   </main>
 
   <footer class="footer-site">
     <div class="footer-links">
       <a href="index.html">Home</a>
-      <a href="features.html">Features</a>
-      <a href="pricing.html">Pricing &amp; Simulator</a>
+      <a href="website/features.html">Features</a>
+      <a href="website/pricing.html">Pricing &amp; Simulator</a>
       <a href="privacy.html">Privacy Policy</a>
       <a href="terms.html">Terms of Service</a>
-      <a href="#" onclick="launchPocketTrackApp(event);return false;">Launch App</a>
+      <a href="app.html">Launch App</a>
     </div>
     <p style="margin-bottom:6px;">© 2026 PocketTrack. Built for financial freedom. Synced securely to Google Cloud.</p>
     <p style="font-size:11.5px;color:var(--text-dim);max-width:720px;margin:0 auto;line-height:1.5;">Disclaimer: PocketTrack is a personal budgeting and expense tracking tool. It does not provide certified financial, investment, or legal advice. Projections are mathematical simulations only.</p>
   </footer>
 </div>
 
-<script src="main.js"></script>
+<script src="website/main.js"></script>
 </body>
 </html>

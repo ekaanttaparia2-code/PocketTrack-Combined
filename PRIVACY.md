@@ -1,26 +1,34 @@
-# Privacy Policy for PocketTrack
+# Privacy Policy & DPDP Act 2023 Compliance for PocketTrack
 
-**Last updated:** August 26, 2026
+**Last updated:** September 27, 2026
 
-PocketTrack ("we", "our", or "app") is designed from the ground up to protect your personal and financial privacy.
+PocketTrack ("we", "us", "our") is committed to protecting your personal data in accordance with the **Digital Personal Data Protection Act, 2023 (DPDP Act)** and global privacy standards.
 
-### 1. Data Ownership
-- All financial data, transactions, ledgers, notes, and records belong solely to you.
-- We do not sell, rent, monetize, or share your financial data with third-party advertisers.
+### 1. Data Fiduciary
+- **Entity:** PocketTrack Technologies
+- **Email:** `privacy@pockettrack.in` / `grievance@pockettrack.in`
 
-### 2. Information Storage & Cloud Sync
-- **Local Storage / Offline Persistence**: Your entries are cached on your device using IndexedDB and `localStorage` for offline functionality.
-- **Cloud Sync**: When signed in, entries sync securely with your private account on Google Firebase Firestore using encrypted HTTPS/WSS protocols.
+### 2. What Data We Collect
+- **Identifiers:** Email and unique Firebase user UID for authentication.
+- **Transactions:** User-input expenses, income, category tags, amounts, and dates.
+- **What We NEVER Collect:** No bank credentials, OTPs, debit/credit card CVVs, or location telemetry. Speech recognition runs 100% locally via the browser Web Speech API.
 
-### 3. Voice & Microphone Permissions
-- The microphone is used exclusively for speech-to-text transaction input when you tap the mic button.
-- Audio is processed through the browser's standard Web Speech API. We do not store raw audio recordings on any server.
+### 3. Purpose Limitation & Zero Trackers
+We strictly process data to deliver budgeting calculations, analytics, and cross-device synchronization. We do not run third-party advertising SDKs, ad trackers, or data-broker scraping scripts.
 
-### 4. Clipboard & Notification Parsing
-- The Smart Logger feature accesses text you explicitly paste from the clipboard to parse transaction amounts and merchants. It never reads your clipboard without your direct action.
+### 4. Storage & Encryption
+- Data in transit: TLS 1.3 encryption.
+- Data at rest: AES-256 cloud encryption via Google Cloud Firestore.
+- Offline data: Sandboxed in client-side IndexedDB.
 
-### 5. Security & Authentication
-- Authentication is handled via Firebase Authentication (Email/Password, Google Sign-In). Passwords are never accessible to app developers.
+### 5. Rights of Data Principals
+Under the DPDP Act 2023, you have the right to:
+- Access your data summary.
+- Correct inaccurate records.
+- Exercise 1-Tap Permanent Purge (complete account and data erasure).
+- Seek grievance redressal.
 
-### 6. Contact & Data Deletion
-- You can permanently delete all your data at any time from the app settings via the "Clear all" feature or by contacting support.
+### 6. Grievance Officer Contact
+- **Email:** `grievance@pockettrack.in`
+- **General Support:** `support@pockettrack.in`
+- **SLA:** Acknowledged within 24 hours; resolved within 7 business days.

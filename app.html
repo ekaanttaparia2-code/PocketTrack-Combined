@@ -126,7 +126,13 @@
     <label data-i18n="lbl_password">Password</label>
     <input type="password" id="auth-pass" placeholder="At least 6 characters" data-i18n-ph="ph_pass"/>
     <p class="auth-forgot"><a href="#" onclick="handleForgotPassword();return false;" data-i18n="lnk_forgot_pass">Forgot password?</a></p>
-    <p id="auth-error" style="color:var(--red);font-size:12.5px;display:none;margin:6px 0 0"></p>
+    <div style="margin:12px 0 8px;display:flex;align-items:flex-start;gap:8px;text-align:left;font-size:11.5px;color:rgba(255,255,255,0.72);line-height:1.4;">
+      <input type="checkbox" id="auth-consent-check" style="margin-top:2px;accent-color:var(--accent,#8b5cf6);" checked/>
+      <label for="auth-consent-check">
+        I confirm I am 18+ years old and agree to the <a href="terms.html" target="_blank" style="color:#c4b5fd;text-decoration:underline;">Terms</a> &amp; <a href="privacy.html" target="_blank" style="color:#c4b5fd;text-decoration:underline;">Privacy Policy</a> (DPDP Act 2023 compliant).
+      </label>
+    </div>
+
     <div class="btn-row" style="margin-top:14px">
       <button class="btn primary auth-action-btn" id="auth-login-btn" onclick="authAction('login')"><i class="ti ti-login"></i> <span data-i18n="btn_login">Log in</span></button>
       <button class="btn auth-action-btn" id="auth-signup-btn" onclick="authAction('signup')"><i class="ti ti-user-plus"></i> <span data-i18n="btn_signup">Sign up</span></button>
@@ -972,7 +978,19 @@
     </div>
   </div>
 
-  <footer>PocketTrack · synced to the cloud · your data, your account</footer>
+  <footer style="text-align:center;padding:24px 16px 85px;font-size:11px;color:var(--text-dim,#71717a);line-height:1.6;">
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;">
+      <a href="terms.html" target="_blank" style="color:var(--text-dim,#a1a1aa);text-decoration:underline;">Terms of Service</a>
+      <span>·</span>
+      <a href="privacy.html" target="_blank" style="color:var(--text-dim,#a1a1aa);text-decoration:underline;">Privacy Policy</a>
+      <span>·</span>
+      <a href="#" onclick="if(typeof openSupportModal==='function')openSupportModal();return false;" style="color:var(--text-dim,#a1a1aa);text-decoration:underline;">Help &amp; Grievance Support</a>
+      <span>·</span>
+      <a href="#" onclick="if(typeof deleteAccountAndPurgeData==='function')deleteAccountAndPurgeData();return false;" style="color:#f87171;text-decoration:underline;">Delete Account (Purge Data)</a>
+    </div>
+    <p style="margin:0 0 4px;">© 2026 PocketTrack Technologies. Encrypted cloud sync · Zero ad trackers.</p>
+    <p style="margin:0;font-size:10.5px;color:rgba(255,255,255,0.38);">Disclaimer: PocketTrack is a personal expense tracking and budgeting tool. It does not provide certified financial, investment, or legal advice. Projections are mathematical simulations only.</p>
+  </footer>
 </div>
 
 <!-- Bottom Tab Bar — floating pill, fixed to bottom, app-like -->

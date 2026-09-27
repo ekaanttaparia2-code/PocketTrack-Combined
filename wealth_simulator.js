@@ -170,6 +170,10 @@
           '</div>' +
         '</div>' +
 
+        '<p style="font-size:10.5px;color:var(--text-dim);text-align:center;margin:0 0 12px;line-height:1.4;">⚖️ <i>' +
+          (isHi ? 'गणितीय सिमुलेशन केवल शैक्षिक उद्देश्य के लिए है। निवेश सलाह नहीं।' : 'Mathematical simulation for educational purposes. Not certified investment advice.') +
+        '</i></p>' +
+
         '<button type="button" class="btn primary" onclick="document.getElementById(\'wealth-sim-modal-backdrop\').remove()" style="width:100%;padding:12px;font-weight:700;font-size:13.5px;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:14px;cursor:pointer;">' +
           (isHi ? 'पूर्ण हुआ 👍' : 'Close Simulator 👍') +
         '</button>' +

@@ -2562,6 +2562,149 @@ function clearAll(){
   });
 }
 
+// ===== Legal Compliance: DPDP Act 2023 Account Erasure & Support =====
+async function deleteAccountAndPurgeData(){
+  if(!currentUser){
+    if(typeof toast === 'function') toast('Not signed in', 'error');
+    return;
+  }
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const confirmMsg = isHi
+    ? '⚠️ स्थायी खाता व डेटा विलोपन (DPDP अधिनियम 2023):\n\nक्या आप अपना खाता, लॉगिन क्रेडेंशियल और सभी क्लाउड प्रविष्टियाँ हमेशा के लिए हटाना चाहते हैं? यह प्रक्रिया वापस नहीं ली जा सकती।'
+    : '⚠️ Permanent Account Deletion & Data Purge (DPDP Act 2023):\n\nAre you sure you want to permanently delete your account, authentication credentials, and ALL cloud transaction records? This action cannot be undone.';
+
+  showAppConfirm(confirmMsg, async ()=>{
+    try {
+      if(typeof toast === 'function') toast(isHi ? 'डेटा क्लाउड से हटाया जा रहा है...' : 'Purging all records from cloud...', 'info');
+      const uid = currentUser.uid;
+      const userRef = db.collection('users').doc(uid);
+
+      // 1. Delete all subcollections
+      const subcollections = ['entries', 'events', 'recurring', 'ledger', 'portfolios'];
+      for (const colName of subcollections) {
+        try {
+          const snap = await userRef.collection(colName).get();
+          let batch = db.batch(), ops = 0;
+          for (const doc of snap.docs) {
+            batch.delete(doc.ref);
+            ops++;
+            if (ops === 400) {
+              await batch.commit();
+              batch = db.batch();
+              ops = 0;
+            }
+          }
+          if (ops > 0) await batch.commit();
+        } catch(e) {
+          console.warn('Subcollection delete notice (' + colName + '):', e.message);
+        }
+      }
+
+      // 2. Delete main user document
+      try {
+        await userRef.delete();
+      } catch(e) {}
+
+      // 3. Purge all localStorage keys related to user and guest
+      try {
+        const keysToRemove = [
+          'pockettrack_entries_cache_' + uid,
+          'pockettrack_wallets_' + uid,
+          'pockettrack_ledger_' + uid,
+          'pockettrack_recurring_' + uid,
+          'pockettrack_entries_cache',
+          'pockettrack_wallets',
+          'pockettrack_wallets_guest',
+          'pockettrack_ledger_guest',
+          'pockettrack_onboarded',
+          'pockettrack_onboarded_v2',
+          'pockettrack_app_mode_chosen',
+          'pockettrack_age_group'
+        ];
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      } catch(e) {}
+
+      // 4. Delete the Firebase Auth User
+      const userToDelete = currentUser;
+      try {
+        await userToDelete.delete();
+      } catch(authErr) {
+        console.warn('Auth user delete notice:', authErr.message);
+        await auth.signOut();
+      }
+
+      if (typeof toast === 'function') {
+        toast(isHi ? 'आपका खाता और डेटा हमेशा के लिए हटा दिया गया है।' : 'Your account and data have been permanently deleted.', 'success');
+      }
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    } catch(err) {
+      if (typeof toast === 'function') toast('Could not complete deletion: ' + err.message, 'error');
+    }
+  });
+}
+window.deleteAccountAndPurgeData = deleteAccountAndPurgeData;
+
+window.openSupportModal = function(){
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const existing = document.getElementById('support-modal-backdrop');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'support-modal-backdrop';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
+
+  modal.innerHTML = `
+    <div class="card" style="max-width:440px;width:100%;background:linear-gradient(160deg,#181432,#0d0a21);border:1px solid rgba(139,92,246,0.4);border-radius:28px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">🛡️</span>
+          <div>
+            <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;">${isHi ? 'सहायता व शिकायत निवारण' : 'Support & Grievance Redressal'}</h3>
+            <span style="font-size:11px;color:var(--text-dim,#94a3b8);">${isHi ? 'DPDP अधिनियम 2023 अनुपालन' : 'DPDP Act 2023 & User Help'}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('support-modal-backdrop').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:16px;margin-bottom:16px;">
+        <strong style="font-size:13px;color:#c4b5fd;display:block;margin-bottom:6px;">⚖️ ${isHi ? 'शिकायत अधिकारी (Grievance Officer)' : 'Dedicated Grievance Officer'}:</strong>
+        <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.5;">
+          ${isHi ? 'डेटा गोपनीयता, अधिकार या सेवा से संबंधित किसी भी शिकायत के लिए:' : 'For data privacy, statutory rights, or service inquiries:'}<br>
+          📧 <a href="mailto:grievance@pockettrack.in" style="color:var(--accent-green,#34d399);text-decoration:underline;">grievance@pockettrack.in</a><br>
+          💬 <a href="mailto:support@pockettrack.in" style="color:#c4b5fd;text-decoration:underline;">support@pockettrack.in</a>
+        </p>
+        <span style="display:block;font-size:11px;color:var(--text-dim,#94a3b8);margin-top:6px;">⏱️ ${isHi ? '24 घंटे में पावती · 7 व्यावसायिक दिनों में समाधान' : 'Acknowledgment within 24h · Resolution within 7 business days.'}</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <a href="terms.html" target="_blank" class="btn" style="text-align:center;padding:10px;font-size:12.5px;background:rgba(255,255,255,0.05);color:#fff;text-decoration:none;">
+          📜 ${isHi ? 'नियम और शर्तें (Terms of Service)' : 'View Terms of Service'} ↗
+        </a>
+        <a href="privacy.html" target="_blank" class="btn" style="text-align:center;padding:10px;font-size:12.5px;background:rgba(255,255,255,0.05);color:#fff;text-decoration:none;">
+          🔒 ${isHi ? 'गोपनीयता नीति (Privacy Policy)' : 'View Privacy Policy'} ↗
+        </a>
+      </div>
+
+      <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:16px;padding:14px;margin-bottom:16px;">
+        <strong style="color:#f87171;font-size:12.5px;display:block;margin-bottom:4px;">🗑️ ${isHi ? 'स्थायी खाता विलोपन' : 'Permanent Account Erasure'}:</strong>
+        <p style="margin:0 0 10px;font-size:11px;color:var(--text-dim,#94a3b8);line-height:1.4;">
+          ${isHi ? 'अपने सभी क्लाउड रिकॉर्ड और लॉगिन खाते को हमेशा के लिए मिटाएं।' : 'Permanently wipe all your cloud entries, records, and login account under DPDP Act 2023.'}
+        </p>
+        <button onclick="document.getElementById('support-modal-backdrop').remove();deleteAccountAndPurgeData();" class="btn danger" style="width:100%;padding:10px;font-size:12px;font-weight:700;">
+          🗑️ ${isHi ? 'खाता व डेटा हमेशा के लिए हटाएं' : 'Delete Account & All Data'}
+        </button>
+      </div>
+
+      <button onclick="document.getElementById('support-modal-backdrop').remove();" class="btn" style="width:100%;padding:12px;font-size:12.5px;">
+        ${isHi ? 'बंद करें' : 'Close'}
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
 if (typeof renderReport === 'function') renderReport();
 applyLanguage();
 

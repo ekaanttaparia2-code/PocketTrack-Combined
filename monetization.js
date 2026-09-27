@@ -477,6 +477,10 @@ function openProCheckout(themeName){
       <p style="text-align:center;font-size:10px;color:var(--text-faint);margin:12px 0 0;display:flex;justify-content:center;gap:4px;align-items:center">
         <i class="ti ti-shield-check"></i> ${mon('secured')} <i class="ti ti-lock"></i>
       </p>
+      <div style="margin-top:8px;text-align:center;font-size:10.5px;color:var(--text-dim,#94a3b8);line-height:1.4;">
+        🛡️ <b>7-day money-back guarantee</b> · Cancel anytime.<br>
+        By subscribing, you agree to our <a href="terms.html" target="_blank" style="color:#c4b5fd;text-decoration:underline;">Terms of Service</a> &amp; <a href="privacy.html" target="_blank" style="color:#c4b5fd;text-decoration:underline;">Privacy Policy</a>.
+      </div>
     </div>
   `;
   overlay.style.display = 'flex';

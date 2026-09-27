@@ -169,6 +169,10 @@
           '</div>' +
         '</div>' +
 
+        '<p style="font-size:10.5px;color:var(--text-dim);text-align:center;margin:0 0 12px;line-height:1.4;">⚖️ <i>' +
+          (isHi ? 'यह केवल एक गणितीय सिमुलेशन है, निवेश सलाह नहीं।' : 'Educational simulation based on the 4% rule. Not certified financial advice.') +
+        '</i></p>' +
+
         '<button type="button" class="btn primary" onclick="document.getElementById(\'fire-runway-modal-backdrop\').remove()" style="width:100%;padding:12px;font-weight:700;font-size:13.5px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:14px;cursor:pointer;">' +
           (isHi ? 'समझ गया 👍' : 'Got It 👍') +
         '</button>' +
