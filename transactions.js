@@ -284,7 +284,7 @@ function openCommandHubModal(){
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
 
   modal.innerHTML = `
-    <div class="card" style="max-width:500px;width:100%;background:linear-gradient(160deg,#160f33,#0f0926);border:1px solid rgba(139,92,246,0.45);border-radius:28px;padding:26px 22px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;">
+    <div class="card" style="max-width:520px;width:100%;background:linear-gradient(160deg,#160f33,#0f0926);border:1px solid rgba(139,92,246,0.45);border-radius:28px;padding:26px 22px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:22px;">⚡</span>
@@ -296,67 +296,114 @@ function openCommandHubModal(){
         <button onclick="closeCommandHubModal()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
       </div>
 
+      <!-- Power Tools Grid (Including Shifted Home Widgets) -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+        <!-- 1. Save to Spend / Daily Burn -->
+        <div onclick="closeCommandHubModal();openDailyBurnModal();" style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">⚡</div>
+          <strong style="display:block;font-size:14px;color:#fbbf24;">${isHi ? 'सेव टू स्पेंड (दैनिक बर्न)' : 'Save to Spend'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'दैनिक सुरक्षित खर्च सीमा' : 'Daily burn pace & radar'}</span>
+        </div>
+
+        <!-- 2. 50/30/20 Envelope Budget -->
+        <div onclick="closeCommandHubModal();openEnvelopesModal();" style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">✉️</div>
+          <strong style="display:block;font-size:14px;color:#38bdf8;">${isHi ? '50/30/20 लिफाफा बजट' : '50/30/20 Envelopes'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'ज़रूरतें, इच्छाएं व बचत' : 'Needs, wants & savings'}</span>
+        </div>
+
+        <!-- 3. Invisible Leaker / Financial DNA -->
+        <div onclick="closeCommandHubModal();openFinancialDnaModal();" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🧬</div>
+          <strong style="display:block;font-size:14px;color:#c4b5fd;">${isHi ? 'इनविजिबल लीकर (DNA)' : 'Invisible Leaker'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'खर्च व्यक्तित्व और लीक्स' : 'DNA archetype & cash drag'}</span>
+        </div>
+
+        <!-- 4. Digital Chillar Vault -->
+        <div onclick="closeCommandHubModal();openDigitalVaultModal();" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🪙</div>
+          <strong style="display:block;font-size:14px;color:#fde047;">${isHi ? 'डिजिटल चिल्लर वॉल्ट' : 'Digital Chillar Vault'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'पैसिव राउंड-अप बचत' : 'Silent round-ups piggy'}</span>
+        </div>
+
+        <!-- 5. Emergency Fund & Goal SIP -->
+        <div onclick="closeCommandHubModal();if(typeof openGoalPlannerModal==='function')openGoalPlannerModal();" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🎯</div>
+          <strong style="display:block;font-size:14px;color:#34d399;">${isHi ? 'इमरजेंसी फंड व लक्ष्य' : 'Emergency Fund & SIP'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'लक्ष्य आधारित बचत व ग्रोथ' : 'Emergency buffer & goals'}</span>
+        </div>
+
+        <!-- 6. Wallets & Accounts -->
         <div onclick="closeCommandHubModal();if(typeof openWalletManagerModal==='function')openWalletManagerModal();" style="background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.45);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">💳</div>
           <strong style="display:block;font-size:14px;color:var(--accent-bright,#c4b5fd);">${isHi ? 'वॉलेट और खाते' : 'Wallets & Accounts'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'कैश, बैंक, कार्ड प्रबंधन' : 'Manage & custom wallets'}</span>
         </div>
 
+        <!-- 7. Ledger Accounts -->
         <div onclick="selectHubTool('ledger')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(52,211,153,0.3);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">📑</div>
           <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'खाता (Ledger)' : 'Ledger Accounts'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'मित्रों का ऋण और बकाया' : 'P2P debts & settlement'}</span>
         </div>
 
+        <!-- 8. Splitwise Spaces -->
         <div onclick="selectHubTool('events')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.3);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">👥</div>
           <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'स्पेस (Spaces)' : 'Splitwise Spaces'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'ग्रुप ट्रिप और बिल बंटवारा' : 'Group trips & split bills'}</span>
         </div>
 
+        <!-- 9. Smart UPI Logger -->
         <div onclick="selectHubTool('upi')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(251,191,36,0.3);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">⚡</div>
           <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'स्मार्ट UPI लॉगर' : 'Smart UPI Logger'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'पेस्ट करें और ऑटो-लॉग' : 'Paste & auto-detect'}</span>
         </div>
 
-        <div onclick="selectHubTool('pro')" style="background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-          <div style="font-size:24px;margin-bottom:6px;">👑</div>
-          <strong style="display:block;font-size:14px;color:#f472b6;">${isHi ? 'Pro और थीम' : 'Pro & Luxury Themes'}</strong>
-          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'OLED, Emerald, Sunset' : 'OLED, Emerald, Sunset'}</span>
-        </div>
-
-        <div onclick="selectHubTool('rewards')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-          <div style="font-size:24px;margin-bottom:6px;">🏆</div>
-          <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'रिवॉर्ड्स और बैज' : 'Rewards & Badges'}</strong>
-          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'स्ट्रीक पॉइंट्स और छूट' : 'Streak points & perks'}</span>
-        </div>
-
-        <div onclick="selectHubTool('language')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-          <div style="font-size:24px;margin-bottom:6px;">🌐</div>
-          <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'भाषा (Language)' : 'Language & Region'}</strong>
-          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'हिंदी, English + 6 और' : 'Hindi, English + 6 more'}</span>
-        </div>
-
+        <!-- 10. FIRE & Runway Horizon -->
         <div onclick="closeCommandHubModal();if(typeof openFireRunwayModal==='function')openFireRunwayModal();" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.4);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">🔥</div>
           <strong style="display:block;font-size:14px;color:#fbbf24;">${isHi ? 'FIRE व इमरजेंसी रनवे' : 'FIRE & Runway Horizon'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? '4% नियम व वित्तीय आज़ादी' : 'Survival months & FI target'}</span>
         </div>
 
+        <!-- 11. Wealth & SIP Simulator -->
         <div onclick="closeCommandHubModal();if(typeof openWealthSimulatorModal==='function')openWealthSimulatorModal();" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">📈</div>
           <strong style="display:block;font-size:14px;color:#34d399;">${isHi ? 'वेल्थ व SIP सिम्युलेटर' : 'Wealth & SIP Simulator'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'चक्रवृद्धि विकास प्रोजेक्टर' : 'Compound growth projector'}</span>
         </div>
 
+        <!-- 12. Debt Payoff Strategist -->
         <div onclick="closeCommandHubModal();if(typeof openDebtPayoffModal==='function')openDebtPayoffModal();" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">🎯</div>
           <strong style="display:block;font-size:14px;color:#f87171;">${isHi ? 'कर्ज मुक्ति (Debt Payoff)' : 'Debt Payoff Strategist'}</strong>
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'एवलांच व स्नोबॉल विधि' : 'Avalanche vs Snowball'}</span>
         </div>
 
+        <!-- 13. Pro & Luxury Themes -->
+        <div onclick="selectHubTool('pro')" style="background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">👑</div>
+          <strong style="display:block;font-size:14px;color:#f472b6;">${isHi ? 'Pro और थीम' : 'Pro & Luxury Themes'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'OLED, Emerald, Sunset' : 'OLED, Emerald, Sunset'}</span>
+        </div>
+
+        <!-- 14. Rewards & Badges -->
+        <div onclick="selectHubTool('rewards')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🏆</div>
+          <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'रिवॉर्ड्स और बैज' : 'Rewards & Badges'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'स्ट्रीक पॉइंट्स और छूट' : 'Streak points & perks'}</span>
+        </div>
+
+        <!-- 15. Language & Region -->
+        <div onclick="selectHubTool('language')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">🌐</div>
+          <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'भाषा (Language)' : 'Language & Region'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'हिंदी, English + 6 और' : 'Hindi, English + 6 more'}</span>
+        </div>
+
+        <!-- 16. Replay Finny Tour -->
         <div onclick="closeCommandHubModal();if(typeof restartOnboarding==='function')restartOnboarding();" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:24px;margin-bottom:6px;">🎓</div>
           <strong style="display:block;font-size:14px;color:#fff;">${isHi ? 'टूर दोबारा देखें' : 'Replay Finny Tour'}</strong>
@@ -387,6 +434,315 @@ function selectHubTool(tabName){
   closeCommandHubModal();
   setTab(tabName);
 }
+
+// ===== Power Hub Shifted Modals =====
+window.openDailyBurnModal = function() {
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const data = (typeof computeSafeToSpend === 'function') ? computeSafeToSpend() : {
+    remainingDays: 15, dailyAllowance: 500, todaySpent: 0, todayRemaining: 500, burnPercent: 0, isSafe: true
+  };
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (Math.min(100, data.burnPercent) / 100) * circumference;
+  let gaugeColor = '#34d399';
+  let statusEmoji = '🟢';
+  let statusMsg = isHi ? `आज के लिए ₹${Math.max(0, data.todayRemaining).toLocaleString('en-IN')} शेष` : `₹${Math.max(0, data.todayRemaining).toLocaleString('en-IN')} safe to spend today`;
+  if (data.burnPercent > 100) {
+    gaugeColor = '#f87171';
+    statusEmoji = '🔴';
+    statusMsg = isHi ? `आज ₹${Math.abs(data.todayRemaining).toLocaleString('en-IN')} अधिक खर्च हो गया!` : `Exceeded daily burn by ₹${Math.abs(data.todayRemaining).toLocaleString('en-IN')}`;
+  } else if (data.burnPercent > 70) {
+    gaugeColor = '#fbbf24';
+    statusEmoji = '🟡';
+    statusMsg = isHi ? `सावधानी: दैनिक सीमा के निकट` : `Caution: Approaching daily safe limit`;
+  }
+
+  const existing = document.getElementById('daily-burn-modal-backdrop');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'daily-burn-modal-backdrop';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
+
+  modal.innerHTML = `
+    <div class="card" style="max-width:440px;width:100%;background:linear-gradient(160deg,#181432,#0d0a21);border:1px solid rgba(251,191,36,0.4);border-radius:28px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">⚡</span>
+          <div>
+            <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;color:#fff;">${isHi ? 'सेव टू स्पेंड (दैनिक बर्न मीटर)' : 'Save to Spend · Daily Burn Meter'}</h3>
+            <span style="font-size:11px;color:#fbbf24;font-weight:600;">${data.remainingDays} ${isHi ? 'दिन महीने में बाकी' : 'days remaining in month'}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('daily-burn-modal-backdrop').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:center;margin:16px 0;">
+        <div style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 96 96" style="width:96px;height:96px;transform:rotate(-90deg);">
+            <circle cx="48" cy="48" r="${radius}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"></circle>
+            <circle cx="48" cy="48" r="${radius}" fill="none" stroke="${gaugeColor}" stroke-width="8" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round" style="transition:stroke-dashoffset 0.6s ease;"></circle>
+          </svg>
+          <div style="position:absolute;font-size:26px;">${data.isSafe ? '⚡' : '⚠️'}</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-bottom:18px;">
+        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:${gaugeColor};">
+          ₹${data.dailyAllowance.toLocaleString('en-IN')}<span style="font-size:14px;color:var(--text-dim,#94a3b8);font-weight:500;">/day</span>
+        </div>
+        <div style="font-size:13px;margin-top:4px;color:#e2e8f0;">
+          ${statusEmoji} <b>${statusMsg}</b>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:14px;">
+        <div>
+          <span style="font-size:10px;text-transform:uppercase;color:var(--text-dim,#94a3b8);display:block;">${isHi ? 'आज का खर्च' : 'Spent Today'}</span>
+          <strong style="font-size:16px;color:#f87171;display:block;margin-top:2px;">₹${data.todaySpent.toLocaleString('en-IN')}</strong>
+        </div>
+        <div>
+          <span style="font-size:10px;text-transform:uppercase;color:var(--text-dim,#94a3b8);display:block;">${isHi ? 'आज की बची सीमा' : 'Remaining Today'}</span>
+          <strong style="font-size:16px;color:${gaugeColor};display:block;margin-top:2px;">₹${Math.max(0, data.todayRemaining).toLocaleString('en-IN')}</strong>
+        </div>
+      </div>
+
+      <p style="font-size:11.5px;color:var(--text-dim,#94a3b8);line-height:1.5;margin:0 0 16px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:10px 12px;">
+        💡 <b>${isHi ? 'स्मार्ट टिप' : 'Smart Pace Rule'}:</b> ${isHi ? 'यदि आप आज इस सीमा के भीतर रहते हैं, तो महीने के अंत तक आपका बजट कभी खत्म नहीं होगा।' : 'Staying within your daily burn allowance ensures you never run out of money before month-end.'}
+      </p>
+
+      <button onclick="document.getElementById('daily-burn-modal-backdrop').remove();openQuickComposer('expense');" class="btn primary" style="width:100%;padding:12px;font-size:13px;font-weight:700;">
+        + ${isHi ? 'खर्च दर्ज करें' : 'Log Expense'}
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.openEnvelopesModal = function() {
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const data = (window.Envelopes && typeof window.Envelopes.getSummary === 'function') 
+    ? window.Envelopes.getSummary() 
+    : { income: 25000, needs: { allocated: 12500, spent: 0, pct: 0 }, wants: { allocated: 7500, spent: 0, pct: 0 }, savings: { allocated: 5000, spent: 0, pct: 0 } };
+
+  const existing = document.getElementById('envelopes-modal-backdrop');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'envelopes-modal-backdrop';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
+
+  modal.innerHTML = `
+    <div class="card" style="max-width:460px;width:100%;background:linear-gradient(160deg,#181432,#0d0a21);border:1px solid rgba(139,92,246,0.4);border-radius:28px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">✉️</span>
+          <div>
+            <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;">${isHi ? '50/30/20 लिफाफा बजट' : '50/30/20 Envelope Budget'}</h3>
+            <span style="font-size:11px;color:var(--text-dim,#94a3b8);">${isHi ? 'मासिक आय' : 'Tracked Income'}: ₹${data.income.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('envelopes-modal-backdrop').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin:16px 0;">
+        <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.3);border-radius:18px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="color:#38bdf8;font-size:14px;">🏠 ${isHi ? 'ज़रूरतें (Needs - 50%)' : 'Needs (50%)'}</strong>
+            <span style="font-size:12px;font-weight:700;color:#fff;">₹${(data.needs.spent||0).toLocaleString('en-IN')} / ₹${(data.needs.allocated||0).toLocaleString('en-IN')}</span>
+          </div>
+          <div style="width:100%;height:7px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+            <div style="width:${Math.min(100, data.needs.pct||0)}%;height:100%;background:#38bdf8;border-radius:4px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-dim,#94a3b8);margin-top:4px;">
+            <span>${isHi ? 'किराया, राशन, बिजली, दवा' : 'Rent, groceries, utilities'}</span>
+            <span>${(data.needs.pct||0)}% used</span>
+          </div>
+        </div>
+
+        <div style="background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.3);border-radius:18px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="color:#f472b6;font-size:14px;">🍿 ${isHi ? 'इच्छाएं (Wants - 30%)' : 'Wants (30%)'}</strong>
+            <span style="font-size:12px;font-weight:700;color:#fff;">₹${(data.wants.spent||0).toLocaleString('en-IN')} / ₹${(data.wants.allocated||0).toLocaleString('en-IN')}</span>
+          </div>
+          <div style="width:100%;height:7px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+            <div style="width:${Math.min(100, data.wants.pct||0)}%;height:100%;background:#ec4899;border-radius:4px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-dim,#94a3b8);margin-top:4px;">
+            <span>${isHi ? 'डाइनिंग, शॉपिंग, नेटफ्लिक्स' : 'Dining out, shopping, hobbies'}</span>
+            <span>${(data.wants.pct||0)}% used</span>
+          </div>
+        </div>
+
+        <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:18px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong style="color:#34d399;font-size:14px;">📈 ${isHi ? 'बचत व निवेश (Savings - 20%)' : 'Savings & Investment (20%)'}</strong>
+            <span style="font-size:12px;font-weight:700;color:#34d399;">₹${(data.savings.allocated||0).toLocaleString('en-IN')}</span>
+          </div>
+          <div style="width:100%;height:7px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+            <div style="width:100%;height:100%;background:#10b981;border-radius:4px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-dim,#94a3b8);margin-top:4px;">
+            <span>${isHi ? 'इमरजेंसी फंड, SIP, सोना' : 'Emergency fund, SIP & stocks'}</span>
+            <span>20% Locked</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('envelopes-modal-backdrop').remove();if(window.Envelopes&&window.Envelopes.openEditModal)window.Envelopes.openEditModal();" class="btn" style="flex:1;padding:12px;font-size:12.5px;background:rgba(139,92,246,0.18);border-color:rgba(139,92,246,0.4);color:#c4b5fd;">
+          ✏️ ${isHi ? 'प्लान बदलें' : 'Edit Allocation'}
+        </button>
+        <button onclick="document.getElementById('envelopes-modal-backdrop').remove();" class="btn" style="flex:1;padding:12px;font-size:12.5px;">
+          ${isHi ? 'बंद करें' : 'Close'}
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.openFinancialDnaModal = function() {
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const dna = (typeof computeFinancialDNA === 'function') ? computeFinancialDNA() : {
+    type: 'leaker', title: 'The Invisible Leaker', emoji: '💸',
+    tagline: 'Little leaks sink big ships.', color: '#a855f7',
+    tips: ['Audit daily small coffees and snacks', 'Use the 24-hour rule before non-essential purchases'],
+    metrics: { savingsRatio: 15, socialSpendPct: 35, impulseRate: 25, entryCount: 8 }
+  };
+  const m = dna.metrics || { savingsRatio: 15, socialSpendPct: 35, impulseRate: 25, entryCount: 0 };
+
+  const existing = document.getElementById('financial-dna-modal-backdrop');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'financial-dna-modal-backdrop';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
+
+  modal.innerHTML = `
+    <div class="card" style="max-width:460px;width:100%;background:linear-gradient(160deg,#181432,#0d0a21);border:1px solid rgba(168,85,247,0.4);border-radius:28px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">🧬</span>
+          <div>
+            <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;">${isHi ? 'फाइनेंशियल डीएनए व लीकर' : 'Financial DNA & Invisible Leaker'}</h3>
+            <span style="font-size:11px;color:var(--text-dim,#94a3b8);">${isHi ? 'व्यवहार अर्थशास्त्र विश्लेषण' : 'Behavioral Economics Archetype'}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('financial-dna-modal-backdrop').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+
+      <div style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);border-radius:20px;padding:18px 16px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:42px;margin-bottom:4px;">${dna.emoji}</div>
+        <h4 style="margin:0;font-size:19px;font-weight:700;color:#c4b5fd;">${dna.title}</h4>
+        <p style="margin:6px 0 0;font-size:12.5px;color:rgba(255,255,255,0.8);font-style:italic;">"${dna.tagline}"</p>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:14px;margin-bottom:16px;">
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span>${isHi ? 'बचत दर' : 'Savings Rate'}</span>
+            <strong style="color:#34d399;">${m.savingsRatio.toFixed(0)}%</strong>
+          </div>
+          <div style="width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+            <div style="width:${Math.min(100, m.savingsRatio)}%;height:100%;background:#34d399;border-radius:3px;"></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span>${isHi ? 'सामाजिक खर्च (दोस्तों पर)' : 'Social Spend Ratio'}</span>
+            <strong style="color:#fbbf24;">${m.socialSpendPct.toFixed(0)}%</strong>
+          </div>
+          <div style="width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+            <div style="width:${Math.min(100, m.socialSpendPct)}%;height:100%;background:#fbbf24;border-radius:3px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span>${isHi ? 'आवेगपूर्ण खर्च दर' : 'Impulse Purchase Rate'}</span>
+            <strong style="color:#f87171;">${m.impulseRate.toFixed(0)}%</strong>
+          </div>
+          <div style="width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+            <div style="width:${Math.min(100, m.impulseRate)}%;height:100%;background:#f87171;border-radius:3px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:12px 14px;margin-bottom:16px;">
+        <strong style="display:block;font-size:12px;color:#c4b5fd;margin-bottom:6px;">🎯 ${isHi ? 'आपके लिए विशेष सलाह' : 'Personalized Anti-Leak Tips'}:</strong>
+        <ul style="margin:0;padding-left:18px;font-size:11.5px;color:#cbd5e1;line-height:1.6;">
+          ${(dna.tips||[]).map(t => `<li>${t}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button onclick="if(window.shareFinancialDNA)window.shareFinancialDNA();" class="btn primary" style="flex:1;padding:12px;font-size:12.5px;">
+          📤 ${isHi ? 'डीएनए शेयर करें' : 'Share DNA'}
+        </button>
+        <button onclick="document.getElementById('financial-dna-modal-backdrop').remove();" class="btn" style="flex:1;padding:12px;font-size:12.5px;">
+          ${isHi ? 'बंद करें' : 'Close'}
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.openDigitalVaultModal = function() {
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const data = (typeof computeRoundUpVault === 'function') ? computeRoundUpVault() : { totalSaved: 1240, monthSaved: 450 };
+  const displayAmt = data.monthSaved > 0 ? data.monthSaved : 450;
+  const totalAmt = data.totalSaved > 0 ? data.totalSaved : 1240;
+
+  const existing = document.getElementById('digital-vault-modal-backdrop');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'digital-vault-modal-backdrop';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
+
+  modal.innerHTML = `
+    <div class="card" style="max-width:440px;width:100%;background:linear-gradient(160deg,#181432,#0d0a21);border:1px solid rgba(251,191,36,0.4);border-radius:28px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">🪙</span>
+          <div>
+            <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;">${isHi ? 'डिजिटल चिल्लर वॉल्ट' : 'Digital Chillar Vault'}</h3>
+            <span style="font-size:11px;color:#fbbf24;font-weight:600;">${isHi ? 'पैसिव राउंड-अप बचत' : 'Micro Round-Ups Simulator'}</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('digital-vault-modal-backdrop').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px;">
+        <div id="vault-piggy-interactive" onclick="this.style.transform='scale(1.25) rotate(10deg)';setTimeout(()=>{this.style.transform='scale(1)';},300);" style="font-size:48px;cursor:pointer;transition:transform 0.2s;" title="Tap to shake!">
+          🪙
+        </div>
+        <span style="font-size:11px;text-transform:uppercase;color:var(--text-dim,#94a3b8);letter-spacing:0.5px;margin-top:6px;">${isHi ? 'इस महीने की राउंड-अप बचत' : 'Round-Up Savings This Month'}</span>
+        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:#fbbf24;margin-top:2px;">
+          ₹${displayAmt.toLocaleString('en-IN')}
+        </div>
+        <span style="font-size:11px;color:#cbd5e1;margin-top:4px;">${isHi ? 'कुल संचित चिल्लर: ₹' + totalAmt.toLocaleString('en-IN') : 'Lifetime Chillar Saved: ₹' + totalAmt.toLocaleString('en-IN')}</span>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:14px;margin-bottom:16px;">
+        <strong style="display:block;font-size:12.5px;color:#fff;margin-bottom:6px;">⚡ ${isHi ? 'यह कैसे काम करता है?' : 'How Chillar Works'}:</strong>
+        <p style="margin:0;font-size:11.5px;color:var(--text-dim,#94a3b8);line-height:1.5;">
+          ${isHi 
+            ? 'जब भी आप ₹42 की चाय पीते हैं, PocketTrack इसे ₹50 तक राउंड-अप करके बचे ₹8 आपके डिजिटल चिल्लर वॉल्ट में जोड़ता है। महीने भर में यह चुपचाप एक बड़ा फंड बन जाता है!'
+            : 'Every time you spend ₹42 on chai, PocketTrack rounds it to ₹50, putting ₹8 into your digital vault silently. Without feeling any pinch, you build wealth automatically!'}
+        </p>
+      </div>
+
+      <button onclick="document.getElementById('digital-vault-modal-backdrop').remove();" class="btn primary" style="width:100%;padding:12px;font-size:13px;font-weight:700;">
+        ${isHi ? 'समझ गया' : 'Got it!'}
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
 
 function listenToEntries(){
   if(!currentUser) return;

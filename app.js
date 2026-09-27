@@ -1277,13 +1277,24 @@ function getCurrentStreak(){
 }
 
 function renderStreak(){
+  const streak = Math.max(1, getCurrentStreak());
+  const text = (typeof currentLang !== 'undefined' && currentLang === 'hi') ? `${streak} दिन की स्ट्रीक` : `${streak}-Day Streak`;
+  const headerPill = document.getElementById('header-streak-pill');
+  const headerText = document.getElementById('header-streak-text');
+  if (headerText) {
+    headerText.textContent = text;
+  }
+  if (headerPill) {
+    headerPill.style.display = 'inline-flex';
+  }
   const card=document.getElementById('streak-card');
-  if(!card)return;
-  const streak=getCurrentStreak();
-  if(streak<1){ card.style.display='none'; return; }
-  card.style.display='block';
-  const text = currentLang==='hi' ? `${streak} दिन की स्ट्रीक` : `${streak} day${streak===1?'':'s'} streak`;
-  document.getElementById('streak-count-text').textContent = text;
+  if(card){
+    if(streak<1){ card.style.display='none'; return; }
+    card.style.display='block';
+    const cardText = (typeof currentLang !== 'undefined' && currentLang === 'hi') ? `${streak} दिन की स्ट्रीक` : `${streak} day${streak===1?'':'s'} streak`;
+    const countEl = document.getElementById('streak-count-text');
+    if(countEl) countEl.textContent = cardText;
+  }
 }
 
 // --- Rewards: fully derived from entries data, no separate storage needed ---
