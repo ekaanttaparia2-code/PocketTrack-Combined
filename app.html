@@ -113,25 +113,32 @@
 
 <!-- AUTH OVERLAY -->
 <div id="auth-screen" style="position:fixed;inset:0;background:radial-gradient(900px 500px at 12% -8%, rgba(139,92,246,0.32), transparent 60%),linear-gradient(170deg,var(--bg1),var(--bg2) 52%,var(--bg3) 100%);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px">
-  <div id="auth-main-view" style="width:100%;max-width:380px;background:linear-gradient(165deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));border:1px solid rgba(255,255,255,0.14);border-radius:24px;padding:30px;box-shadow:0 22px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10);backdrop-filter:blur(20px)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-      <div class="brand-icon brand-logo-wrap"><img class="brand-logo-img" src="icon-192.png" alt="PocketTrack" width="48" height="48"></div>
+  <div id="auth-main-view" style="width:100%;max-width:385px;background:linear-gradient(165deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));border:1px solid rgba(255,255,255,0.14);border-radius:24px;padding:30px 26px;box-shadow:0 22px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10);backdrop-filter:blur(20px)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div class="brand-icon brand-logo-wrap"><img class="brand-logo-img" src="icon-192.png" alt="PocketTrack" width="46" height="46"></div>
       <div>
         <h1 class="auth-brand-title">PocketTrack</h1>
         <p class="auth-brand-sub" data-i18n="auth_sub">Sign in to sync your data</p>
       </div>
     </div>
-    <label data-i18n="lbl_email">Email</label>
+    
+    <label data-i18n="lbl_email" style="margin-top:0;">Email</label>
     <input type="email" id="auth-email" placeholder="you@example.com" data-i18n-ph="ph_email"/>
-    <label data-i18n="lbl_password">Password</label>
-    <input type="password" id="auth-pass" placeholder="At least 6 characters" data-i18n-ph="ph_pass"/>
-    <p class="auth-forgot"><a href="#" onclick="handleForgotPassword();return false;" data-i18n="lnk_forgot_pass">Forgot password?</a></p>
-    <div style="margin:12px 0 8px;display:flex;align-items:flex-start;gap:8px;text-align:left;font-size:11.5px;color:rgba(255,255,255,0.72);line-height:1.4;">
-      <input type="checkbox" id="auth-consent-check" style="margin-top:2px;accent-color:var(--accent,#8b5cf6);" checked/>
-      <label for="auth-consent-check">
-        I confirm I am 18+ years old and agree to the <a href="terms.html" target="_blank" style="color:#c4b5fd;text-decoration:underline;">Terms</a> &amp; <a href="privacy.html" target="_blank" style="color:#c4b5fd;text-decoration:underline;">Privacy Policy</a> (DPDP Act 2023 compliant).
-      </label>
+
+    <div class="auth-field-header">
+      <label data-i18n="lbl_password">Password</label>
+      <a href="#" class="auth-forgot-link" onclick="handleForgotPassword();return false;" data-i18n="lnk_forgot_pass">Forgot password?</a>
     </div>
+    <input type="password" id="auth-pass" placeholder="At least 6 characters" data-i18n-ph="ph_pass"/>
+
+    <label class="auth-consent-box" for="auth-consent-check">
+      <input type="checkbox" id="auth-consent-check" class="auth-checkbox" checked/>
+      <span class="auth-consent-text">
+        I agree to the <a href="terms.html" target="_blank" class="auth-legal-link" onclick="event.stopPropagation()">Terms of Service</a> &amp; <a href="privacy.html" target="_blank" class="auth-legal-link" onclick="event.stopPropagation()">Privacy Policy</a>
+      </span>
+    </label>
+
+    <div id="auth-error" class="auth-error-banner" style="display:none;"></div>
 
     <div class="btn-row" style="margin-top:14px">
       <button class="btn primary auth-action-btn" id="auth-login-btn" onclick="authAction('login')"><i class="ti ti-login"></i> <span data-i18n="btn_login">Log in</span></button>

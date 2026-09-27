@@ -7,8 +7,8 @@ By accessing, installing, or using PocketTrack, you agree to these terms:
 ### 1. Intended Use & Important Disclaimer
 PocketTrack is a personal finance tool intended for personal budgeting, expense tracking, and split calculations. **It does not provide certified financial, investment, legal, or tax advice.** All financial projections (e.g. FIRE Runway, 50/30/20, SIP calculations) are mathematical simulations based on user inputs. Consult a qualified professional for individual investment decisions.
 
-### 2. Eligibility & Age Gate
-You must be at least 18 years of age (or the legal age of majority in your jurisdiction) to create an account and use PocketTrack. Minors may only use the app under parental or guardian supervision.
+### 2. User Eligibility (All Ages Welcome)
+PocketTrack is an open, family-friendly personal budgeting and financial literacy tool designed for users of all ages—including students, young earners, families, and seniors. Minors are welcome to use the service to build healthy money habits, with parental or guardian guidance where appropriate.
 
 ### 3. User Accounts & Security
 You are solely responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.

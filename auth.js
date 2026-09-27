@@ -10,23 +10,38 @@ function setAuthButtonsLoading(isLoading){
   });
 }
 
+function showAuthError(msg){
+  const errEl=document.getElementById('auth-error');
+  if(errEl){
+    errEl.textContent=msg;
+    errEl.style.display='flex';
+  } else if(typeof toast==='function'){
+    toast(msg,'error');
+  }
+}
+
+function hideAuthError(){
+  const errEl=document.getElementById('auth-error');
+  if(errEl){
+    errEl.textContent='';
+    errEl.style.display='none';
+  }
+}
+
 function authAction(mode){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
-  const errEl=document.getElementById('auth-error');
-  errEl.style.display='none';
+  hideAuthError();
   if(!email||!pass||pass.length<6){
-    errEl.textContent = currentLang==='hi' ? 'सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड डालें।' : 'Enter a valid email and a password with 6+ characters.';
-    errEl.style.display='block';
+    showAuthError(currentLang==='hi' ? 'सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड डालें।' : 'Enter a valid email and a password with 6+ characters.');
     return;
   }
   if (mode === 'signup') {
     const consent = document.getElementById('auth-consent-check');
     if (consent && !consent.checked) {
-      errEl.textContent = currentLang === 'hi' 
-        ? 'कृपया जारी रखने के लिए नियम व शर्तों और गोपनीयता नीति (18+) को स्वीकार करें।' 
-        : 'Please accept the Terms of Service & Privacy Policy (18+) to create an account.';
-      errEl.style.display = 'block';
+      showAuthError(currentLang === 'hi' 
+        ? 'कृपया आगे बढ़ने के लिए नियम व शर्तों और गोपनीयता नीति को स्वीकार करें।' 
+        : 'Please accept the Terms of Service & Privacy Policy to create an account.');
       return;
     }
   }
@@ -39,8 +54,7 @@ function authAction(mode){
       cred.user.sendEmailVerification().catch(e=>console.log('Verification email failed:',e));
     }
   }).catch(err=>{
-    errEl.textContent=err.message;
-    errEl.style.display='block';
+    showAuthError(err.message);
   }).finally(()=>{
     setAuthButtonsLoading(false);
   });
@@ -48,24 +62,27 @@ function authAction(mode){
 
 function handleForgotPassword(){
   const email=document.getElementById('auth-email').value.trim();
-  const errEl=document.getElementById('auth-error');
-  errEl.style.display='none';
+  hideAuthError();
   if(!email){
-    errEl.textContent = currentLang==='hi' ? 'पासवर्ड रीसेट लिंक पाने के लिए पहले अपना ईमेल डालें।' : 'Enter your email above first to get a reset link.';
-    errEl.style.display='block';
+    showAuthError(currentLang==='hi' ? 'पासवर्ड रीसेट लिंक पाने के लिए पहले अपना ईमेल डालें।' : 'Enter your email above first to get a reset link.');
     return;
   }
   auth.sendPasswordResetEmail(email).then(()=>{
     toast(currentLang==='hi' ? 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दिया गया है' : 'Password reset link sent to your email', 'success');
   }).catch(err=>{
-    errEl.textContent=err.message;
-    errEl.style.display='block';
+    showAuthError(err.message);
   });
 }
 
 function signInWithGoogle(){
-  const errEl=document.getElementById('auth-error');
-  errEl.style.display='none';
+  hideAuthError();
+  const consent = document.getElementById('auth-consent-check');
+  if (consent && !consent.checked) {
+    showAuthError(currentLang === 'hi' 
+      ? 'कृपया आगे बढ़ने के लिए नियम व शर्तों और गोपनीयता नीति को स्वीकार करें।' 
+      : 'Please accept the Terms of Service & Privacy Policy to continue.');
+    return;
+  }
   const btn=document.getElementById('auth-google-btn');
   const originalHTML=btn.innerHTML;
   btn.disabled=true;
@@ -78,8 +95,7 @@ function signInWithGoogle(){
       return;
     }
     if(err.code!=='auth/popup-closed-by-user'){
-      errEl.textContent=err.message;
-      errEl.style.display='block';
+      showAuthError(err.message);
     }
   }).finally(()=>{
     btn.disabled=false;
