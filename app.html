@@ -225,6 +225,7 @@
       <!-- Row 1: Right to Left motion -->
       <div class="hub-ticker-row">
         <div class="hub-ticker-track scroll-left">
+          <button type="button" class="hub-ticker-pill" onclick="triggerReceiptScanner()"><span>📷</span> Smart Receipt OCR</button>
           <button type="button" class="hub-ticker-pill" onclick="openEnvelopesModal()"><span>✉️</span> 50/30/20 Envelopes</button>
           <button type="button" class="hub-ticker-pill" onclick="openDailyBurnModal()"><span>⚡</span> Save-to-Spend Radar</button>
           <button type="button" class="hub-ticker-pill" onclick="openFinancialDnaModal()"><span>🧬</span> Invisible Leaker DNA</button>
@@ -233,6 +234,7 @@
           <button type="button" class="hub-ticker-pill" onclick="selectHubTool('ledger')"><span>📑</span> Ledger Accounts (P2P)</button>
           <button type="button" class="hub-ticker-pill" onclick="selectHubTool('events')"><span>👥</span> Splitwise Spaces</button>
           <!-- Duplicate for seamless infinite loop -->
+          <button type="button" class="hub-ticker-pill" onclick="triggerReceiptScanner()"><span>📷</span> Smart Receipt OCR</button>
           <button type="button" class="hub-ticker-pill" onclick="openEnvelopesModal()"><span>✉️</span> 50/30/20 Envelopes</button>
           <button type="button" class="hub-ticker-pill" onclick="openDailyBurnModal()"><span>⚡</span> Save-to-Spend Radar</button>
           <button type="button" class="hub-ticker-pill" onclick="openFinancialDnaModal()"><span>🧬</span> Invisible Leaker DNA</button>
@@ -1014,6 +1016,7 @@
       </div>
 
       <div class="composer-actions">
+        <button type="button" class="composer-scan-btn" onclick="triggerReceiptScanner()" title="Scan paper bill or digital receipt">📷 Scan Bill</button>
         <button class="composer-voice composer-voice-primary" onclick="closeTransactionComposer();startVoiceRecognition()">🎙️ Add by voice</button>
         <button id="composer-save" class="composer-save" onclick="submitTransactionComposer()">Save expense <span>→</span></button>
       </div>
@@ -1096,6 +1099,7 @@
 <script src="fire_runway.js"></script>
 <script src="wealth_simulator.js"></script>
 <script src="debt_payoff.js"></script>
+<script src="receipt_scanner.js"></script>
 </body>
 </html>
 

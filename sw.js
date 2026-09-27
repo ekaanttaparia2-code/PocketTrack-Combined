@@ -1,4 +1,4 @@
-const CACHE = 'pockettrack-v14-full-suite';
+const CACHE = 'pockettrack-v15-receipt-ocr-suite';
 const SHELL = [
   './',
   './index.html',
@@ -31,6 +31,12 @@ const SHELL = [
   './daily_burn_meter.js',
   './upi_qr_generator.js',
   './goal_sip_planner.js',
+  './finny.js',
+  './envelopes.js',
+  './fire_runway.js',
+  './wealth_simulator.js',
+  './debt_payoff.js',
+  './receipt_scanner.js',
   './NotoSansDevanagari-Regular.ttf'
 ];
 

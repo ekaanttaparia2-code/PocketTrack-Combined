@@ -345,6 +345,12 @@ function openCommandHubModal(){
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'खर्च व्यक्तित्व और लीक्स' : 'DNA archetype & cash drag'}</span>
         </div>
 
+        <!-- 4. Smart Receipt Scanner -->
+        <div onclick="closeCommandHubModal();triggerReceiptScanner();" style="background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.45);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:24px;margin-bottom:6px;">📷</div>
+          <strong style="display:block;font-size:14px;color:#38bdf8;">${isHi ? 'रसीद स्कैनर (OCR)' : 'Receipt Scanner'}</strong>
+          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'बिल स्कैन करें और ऑटो-लॉग' : 'Scan bills & instant OCR'}</span>
+        </div>
 
         <!-- 5. Emergency Fund & Goal SIP -->
         <div onclick="closeCommandHubModal();if(typeof openGoalPlannerModal==='function')openGoalPlannerModal();" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
