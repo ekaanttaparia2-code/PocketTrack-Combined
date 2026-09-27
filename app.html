@@ -220,6 +220,53 @@
       </button>
     </div>
 
+    <!-- Dual Floating Ticker Bar between Personal Wallet and All Wallets (Paytm style) -->
+    <div class="hub-ticker-wrapper" id="hub-floating-ticker">
+      <!-- Row 1: Right to Left motion -->
+      <div class="hub-ticker-row">
+        <div class="hub-ticker-track scroll-left">
+          <button type="button" class="hub-ticker-pill" onclick="openEnvelopesModal()"><span>✉️</span> 50/30/20 Envelopes</button>
+          <button type="button" class="hub-ticker-pill" onclick="openDailyBurnModal()"><span>⚡</span> Save-to-Spend Radar</button>
+          <button type="button" class="hub-ticker-pill" onclick="openFinancialDnaModal()"><span>🧬</span> Invisible Leaker DNA</button>
+          <button type="button" class="hub-ticker-pill" onclick="openGoalPlannerModal()"><span>🎯</span> Emergency Fund &amp; SIP</button>
+          <button type="button" class="hub-ticker-pill" onclick="openWalletManagerModal()"><span>💳</span> Multi-Wallets &amp; Accounts</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('ledger')"><span>📑</span> Ledger Accounts (P2P)</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('events')"><span>👥</span> Splitwise Spaces</button>
+          <!-- Duplicate for seamless infinite loop -->
+          <button type="button" class="hub-ticker-pill" onclick="openEnvelopesModal()"><span>✉️</span> 50/30/20 Envelopes</button>
+          <button type="button" class="hub-ticker-pill" onclick="openDailyBurnModal()"><span>⚡</span> Save-to-Spend Radar</button>
+          <button type="button" class="hub-ticker-pill" onclick="openFinancialDnaModal()"><span>🧬</span> Invisible Leaker DNA</button>
+          <button type="button" class="hub-ticker-pill" onclick="openGoalPlannerModal()"><span>🎯</span> Emergency Fund &amp; SIP</button>
+          <button type="button" class="hub-ticker-pill" onclick="openWalletManagerModal()"><span>💳</span> Multi-Wallets &amp; Accounts</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('ledger')"><span>📑</span> Ledger Accounts (P2P)</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('events')"><span>👥</span> Splitwise Spaces</button>
+        </div>
+      </div>
+
+      <!-- Row 2: Left to Right motion -->
+      <div class="hub-ticker-row">
+        <div class="hub-ticker-track scroll-right">
+          <button type="button" class="hub-ticker-pill" onclick="openFireRunwayModal()"><span>🔥</span> FIRE &amp; Runway Horizon</button>
+          <button type="button" class="hub-ticker-pill" onclick="openWealthSimulatorModal()"><span>📈</span> Wealth &amp; SIP Simulator</button>
+          <button type="button" class="hub-ticker-pill" onclick="openDebtPayoffModal()"><span>🎯</span> Debt Payoff Strategist</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('upi')"><span>⚡</span> Smart UPI Logger</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('pro')"><span>👑</span> Pro &amp; Luxury Themes</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('rewards')"><span>🏆</span> Rewards &amp; Badges</button>
+          <button type="button" class="hub-ticker-pill" onclick="toggleFinnyChat()"><span>🤖</span> Finny AI Advisor</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('language')"><span>🌐</span> Multi-Language</button>
+          <!-- Duplicate for seamless infinite loop -->
+          <button type="button" class="hub-ticker-pill" onclick="openFireRunwayModal()"><span>🔥</span> FIRE &amp; Runway Horizon</button>
+          <button type="button" class="hub-ticker-pill" onclick="openWealthSimulatorModal()"><span>📈</span> Wealth &amp; SIP Simulator</button>
+          <button type="button" class="hub-ticker-pill" onclick="openDebtPayoffModal()"><span>🎯</span> Debt Payoff Strategist</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('upi')"><span>⚡</span> Smart UPI Logger</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('pro')"><span>👑</span> Pro &amp; Luxury Themes</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('rewards')"><span>🏆</span> Rewards &amp; Badges</button>
+          <button type="button" class="hub-ticker-pill" onclick="toggleFinnyChat()"><span>🤖</span> Finny AI Advisor</button>
+          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('language')"><span>🌐</span> Multi-Language</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Wallet / Account Switcher Bar -->
     <div class="wallet-switcher-bar" id="wallet-switcher-bar">
       <div id="wallet-pills-list" style="display:inline-flex;gap:8px;"></div>

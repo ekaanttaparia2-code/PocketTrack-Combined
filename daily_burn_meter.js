@@ -132,7 +132,24 @@ function computeSafeToSpend() {
     }
   });
 
-  // Effective budget pool
+  // 1. Calculate actual current liquid balance in user's wallets
+  let currentBalance = 0;
+  if (typeof computeWalletBalances === 'function') {
+    const balances = computeWalletBalances();
+    const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : 'all';
+    if (activeW && activeW !== 'all' && balances[activeW] !== undefined) {
+      currentBalance = balances[activeW];
+    } else {
+      Object.values(balances).forEach(b => { currentBalance += b; });
+    }
+  } else {
+    const allList = (typeof mainEntries === 'function') ? mainEntries() : (window.entries || []);
+    const totalInc = allList.filter(e => e.type === 'income').reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+    const totalExp = allList.filter(e => e.type === 'expense').reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+    currentBalance = totalInc - totalExp;
+  }
+
+  // 2. Effective budget pool (if set)
   let budgetPool = monthIncome;
   if (typeof weeklyBudget !== 'undefined' && weeklyBudget > 0) {
     budgetPool = Math.max(budgetPool, weeklyBudget * 4.2);
@@ -142,23 +159,35 @@ function computeSafeToSpend() {
     budgetPool = Math.max(budgetPool, storedIncome);
   }
 
-  const hasBudgetOrIncome = budgetPool > 0;
-  if (!hasBudgetOrIncome) {
+  // Liquid funds available for remainder of month:
+  // User cannot spend more than their actual current balance + what was already spent today.
+  const liquidPool = Math.max(0, currentBalance + todaySpent);
+
+  // If user has zero or negative balance, daily allowance must be 0
+  if (liquidPool <= 0) {
     return {
       remainingDays,
       dailyAllowance: 0,
       todaySpent,
-      todayRemaining: 0,
-      burnPercent: 0,
-      isSafe: true,
-      hasBudgetOrIncome: false
+      todayRemaining: -todaySpent,
+      burnPercent: todaySpent > 0 ? 100 : 0,
+      isSafe: false,
+      hasBudgetOrIncome: true,
+      currentBalance
     };
   }
 
-  const remainingMonthPool = Math.max(0, budgetPool - monthSpent + todaySpent);
-  const dailyAllowance = Math.max(10, Math.round(remainingMonthPool / remainingDays));
+  // Budget remaining for the month (if a budget limit is defined)
+  let spendablePool = liquidPool;
+  if (budgetPool > 0) {
+    const budgetRemaining = Math.max(0, budgetPool - monthSpent + todaySpent);
+    spendablePool = Math.min(liquidPool, budgetRemaining);
+  }
+
+  // Calculate daily allowance spread across remaining days of the month
+  const dailyAllowance = Math.min(spendablePool, Math.max(0, Math.floor(spendablePool / remainingDays)));
   const todayRemaining = dailyAllowance - todaySpent;
-  const burnPercent = Math.min(100, Math.round((todaySpent / dailyAllowance) * 100));
+  const burnPercent = dailyAllowance > 0 ? Math.min(100, Math.round((todaySpent / dailyAllowance) * 100)) : 100;
 
   return {
     remainingDays,
@@ -167,7 +196,8 @@ function computeSafeToSpend() {
     todayRemaining,
     burnPercent,
     isSafe: todayRemaining >= 0,
-    hasBudgetOrIncome: true
+    hasBudgetOrIncome: true,
+    currentBalance
   };
 }
 
@@ -186,7 +216,11 @@ window.renderDailyBurnMeter = function() {
   let statusEmoji = '🟢';
   let statusMsg = `₹${Math.max(0, data.todayRemaining).toLocaleString('en-IN')} left for today`;
   
-  if (data.burnPercent > 100) {
+  if (data.currentBalance <= 0) {
+    gaugeColor = '#f87171'; // Red
+    statusEmoji = '⚠️';
+    statusMsg = `Balance exhausted (₹${data.currentBalance.toLocaleString('en-IN')})`;
+  } else if (data.burnPercent > 100) {
     gaugeColor = '#f87171'; // Red
     statusEmoji = '🔴';
     statusMsg = `Over by ₹${Math.abs(data.todayRemaining).toLocaleString('en-IN')} today`;
@@ -216,7 +250,7 @@ window.renderDailyBurnMeter = function() {
         <div class="burn-stats">
           <div style="font-size:11px;color:var(--text-dim,#94a3b8);text-transform:uppercase;">Daily Allowance</div>
           <div class="burn-allowance-val" style="color:${gaugeColor};">₹${data.dailyAllowance.toLocaleString('en-IN')}<span style="font-size:12px;font-weight:500;color:var(--text-dim);">/day</span></div>
-          <div class="burn-sub-msg">${statusEmoji} <b>${statusMsg}</b> · Spent ₹${data.todaySpent.toLocaleString('en-IN')}</div>
+          <div class="burn-sub-msg">${statusEmoji} <b>${statusMsg}</b> · Balance: ₹${data.currentBalance.toLocaleString('en-IN')}</div>
         </div>
       </div>
     </div>
