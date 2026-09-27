@@ -2,7 +2,7 @@
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Deploy-8b5cf6.svg)](https://github.com/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-4ade80.svg)](manifest.json)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%26%20Private-red.svg)](LICENSE)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange.svg)](https://firebase.google.com/)
 
 > **PocketTrack** is a modern, offline-first personal finance PWA built with a Cyberpunk/Neon glassmorphism design system. It combines smart voice expense logging, a context-aware AI intent engine, P2P debt ledger management, Splitwise-style group bill splitting, automated recurring expenses, and live health score insights.
@@ -58,7 +58,7 @@ pocket-tracker/
 ├── manifest.json        # Web App Manifest for mobile installation
 ├── .nojekyll            # Bypasses Jekyll processing on GitHub Pages
 ├── .gitignore           # Standard production gitignore
-├── LICENSE              # MIT License
+├── LICENSE              # Proprietary & Confidential License
 ├── PRIVACY.md           # Privacy Policy
 ├── TERMS.md             # Terms of Service
 └── README.md            # Project documentation
@@ -80,4 +80,4 @@ Simply clone or download this repository and open `index.html` in any modern web
 ---
 
 ## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
+This software and all source code are private and proprietary. All rights reserved. Strictly prohibited from copying, reproducing, distributing, modifying, or using without explicit prior written authorization. See [LICENSE](LICENSE) for full legal terms.

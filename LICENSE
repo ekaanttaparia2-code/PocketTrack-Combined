@@ -1,16 +1,42 @@
-GNU GENERAL PUBLIC LICENSE
-Version 3, 29 June 2007
+PROPRIETARY AND CONFIDENTIAL LICENSE (ALL RIGHTS RESERVED)
 
-Copyright (C) 2026 PocketTrack.
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Copyright (c) 2026 PocketTrack. All Rights Reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
+===============================================================================
+IMPORTANT NOTICE: THIS SOFTWARE AND ITS SOURCE CODE ARE STRICTLY PRIVATE AND 
+PROPRIETARY PROPERTY. THIS REPOSITORY IS NOT OPEN SOURCE AND IS NOT IN THE 
+PUBLIC DOMAIN.
+===============================================================================
 
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
+1. STRICT RESTRICTION ON USE AND REPRODUCTION
+Under no circumstances may any individual, organization, company, automated 
+system, or third party who accesses, views, clones, or obtains this repository, 
+software, source code, designs, or documentation:
+   (a) Use, run, host, deploy, execute, or operate the software or any portion thereof;
+   (b) Copy, duplicate, replicate, clone, or store copies of the code or assets in any form;
+   (c) Modify, alter, adapt, translate, enhance, decompile, reverse-engineer, or create derivative works;
+   (d) Distribute, share, publish, sublicense, sell, rent, lease, or transfer the code, assets, or concepts to any third party.
+
+2. ACCESS DOES NOT CONSTITUTE A LICENSE
+The visibility or availability of this codebase (whether on GitHub, GitHub Pages, 
+cloud hosting, web mirrors, or any other medium) is strictly for authorized 
+viewing only. Viewing or having read access to this code grants NO right, license, 
+express or implied consent, or authorization to use, copy, reproduce, or build 
+upon this software in any manner.
+
+3. EXCLUSIVE PROPRIETARY OWNERSHIP
+All copyrights, trademarks, trade secrets, patents, algorithmic concepts, and 
+intellectual property associated with PocketTrack remain the sole and exclusive 
+property of the copyright holder.
+
+4. LEGAL ENFORCEMENT
+Any unauthorized copying, mirroring, deployment, or usage of this software 
+constitutes willful copyright infringement and breach of proprietary rights. 
+Violators will be prosecuted to the maximum extent permissible under national 
+and international copyright laws and treaties.
+
+5. DISCLAIMER OF WARRANTY
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL 
+THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY.
