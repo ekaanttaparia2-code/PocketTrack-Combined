@@ -58,6 +58,75 @@ function getReportEntries(){
 }
 window.getReportEntries = getReportEntries;
 
+function getPeriodAccountingData(){
+  const p = (typeof window !== 'undefined' && window.period) ? window.period : (typeof period !== 'undefined' ? period : 'week');
+  const base = (typeof mainEntries === 'function') ? mainEntries() : [];
+  const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : (typeof activeWalletId !== 'undefined' ? activeWalletId : 'all');
+
+  // 1. Initial wallet starting balance
+  let initialBalance = 0;
+  if (typeof userWallets !== 'undefined' && Array.isArray(userWallets)) {
+    if (activeW && activeW !== 'all') {
+      const w = userWallets.find(x => x.id === activeW);
+      initialBalance = w ? (parseFloat(w.initialBalance) || 0) : 0;
+    } else {
+      userWallets.forEach(w => {
+        initialBalance += (parseFloat(w.initialBalance) || 0);
+      });
+    }
+  }
+
+  // 2. Determine start date of active period
+  let startDate = null;
+  const now = new Date();
+  if (p === 'week') {
+    const day = now.getDay();
+    const diff = now.getDate() - (day === 0 ? 6 : day - 1);
+    const mon = new Date(now); mon.setDate(diff);
+    startDate = (typeof dateToStr === 'function') ? dateToStr(mon) : mon.toISOString().slice(0, 10);
+  } else if (p === 'month') {
+    const y = now.getFullYear(), m = now.getMonth();
+    startDate = (typeof dateToStr === 'function') ? dateToStr(new Date(y, m, 1)) : new Date(y, m, 1).toISOString().slice(0, 10);
+  } else if (p === 'custom') {
+    startDate = document.getElementById('rep-from')?.value || null;
+  }
+
+  // 3. Transactions prior to startDate
+  let prevIncome = 0;
+  let prevSpent = 0;
+  if (startDate) {
+    base.forEach(e => {
+      if (e.date && e.date < startDate) {
+        const amt = Number(e.amt) || 0;
+        if (e.type === 'income') prevIncome += amt;
+        else if (e.type === 'expense') prevSpent += amt;
+      }
+    });
+  }
+
+  const openingBalance = initialBalance + (prevIncome - prevSpent);
+  const periodEntries = getReportEntries();
+  const periodIncome = periodEntries.filter(e => e.type === 'income').reduce((s, e) => s + (Number(e.amt) || 0), 0);
+  const periodSpent = periodEntries.filter(e => e.type === 'expense').reduce((s, e) => s + (Number(e.amt) || 0), 0);
+  const netFlow = periodIncome - periodSpent;
+  const closingBalance = openingBalance + netFlow;
+
+  return {
+    period: p,
+    startDate,
+    initialBalance,
+    prevIncome,
+    prevSpent,
+    openingBalance,
+    periodEntries,
+    periodIncome,
+    periodSpent,
+    netFlow,
+    closingBalance
+  };
+}
+window.getPeriodAccountingData = getPeriodAccountingData;
+
 // --- SVG pie chart for category spending — no external chart library needed ---
 function polarToXY(cx,cy,r,angleDeg){
   const rad=(angleDeg-90)*Math.PI/180;
@@ -139,19 +208,54 @@ function hidePieTooltip(){
 
 function renderReport(){
   try {
-    const list = getReportEntries();
-    const income = list.filter(e=>e.type==='income').reduce((s,e)=>s+(Number(e.amt)||0),0);
-    const spent = list.filter(e=>e.type==='expense').reduce((s,e)=>s+(Number(e.amt)||0),0);
-    const bal = income - spent;
+    const acct = getPeriodAccountingData();
+    const list = acct.periodEntries;
+    const income = acct.periodIncome;
+    const spent = acct.periodSpent;
+    const closingBal = acct.closingBalance;
+    const openingBal = acct.openingBalance;
+    const netFlow = acct.netFlow;
     
     const incEl = document.getElementById('r-income');
     const spentEl = document.getElementById('r-spent');
     const balEl = document.getElementById('r-balance');
+    const balSubEl = document.getElementById('r-balance-sub');
     const countEl = document.getElementById('r-count');
     if (incEl) incEl.textContent = '₹' + income.toLocaleString('en-IN');
     if (spentEl) spentEl.textContent = '₹' + spent.toLocaleString('en-IN');
-    if (balEl) balEl.textContent = (bal < 0 ? '-₹' : '₹') + Math.abs(bal).toLocaleString('en-IN');
+    if (balEl) {
+      balEl.textContent = (closingBal < 0 ? '-₹' : '₹') + Math.abs(closingBal).toLocaleString('en-IN');
+      balEl.className = 'metric-val ' + (closingBal < 0 ? 'red' : (closingBal === 0 ? 'amber' : 'green'));
+    }
     if (countEl) countEl.textContent = list.length;
+
+    if (balSubEl) {
+      const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+      const isMr = (typeof currentLang !== 'undefined' && currentLang === 'mr');
+      const isHinglish = (typeof currentLang !== 'undefined' && currentLang === 'hinglish');
+      
+      const netSign = netFlow >= 0 ? '+' : '-';
+      const netFmt = `${netSign}₹${Math.abs(netFlow).toLocaleString('en-IN')}`;
+      const openFmt = `₹${openingBal.toLocaleString('en-IN')}`;
+
+      if (acct.period === 'all') {
+        if (acct.initialBalance !== 0) {
+          const startLbl = isHi ? 'शुरुआती' : (isMr ? 'सुरुवातीचे' : (isHinglish ? 'Starting' : 'Start'));
+          const netLbl = isHi ? 'नेट' : (isMr ? 'निव्वळ' : 'Net');
+          balSubEl.textContent = `${startLbl}: ₹${acct.initialBalance.toLocaleString('en-IN')} · ${netLbl}: ${netFmt}`;
+          balSubEl.style.display = 'block';
+        } else {
+          const netLbl = isHi ? 'नेट बचत' : (isMr ? 'निव्वळ बचत' : 'Net savings');
+          balSubEl.textContent = `${netLbl}: ${netFmt}`;
+          balSubEl.style.display = 'block';
+        }
+      } else {
+        const prevLbl = isHi ? 'पिछला' : (isMr ? 'मागील' : (isHinglish ? 'Pichhla' : 'Prev'));
+        const netLbl = isHi ? 'नेट' : (isMr ? 'निव्वळ' : 'Net');
+        balSubEl.textContent = `${prevLbl}: ${openFmt} · ${netLbl}: ${netFmt}`;
+        balSubEl.style.display = 'block';
+      }
+    }
     
     const cats = {};
     list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+(Number(e.amt)||0);});
@@ -193,18 +297,30 @@ function copyReport(){
     toast(currentLang==='hi' ? '📊 रिपोर्ट कॉपी करना Pro सुविधा है' : '📊 Copying the report is a Pro feature', 'error');
     return;
   }
-  const list=getReportEntries();
-  const income=list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const spent=list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
-  const bal=income-spent;
+  const acct = getPeriodAccountingData();
+  const list = acct.periodEntries;
+  const income = acct.periodIncome;
+  const spent = acct.periodSpent;
+  const bal = acct.closingBalance;
+  const openBal = acct.openingBalance;
+  const netFlow = acct.netFlow;
   const cats={};
-  list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amt;});
+  list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+Number(e.amt||0);});
   const isHi = currentLang==='hi';
   const periodTitle={week:isHi?'साप्ताहिक खर्च रिपोर्ट':'Weekly Expense Report',month:isHi?'मासिक खर्च रिपोर्ट':'Monthly Expense Report',all:isHi?'पूरी खर्च रिपोर्ट':'All-Time Expense Report',custom:isHi?'कस्टम अवधि रिपोर्ट':'Custom Range Expense Report'}[period]||(isHi?'खर्च रिपोर्ट':'Expense Report');
-  let txt=`${periodTitle}\n${'─'.repeat(30)}\n${isHi?'कुल आय':'Total Income'}: ₹${income}\n${isHi?'कुल खर्च':'Total Spent'}: ₹${spent}\n${isHi?'बचा हुआ बैलेंस':'Balance Left'}: ₹${bal}\n\n${isHi?'खर्च का विवरण':'Spending Breakdown'}:\n`;
-  Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c,a])=>{txt+=`  ${CAT_LABELS[c]}: ₹${a}\n`;});
+  
+  let txt=`${periodTitle}\n${'─'.repeat(30)}\n`;
+  if (acct.period !== 'all' || acct.initialBalance !== 0) {
+    txt += `${isHi ? 'पिछला / प्रारंभिक बैलेंस' : 'Opening / Prev Balance'}: ₹${openBal}\n`;
+  }
+  txt += `${isHi?'कुल आय':'Total Income'}: ₹${income}\n`;
+  txt += `${isHi?'कुल खर्च':'Total Spent'}: ₹${spent}\n`;
+  txt += `${isHi?'अवधि नेट फ्लो':'Net Period Flow'}: ${netFlow >= 0 ? '+' : '-'}₹${Math.abs(netFlow)}\n`;
+  txt += `${isHi?'अंतिम बैलेंस':'Closing Balance Left'}: ₹${bal}\n\n`;
+  txt += `${isHi?'खर्च का विवरण':'Spending Breakdown'}:\n`;
+  Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([c,a])=>{txt+=`  ${(typeof CAT_LABELS!=='undefined'&&CAT_LABELS[c])||c}: ₹${a}\n`;});
   txt+=isHi?`\nसभी एंट्रीज़:\n`:`\nAll Entries:\n`;
-  [...list].sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{txt+=`  ${fmtDate(e.date)} | ${e.type==='income'?(isHi?'आय':'INCOME'):(isHi?'खर्च':'EXPENSE')} | ${displayCatLabel(e)} | ${e.label}${e.note?' ('+e.note+')':''} | ${e.type==='income'?'+':'-'}₹${e.amt}\n`;});
+  [...list].sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{txt+=`  ${fmtDate(e.date)} | ${e.type==='income'?(isHi?'आय':'INCOME'):(isHi?'खर्च':'EXPENSE')} | ${typeof displayCatLabel==='function'?displayCatLabel(e):e.cat} | ${e.label}${e.note?' ('+e.note+')':''} | ${e.type==='income'?'+':'-'}₹${e.amt}\n`;});
   navigator.clipboard.writeText(txt).then(()=>toast(TT('report_copied'),'success')).catch(()=>{
     const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
     toast(TT('report_copied'),'success');
@@ -239,16 +355,17 @@ async function exportPDF(){
   }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const list=getReportEntries();
+  const acct = getPeriodAccountingData();
+  const list = acct.periodEntries;
   const devaText=list.some(e=>hasDevanagari(e.label)||hasDevanagari(e.note));
   const devaOk=(currentLang==='hi'||devaText)?await ensureDevanagariFont(doc):false;
   if(devaOk) doc.setFont(DEVA_FONT_NAME,'normal');
   const T=s=>devaOk?s:pdfSafe(s);
-  const income=list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const spent=list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
-  const bal=income-spent;
+  const income=acct.periodIncome;
+  const spent=acct.periodSpent;
+  const bal=acct.closingBalance;
   const cats={};
-  list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amt;});
+  list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+Number(e.amt||0);});
   const CAT_RGB = {food:[74,222,128],travel:[96,165,250],friends:[255,184,77],home:[255,126,179],shopping:[192,132,252],entertainment:[244,114,182],health:[251,113,133],education:[251,191,36],work:[34,211,238],other:[150,150,150]};
   const PURPLE=[124,78,224], PINK=[255,126,179], GREEN=[34,197,94], RED=[239,68,68], DARK=[30,25,50];
 
@@ -432,9 +549,10 @@ function computeHealthScore(){
   // 2. Budget adherence → up to 30 pts (uses the active weekly/monthly budget)
   let budgetScore = 16;
   let budgetPct = 55; // shown % when no budget is set
-  const budget = (typeof totalBudget==='function') ? totalBudget() : (budgetPeriod==='weekly' ? weeklyBudget : monthlyBudget);
+  const bPeriod = (typeof budgetPeriod !== 'undefined') ? budgetPeriod : 'monthly';
+  const budget = (typeof totalBudget==='function') ? totalBudget() : (bPeriod==='weekly' ? (typeof weeklyBudget!=='undefined'?weeklyBudget:0) : (typeof monthlyBudget!=='undefined'?monthlyBudget:0));
   if (typeof budget !== 'undefined' && budget > 0){
-    const spent = (budgetPeriod==='weekly' ? getThisWeekEntries() : getThisMonthEntries())
+    const spent = (bPeriod==='weekly' ? (typeof getThisWeekEntries==='function'?getThisWeekEntries():[]) : (typeof getThisMonthEntries==='function'?getThisMonthEntries():[]))
       .filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
     const pct = Math.min(120, (spent/budget)*100);
     const adherence = Math.max(0, 100 - pct + (pct<=100?6:0));
@@ -621,9 +739,22 @@ function renderFutureMoneySimulator() {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
 
   const list = mainEntries();
-  const income = list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const spent = list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
-  const balance = Math.max(0, income - spent);
+  let balance = 0;
+  if (typeof computeWalletBalances === 'function') {
+    const balances = computeWalletBalances();
+    const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : 'all';
+    if (activeW && activeW !== 'all' && balances[activeW] !== undefined) {
+      balance = Math.max(0, balances[activeW]);
+    } else {
+      let tot = 0;
+      Object.values(balances).forEach(b => { tot += b; });
+      balance = Math.max(0, tot);
+    }
+  } else {
+    const inc = list.filter(e=>e.type==='income').reduce((s,e)=>s+Number(e.amt||0),0);
+    const exp = list.filter(e=>e.type==='expense').reduce((s,e)=>s+Number(e.amt||0),0);
+    balance = Math.max(0, inc - exp);
+  }
   const estSavingsPerMo = balance > 0 ? Math.max(500, Math.round(balance * 0.15)) : 1000;
 
   const inner = `

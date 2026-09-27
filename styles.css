@@ -340,6 +340,7 @@ input[type=date]{color-scheme:dark}
 .metric-val.green{color:var(--green);text-shadow:0 0 24px rgba(52,211,153,0.35)}
 .metric-val.red{color:var(--red);text-shadow:0 0 24px rgba(248,113,113,0.3)}
 .metric-val.amber{color:var(--amber);text-shadow:0 0 24px rgba(251,191,36,0.3)}
+.metric-sub{font-size:10px;color:var(--text-dim,#b9aee3);margin-top:3px;font-weight:500;letter-spacing:0.1px;line-height:1.2}
 
 .entry-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13.5px;flex-wrap:wrap}
 .entry-row:last-child{border-bottom:none}
@@ -2854,6 +2855,10 @@ body.auth-active .voice-fab {
   .period-toggle-v2 button {
     padding: 7px 6px !important;
     font-size: 11px !important;
+  }
+  .metric-sub {
+    font-size: 9.5px !important;
+    letter-spacing: 0;
   }
 }
 
