@@ -164,20 +164,20 @@
 <div class="shell">
   <header>
     <div class="brand">
-      <div class="brand-icon brand-logo-wrap"><img class="brand-logo-img" src="icon-192.png" alt="PocketTrack" width="36" height="36"></div>
-      <div>
+      <div class="brand-icon brand-logo-wrap"><img class="brand-logo-img" src="icon-192.png" alt="PocketTrack" width="34" height="34"></div>
+      <div class="brand-text-wrap">
         <h1>PocketTrack</h1>
       </div>
     </div>
     <div class="brand-actions">
       <button class="mode-toggle-pill" id="header-mode-toggle" onclick="toggleAppMode()" title="Switch Simple (40+) / Power Mode">
-        <span id="mode-icon">⚡</span> <span id="mode-label">Power</span>
+        <span id="mode-icon">⚡</span> <span id="mode-label" class="header-pill-text">Power</span>
       </button>
       <button class="pill sync-pill-btn" id="sync-pill-btn" onclick="triggerManualSync()" title="Cloud Sync Status · Tap to Sync">
         <span class="dot"></span><span id="sync-status">Synced</span>
       </button>
-      <button class="pill export-pill-btn" id="header-export-btn" onclick="exportPDF()" title="Export Statement as PDF" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:#cbd5e1;padding:5px 11px;border-radius:99px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all 0.2s;">
-        <i class="ti ti-download" style="font-size:12px;"></i> <span data-i18n="btn_export">Export</span>
+      <button class="pill export-pill-btn" id="header-export-btn" onclick="exportPDF()" title="Export Statement as PDF">
+        <i class="ti ti-download" style="font-size:12px;"></i> <span class="header-pill-text" data-i18n="btn_export">Export</span>
       </button>
       <button class="btn btn-sm install-btn" id="install-app-btn" style="display:none" onclick="promptInstallApp()"><i class="ti ti-download"></i></button>
     </div>
@@ -204,18 +204,18 @@
 
   <div id="tab-log">
     <!-- Portfolio Switcher Pill Bar with Streak button opposite to Personal Wallet -->
-    <div class="portfolio-switcher-bar" id="portfolio-switcher-bar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-      <div style="display:inline-flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+    <div class="portfolio-switcher-bar" id="portfolio-switcher-bar">
+      <div class="portfolio-scroll-wrapper">
         <button class="portfolio-pill active" id="port-pill-personal" onclick="switchActivePortfolio('personal')">
           <span>👤 Personal Vault</span>
         </button>
-        <div id="portfolio-pills-list" style="display:inline-flex;gap:8px;"></div>
+        <div id="portfolio-pills-list" style="display:inline-flex;gap:6px;"></div>
         <button class="portfolio-pill add-pill" onclick="openNewPortfolioModal()">
-          <i class="ti ti-plus"></i> <span>Shared Space</span>
+          <i class="ti ti-plus"></i> <span>Space</span>
         </button>
       </div>
       <!-- Small streak button opposite to Personal Wallet, above Manage option -->
-      <button class="streak-pill-btn" id="header-streak-pill" onclick="setTab('rewards')" title="Daily Streak · Tap to view Rewards" style="flex-shrink:0;background:linear-gradient(135deg,rgba(251,191,36,0.18),rgba(244,63,94,0.14));border:1px solid rgba(251,191,36,0.4);color:#fbbf24;padding:6px 12px;border-radius:99px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+      <button class="streak-pill-btn" id="header-streak-pill" onclick="setTab('rewards')" title="Daily Streak · Tap to view Rewards">
         <span>🔥</span> <span id="header-streak-text">1-Day Streak</span>
       </button>
     </div>

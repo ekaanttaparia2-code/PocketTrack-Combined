@@ -47,6 +47,55 @@ function initVoiceEngine() {
   }
 }
 
+function initDraggableFab() {
+  const fab = document.getElementById('voice-fab');
+  if (!fab || fab.dataset.draggableInit) return;
+  fab.dataset.draggableInit = 'true';
+
+  let startY = 0;
+  let startTop = 0;
+  let hasMoved = false;
+
+  fab.addEventListener('touchstart', function(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    startY = touch.clientY;
+    const rect = fab.getBoundingClientRect();
+    startTop = rect.top;
+    hasMoved = false;
+  }, { passive: true });
+
+  fab.addEventListener('touchmove', function(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - startY;
+    if (Math.abs(deltaY) > 5) {
+      hasMoved = true;
+      const minTop = 60;
+      const maxTop = window.innerHeight - 120;
+      const newTop = Math.max(minTop, Math.min(maxTop, startTop + deltaY));
+      fab.style.top = newTop + 'px';
+      fab.style.bottom = 'auto';
+    }
+  }, { passive: true });
+
+  fab.addEventListener('touchend', function() {
+    if (hasMoved) {
+      try {
+        sessionStorage.setItem('pt_voice_fab_top', fab.style.top);
+      } catch (err) {}
+    }
+  });
+
+  try {
+    const savedTop = sessionStorage.getItem('pt_voice_fab_top');
+    if (savedTop) {
+      fab.style.top = savedTop;
+      fab.style.bottom = 'auto';
+    }
+  } catch (err) {}
+}
+
 function updateVoiceFabVisibility() {
   const fab = document.getElementById('voice-fab');
   if (!fab) return;
@@ -54,6 +103,9 @@ function updateVoiceFabVisibility() {
   const auth = document.getElementById('auth-screen');
   const onAuthScreen = auth && auth.style.display !== 'none';
   fab.style.display = onAuthScreen ? 'none' : 'flex';
+  if (!onAuthScreen) {
+    initDraggableFab();
+  }
 }
 
 function startVoiceRecognition() {

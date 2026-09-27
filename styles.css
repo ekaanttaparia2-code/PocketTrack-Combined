@@ -2134,13 +2134,37 @@ textarea{
 
 /* Phone-width polish. */
 @media (max-width:600px){
-  .shell{padding-top:calc(10px + env(safe-area-inset-top,0px))}
-  header{align-items:flex-start}
-  .brand{min-width:0;flex:1}
-  .brand p{font-size:11px}
-  .pill{max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .shell{
+    padding-top:calc(10px + env(safe-area-inset-top,0px));
+    padding-bottom:calc(125px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  header{
+    align-items:center !important;
+    gap:6px !important;
+    margin-bottom:0.65rem !important;
+    width:100% !important;
+  }
+  .brand{
+    flex:0 0 auto !important;
+    min-width:auto !important;
+    gap:7px !important;
+  }
+  .brand-text-wrap{
+    flex:0 0 auto !important;
+  }
+  .brand h1{
+    font-size:15.5px !important;
+    white-space:nowrap !important;
+  }
+  .brand p{display:none !important;}
+  .brand-actions{
+    flex:0 0 auto !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:5px !important;
+  }
   .grid2,.grid3,.insights-hero-stats{grid-template-columns:1fr !important}
-  .hero-actions{grid-template-columns:1fr 1fr !important}
+  .hero-actions{grid-template-columns:1fr 1fr !important;gap:8px !important;margin-top:10px !important;}
   .hero-action.voice-action{grid-column:1 / -1}
   .composer-head h2{font-size:20px}
   .composer-amount-wrap input{font-size:38px}
@@ -2243,18 +2267,74 @@ textarea{
 /* keep the in-panel recurring button from hugging the forms below it */
 .add-panel .rec-manage-btn{ margin-bottom:14px; }
 
-/* --- Header sync pill: compact, state-tinted, phone-proof --- */
-@media(max-width:600px){
-  header{flex-wrap:nowrap;gap:10px}
-  .brand{flex:1 1 auto;min-width:0;gap:10px}
-  .brand h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .brand p{font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .brand-actions{flex:0 0 auto;align-self:center}
-  .pill{font-size:10.5px;padding:5px 10px;gap:5px;border-radius:999px;background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.28)}
-  .pill .dot{width:6px;height:6px;flex:0 0 auto}
-  .pill span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pill-syncing{background:rgba(251,191,36,.12)!important;border-color:rgba(251,191,36,.4)!important}
-  .pill-offline{background:rgba(248,113,113,.13)!important;border-color:rgba(248,113,113,.42)!important;color:#fca5a5}
+/* --- Header pills & mobile button styling --- */
+.mode-toggle-pill {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+}
+.sync-pill-btn {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+.export-pill-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.2s;
+}
+
+@media (max-width: 600px) {
+  .mode-toggle-pill {
+    min-height: 28px !important;
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+  }
+  .sync-pill-btn {
+    min-height: 28px !important;
+    padding: 3px 8px !important;
+    font-size: 10.5px !important;
+  }
+  .export-pill-btn {
+    min-height: 28px !important;
+    padding: 3px 8px !important;
+    font-size: 10.5px !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .export-pill-btn .header-pill-text {
+    display: none !important;
+  }
+  .export-pill-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .mode-toggle-pill .header-pill-text {
+    display: none !important;
+  }
+  .mode-toggle-pill {
+    padding: 3px 6px !important;
+  }
 }
 
 /* =====================================================================
@@ -3034,6 +3114,144 @@ body.auth-active .voice-fab {
 }
 .hub-ticker-pill:active {
   transform: scale(0.95);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE APP SETTLEMENT & TOUCH SYSTEM
+   Ensures seamless, zero-overlap native mobile experience
+   ═══════════════════════════════════════════════════════════════ */
+.portfolio-switcher-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.portfolio-scroll-wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 0;
+}
+.portfolio-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.portfolio-pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 11.5px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.portfolio-pill.active {
+  background: rgba(139, 92, 246, 0.24);
+  border-color: rgba(139, 92, 246, 0.55);
+  color: #fff;
+}
+.portfolio-pill.add-pill {
+  border-style: dashed;
+  border-color: rgba(139, 92, 246, 0.45);
+}
+.streak-pill-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(244, 63, 94, 0.14));
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.streak-pill-btn:hover {
+  transform: scale(1.04);
+}
+.streak-pill-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 600px) {
+  .hub-ticker-wrapper {
+    margin: 6px 0 8px 0;
+    gap: 4px;
+  }
+  .hub-ticker-pill {
+    padding: 4px 10px;
+    font-size: 10.5px;
+    gap: 5px;
+  }
+  .wallet-switcher-bar {
+    margin-bottom: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .wallet-switcher-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .wallet-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 5px 11px !important;
+    font-size: 11px !important;
+  }
+  .hero-card {
+    padding: 16px 14px !important;
+    margin-bottom: 12px !important;
+    border-radius: 20px !important;
+  }
+  .hero-balance {
+    font-size: 34px !important;
+    margin: 10px 0 12px !important;
+  }
+  .hero-metrics {
+    margin-bottom: 10px !important;
+  }
+  .hero-metrics > div {
+    padding: 8px 6px !important;
+  }
+  .hero-actions {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+  .hero-action {
+    min-height: 40px !important;
+    font-size: 11.5px !important;
+    padding: 8px 10px !important;
+  }
+  /* Voice FAB compact sizing on mobile */
+  .voice-fab {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 20px !important;
+    right: 14px !important;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45) !important;
+    touch-action: none;
+  }
+  .shell {
+    padding-bottom: calc(125px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 
