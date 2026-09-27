@@ -125,9 +125,26 @@ if (typeof auth !== 'undefined') {
       }).catch(()=>{});
     }
     document.getElementById('verify-banner').style.display = user.emailVerified ? 'none' : 'block';
-    if (!localStorage.getItem('pockettrack_age_group') && !localStorage.getItem('pockettrack_app_mode_chosen')) {
+    
+    // Refresh Finny mascot & Envelopes if loaded
+    if (typeof window.FinnyMascot !== 'undefined' && window.FinnyMascot.render) {
+      try { window.FinnyMascot.render(); } catch(e) {}
+    }
+    if (typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
+      try { window.Envelopes.render(); } catch(e) {}
+    }
+    if (typeof window.renderDailyBurnMeter === 'function') {
+      try { window.renderDailyBurnMeter(); } catch(e) {}
+    }
+
+    // Prompt user for age group ONLY if onboarding is already completed
+    const isOnboarded = localStorage.getItem('pockettrack_onboarded_v2') === 'true' ||
+                        localStorage.getItem('pockettrack_onboarded') === 'true';
+    if (isOnboarded && !localStorage.getItem('pockettrack_age_group') && !localStorage.getItem('pockettrack_app_mode_chosen')) {
       setTimeout(() => {
-        if (typeof window.openAgeModeModal === 'function') {
+        const onboardingEl = document.getElementById('onboarding-screen');
+        const isOnboardingActive = onboardingEl && onboardingEl.style.display !== 'none';
+        if (!isOnboardingActive && typeof window.openAgeModeModal === 'function') {
           window.openAgeModeModal();
         }
       }, 400);

@@ -14,6 +14,15 @@
     var emotion = opts.emotion || 'smile';  // enjoying | smile | neutral | sad | very_sad
     var size = opts.size || 88;
 
+    // Unique IDs per SVG instance to prevent cross-container gradient cache issues in Chromium/Safari
+    var uid = 'fny_' + Math.floor(Math.random() * 10000000);
+    var bodyGrad = uid + '_bg';
+    var bellyGrad = uid + '_bl';
+    var earGrad = uid + '_er';
+    var crownGrad = uid + '_cr';
+    var coinGrad = uid + '_cn';
+    var glow = uid + '_gl';
+
     // Eyebrows based on emotion
     var eyebrowsSVG = '';
     if (emotion === 'enjoying') {
@@ -44,7 +53,7 @@
 
     // Tear for very_sad
     var tearSVG = emotion === 'very_sad'
-      ? '<path d="M56 90 C56 90 53 96 53 99 C53 102 55.5 104 58 104 C60.5 104 63 102 63 99 C63 96 60 90 56 90 Z" fill="#38bdf8" filter="url(#finnyGlow)"/>'
+      ? '<path d="M56 90 C56 90 53 96 53 99 C53 102 55.5 104 58 104 C60.5 104 63 102 63 99 C63 96 60 90 56 90 Z" fill="#38bdf8" filter="url(#' + glow + ')"/>'
       : '';
 
     // Mouth
@@ -65,9 +74,9 @@
     var poseSVG = '';
     if (pose === 'greeting') {
       poseSVG = '<g>' +
-        '<ellipse cx="32" cy="94" rx="9" ry="11" fill="url(#finnyBodyGrad)" transform="rotate(20 32 94)"/>' +
+        '<ellipse cx="32" cy="94" rx="9" ry="11" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(20 32 94)"/>' +
         '<g class="finny-wave">' +
-          '<ellipse cx="128" cy="74" rx="10" ry="13" fill="url(#finnyBodyGrad)" transform="rotate(-30 128 74)"/>' +
+          '<ellipse cx="128" cy="74" rx="10" ry="13" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(-30 128 74)"/>' +
           '<path d="M136 56 L139 63 L146 66 L139 69 L136 76 L133 69 L126 66 L133 63 Z" fill="#fde047" class="finny-sparkle"/>' +
         '</g>' +
       '</g>';
@@ -77,17 +86,17 @@
         '<line x1="98" y1="88" x2="118" y2="88" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>' +
         '<line x1="98" y1="94" x2="114" y2="94" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>' +
         '<line x1="98" y1="100" x2="116" y2="100" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>' +
-        '<ellipse cx="90" cy="100" rx="9" ry="11" fill="url(#finnyBodyGrad)"/>' +
+        '<ellipse cx="90" cy="100" rx="9" ry="11" fill="#10b981" style="fill:url(#' + bodyGrad + ');"/>' +
         '<g transform="rotate(-15 110 85)">' +
           '<rect x="110" y="72" width="4" height="20" rx="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>' +
           '<polygon points="110,92 114,92 112,96" fill="#0f172a"/>' +
-          '<ellipse cx="108" cy="85" rx="7" ry="8" fill="url(#finnyBodyGrad)"/>' +
+          '<ellipse cx="108" cy="85" rx="7" ry="8" fill="#10b981" style="fill:url(#' + bodyGrad + ');"/>' +
         '</g>' +
       '</g>';
     } else if (pose === 'thinking') {
       poseSVG = '<g>' +
-        '<ellipse cx="32" cy="96" rx="9" ry="11" fill="url(#finnyBodyGrad)"/>' +
-        '<ellipse cx="94" cy="95" rx="9" ry="10" fill="url(#finnyBodyGrad)" transform="rotate(-25 94 95)"/>' +
+        '<ellipse cx="32" cy="96" rx="9" ry="11" fill="#10b981" style="fill:url(#' + bodyGrad + ');"/>' +
+        '<ellipse cx="94" cy="95" rx="9" ry="10" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(-25 94 95)"/>' +
         '<g>' +
           '<circle cx="124" cy="50" r="11" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1.8"/>' +
           '<text x="124" y="55" font-size="14" font-weight="bold" fill="#f59e0b" text-anchor="middle" font-family="system-ui,sans-serif">?</text>' +
@@ -95,10 +104,10 @@
       '</g>';
     } else if (pose === 'calculating') {
       poseSVG = '<g>' +
-        '<ellipse cx="30" cy="86" rx="9" ry="11" fill="url(#finnyBodyGrad)" transform="rotate(35 30 86)"/>' +
-        '<ellipse cx="130" cy="86" rx="9" ry="11" fill="url(#finnyBodyGrad)" transform="rotate(-35 130 86)"/>' +
+        '<ellipse cx="30" cy="86" rx="9" ry="11" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(35 30 86)"/>' +
+        '<ellipse cx="130" cy="86" rx="9" ry="11" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(-35 130 86)"/>' +
         '<g transform="translate(68,14)">' +
-          '<circle cx="12" cy="12" r="11" fill="url(#finnyCoinGrad)" stroke="#ca8a04" stroke-width="1.5" filter="url(#finnyGlow)"/>' +
+          '<circle cx="12" cy="12" r="11" fill="#fde047" style="fill:url(#' + coinGrad + ');" stroke="#ca8a04" stroke-width="1.5" filter="url(#' + glow + ')"/>' +
           '<text x="12" y="16" font-size="12" font-weight="900" fill="#78350f" text-anchor="middle" font-family="system-ui,sans-serif">₹</text>' +
         '</g>' +
         '<text x="30" y="52" font-size="15" font-weight="bold" fill="#34d399" opacity="0.85" font-family="system-ui,sans-serif">+</text>' +
@@ -107,14 +116,14 @@
     } else if (pose === 'celebrating') {
       poseSVG = '<g>' +
         '<g transform="translate(56,12)">' +
-          '<polygon points="0,22 8,6 24,14 40,6 48,22" fill="url(#finnyCrownGrad)" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/>' +
+          '<polygon points="0,22 8,6 24,14 40,6 48,22" fill="#f59e0b" style="fill:url(#' + crownGrad + ');" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/>' +
           '<rect x="0" y="21" width="48" height="5" rx="1.5" fill="#f59e0b" stroke="#b45309" stroke-width="1"/>' +
           '<circle cx="8" cy="6" r="3" fill="#ef4444"/>' +
           '<circle cx="24" cy="14" r="3" fill="#3b82f6"/>' +
           '<circle cx="40" cy="6" r="3" fill="#10b981"/>' +
         '</g>' +
-        '<ellipse cx="32" cy="74" rx="9" ry="12" fill="url(#finnyBodyGrad)" transform="rotate(-40 32 74)"/>' +
-        '<ellipse cx="128" cy="74" rx="9" ry="12" fill="url(#finnyBodyGrad)" transform="rotate(40 128 74)"/>' +
+        '<ellipse cx="32" cy="74" rx="9" ry="12" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(-40 32 74)"/>' +
+        '<ellipse cx="128" cy="74" rx="9" ry="12" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(40 128 74)"/>' +
         '<circle cx="22" cy="46" r="2.5" fill="#fde047"/>' +
         '<circle cx="138" cy="46" r="2.5" fill="#38bdf8"/>' +
         '<circle cx="18" cy="66" r="2" fill="#f43f5e"/>' +
@@ -124,28 +133,28 @@
 
     return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="finny-svg" role="img" aria-label="Finny Mascot">' +
       '<defs>' +
-        '<linearGradient id="finnyBodyGrad" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10b981"/><stop offset="50%" stop-color="#059669"/><stop offset="100%" stop-color="#047857"/></linearGradient>' +
-        '<linearGradient id="finnyBellyGrad" x1="45" y1="70" x2="115" y2="135" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient>' +
-        '<linearGradient id="finnyEarGrad" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient>' +
-        '<linearGradient id="finnyCrownGrad" x1="0" y1="0" x2="50" y2="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient>' +
-        '<linearGradient id="finnyCoinGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#ca8a04"/></linearGradient>' +
-        '<filter id="finnyGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>' +
+        '<linearGradient id="' + bodyGrad + '" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10b981"/><stop offset="50%" stop-color="#059669"/><stop offset="100%" stop-color="#047857"/></linearGradient>' +
+        '<linearGradient id="' + bellyGrad + '" x1="45" y1="70" x2="115" y2="135" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient>' +
+        '<linearGradient id="' + earGrad + '" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient>' +
+        '<linearGradient id="' + crownGrad + '" x1="0" y1="0" x2="50" y2="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient>' +
+        '<linearGradient id="' + coinGrad + '" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#ca8a04"/></linearGradient>' +
+        '<filter id="' + glow + '" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>' +
       '</defs>' +
       // Shadow
       '<ellipse cx="80" cy="148" rx="42" ry="7" fill="rgba(0,0,0,0.35)"/>' +
       // Ears
       '<g>' +
-        '<ellipse cx="50" cy="40" rx="14" ry="20" fill="url(#finnyBodyGrad)" transform="rotate(-18 50 40)"/>' +
-        '<ellipse cx="51" cy="41" rx="8" ry="12" fill="url(#finnyEarGrad)" transform="rotate(-18 51 41)"/>' +
-        '<ellipse cx="110" cy="40" rx="14" ry="20" fill="url(#finnyBodyGrad)" transform="rotate(18 110 40)"/>' +
-        '<ellipse cx="109" cy="41" rx="8" ry="12" fill="url(#finnyEarGrad)" transform="rotate(18 109 41)"/>' +
-        '<circle cx="80" cy="24" r="5" fill="#fde047" filter="url(#finnyGlow)"/>' +
+        '<ellipse cx="50" cy="40" rx="14" ry="20" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(-18 50 40)"/>' +
+        '<ellipse cx="51" cy="41" rx="8" ry="12" fill="#fbbf24" style="fill:url(#' + earGrad + ');" transform="rotate(-18 51 41)"/>' +
+        '<ellipse cx="110" cy="40" rx="14" ry="20" fill="#10b981" style="fill:url(#' + bodyGrad + ');" transform="rotate(18 110 40)"/>' +
+        '<ellipse cx="109" cy="41" rx="8" ry="12" fill="#fbbf24" style="fill:url(#' + earGrad + ');" transform="rotate(18 109 41)"/>' +
+        '<circle cx="80" cy="24" r="5" fill="#fde047" filter="url(#' + glow + ')"/>' +
         '<path d="M80 28 L80 38" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>' +
       '</g>' +
       // Body
       '<g>' +
-        '<ellipse cx="80" cy="92" rx="52" ry="48" fill="url(#finnyBodyGrad)"/>' +
-        '<ellipse cx="80" cy="98" rx="34" ry="30" fill="url(#finnyBellyGrad)" opacity="0.9"/>' +
+        '<ellipse cx="80" cy="92" rx="52" ry="48" fill="#10b981" style="fill:url(#' + bodyGrad + ');"/>' +
+        '<ellipse cx="80" cy="98" rx="34" ry="30" fill="#34d399" style="fill:url(#' + bellyGrad + ');" opacity="0.9"/>' +
         '<path d="M68 96 L74 96 L78 102 L86 102 L90 96 L94 96" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
         '<circle cx="80" cy="112" r="3" fill="#fff" opacity="0.6"/>' +
       '</g>' +
@@ -449,23 +458,46 @@
     getContext: getFinnyContext
   };
 
-  // ── Auto Initialization ─────────────────────────────────────
+  // ── Auto Initialization & Lifecycle Hooks ──────────────────
   injectFinnyStyles();
+
+  function hookAppEvents() {
+    if (typeof window.updateHeaderStats === 'function' && !window._finnyHookedStats) {
+      window._finnyHookedStats = true;
+      var origUpdateHeaderStats = window.updateHeaderStats;
+      window.updateHeaderStats = function() {
+        var ret = origUpdateHeaderStats.apply(this, arguments);
+        try { renderFinnyWidget(); } catch(e) {}
+        return ret;
+      };
+    }
+    if (typeof window.renderEntries === 'function' && !window._finnyHookedEntries) {
+      window._finnyHookedEntries = true;
+      var origRenderEntries = window.renderEntries;
+      window.renderEntries = function() {
+        var ret = origRenderEntries.apply(this, arguments);
+        try { renderFinnyWidget(); } catch(e) {}
+        return ret;
+      };
+    }
+  }
+
+  // Hook immediately and retry to catch later-loaded scripts
+  hookAppEvents();
+  setTimeout(hookAppEvents, 500);
+  setTimeout(hookAppEvents, 1500);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(renderFinnyWidget, 400);
+      setTimeout(function() {
+        hookAppEvents();
+        renderFinnyWidget();
+      }, 200);
     });
   } else {
-    setTimeout(renderFinnyWidget, 400);
-  }
-
-  // Hook into stats refresh if window.updateHeaderStats exists
-  var origUpdateHeaderStats = window.updateHeaderStats;
-  if (typeof origUpdateHeaderStats === 'function') {
-    window.updateHeaderStats = function() {
-      origUpdateHeaderStats.apply(this, arguments);
-      try { renderFinnyWidget(); } catch(e) {}
-    };
+    setTimeout(function() {
+      hookAppEvents();
+      renderFinnyWidget();
+    }, 200);
   }
 })();

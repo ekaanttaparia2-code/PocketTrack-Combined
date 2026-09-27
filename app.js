@@ -2762,8 +2762,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedMode = localStorage.getItem('pockettrack_app_mode') || 'power';
   window.setAppMode(savedMode, false);
   
-  // Prompt user for age group if not already set
-  if (!localStorage.getItem('pockettrack_age_group') && !localStorage.getItem('pockettrack_app_mode_chosen')) {
+  // Prompt user for age group ONLY after onboarding is finished
+  const isOnboarded = localStorage.getItem('pockettrack_onboarded_v2') === 'true' ||
+                      localStorage.getItem('pockettrack_onboarded') === 'true';
+  if (isOnboarded && !localStorage.getItem('pockettrack_age_group') && !localStorage.getItem('pockettrack_app_mode_chosen')) {
     const onboardingEl = document.getElementById('onboarding-screen');
     const isOnboardingActive = onboardingEl && onboardingEl.style.display !== 'none';
     if (!isOnboardingActive) {

@@ -401,6 +401,15 @@ function listenToEntries(){
         renderReport();
         updateHeaderStats();
         if(typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+        if(typeof window.FinnyMascot !== 'undefined' && window.FinnyMascot.render) {
+          try { window.FinnyMascot.render(); } catch(e) {}
+        }
+        if(typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
+          try { window.Envelopes.render(); } catch(e) {}
+        }
+        if(typeof window.renderDailyBurnMeter === 'function') {
+          try { window.renderDailyBurnMeter(); } catch(e) {}
+        }
       }
     }
   } catch(e){}
@@ -422,6 +431,15 @@ function listenToEntries(){
       updateHeaderStats();
       if(typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
       if(typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+      if(typeof window.FinnyMascot !== 'undefined' && window.FinnyMascot.render) {
+        try { window.FinnyMascot.render(); } catch(e) {}
+      }
+      if(typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
+        try { window.Envelopes.render(); } catch(e) {}
+      }
+      if(typeof window.renderDailyBurnMeter === 'function') {
+        try { window.renderDailyBurnMeter(); } catch(e) {}
+      }
       checkBudget();
       refreshEventsViewsIfOpen();
       renderStreak();

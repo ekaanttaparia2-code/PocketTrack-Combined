@@ -49,6 +49,50 @@
     { label: '₹1,50,000', val: 150000 }
   ];
 
+  function getExistingAccountData() {
+    var entries = [];
+    if (typeof window.mainEntries === 'function') {
+      try { entries = window.mainEntries(); } catch(e) {}
+    } else if (Array.isArray(window.entries)) {
+      entries = window.entries;
+    }
+    
+    // Also check cached entries
+    if (!entries || !entries.length) {
+      try {
+        var raw = localStorage.getItem('pockettrack_entries_cache') || (window.currentUser && localStorage.getItem('pockettrack_entries_cache_' + window.currentUser.uid));
+        if (raw) {
+          var p = JSON.parse(raw);
+          if (Array.isArray(p) && p.length) entries = p;
+        }
+      } catch(e) {}
+    }
+
+    var balances = { cash: 0, bank: 0, card: 0 };
+    if (typeof window.computeWalletBalances === 'function') {
+      try {
+        var b = window.computeWalletBalances();
+        if (b && typeof b === 'object') balances = b;
+      } catch(e) {}
+    }
+
+    var totalBal = 0;
+    var hasNonZero = false;
+    Object.keys(balances).forEach(function(k) {
+      var val = Number(balances[k]) || 0;
+      totalBal += val;
+      if (val !== 0) hasNonZero = true;
+    });
+
+    var isExisting = (entries && entries.length > 0) || hasNonZero;
+    return {
+      isExisting: isExisting,
+      entriesCount: entries ? entries.length : 0,
+      totalBalance: totalBal,
+      balances: balances
+    };
+  }
+
   function getLang() {
     return (window.currentLang === 'hi' || localStorage.getItem('pockettrack_lang') === 'hi') ? 'hi' : 'en';
   }
@@ -231,7 +275,7 @@
     // ── STEP 5: Custom Blueprint Reveal ───────────────────────
     else if (state.step === 5) {
       var crownSVG = getFinnySVG('celebrating', 'enjoying', 95);
-      var income = Math.max(state.monthlyIncome, 500);
+      var income = Math.max(Number(state.monthlyIncome) || 0, 0);
       var needs = Math.round(income * 0.5);
       var wants = Math.round(income * 0.3);
       var savings = Math.round(income * 0.2);
@@ -277,29 +321,72 @@
 
     // ── STEP 6: Final Account Launch ──────────────────────────
     else if (state.step === 6) {
-      var finnyReadySVG = getFinnySVG('greeting', 'enjoying', 90);
-      html += '<div style="margin-bottom:8px;">' + finnyReadySVG + '</div>' +
-        '<h2 style="font-size:20px;font-weight:800;color:#fff;margin:0 0 4px;">' +
-          (isHi ? 'सब तैयार है! शुरू करें' : 'You\'re All Set to Win!') +
-        '</h2>' +
-        '<p style="font-size:12.5px;color:var(--text-dim);margin:0 0 16px;">' +
-          (isHi ? 'शुरुआती बैलेंस दर्ज करें (बाद में भी बदल सकते हैं):' : 'Optionally set your current starting balance:') +
-        '</p>' +
-        '<div style="width:100%;max-width:320px;margin:0 auto 16px;">' +
-          '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;text-align:left;">' +
-            (isHi ? 'शुरुआती वॉलेट बैलेंस (₹)' : 'Starting Balance (₹)') +
-          '</label>' +
-          '<input type="number" id="ob-start-bal" class="ob-text-input" value="' + state.startingBalance + '" oninput="window.setObStartBal(this.value)">' +
-        '</div>' +
-        '<div style="width:100%;max-width:320px;margin:0 auto 20px;">' +
-          '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;text-align:left;">' +
-            (isHi ? 'प्राथमिक वॉलेट' : 'Primary Account') +
-          '</label>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-            '<button type="button" class="ob-goal-btn ' + (state.walletType === 'bank' ? 'selected' : '') + '" onclick="window.setObWallet(\'bank\')">📱 Bank / UPI</button>' +
-            '<button type="button" class="ob-goal-btn ' + (state.walletType === 'cash' ? 'selected' : '') + '" onclick="window.setObWallet(\'cash\')">💵 Cash Vault</button>' +
+      var acct = getExistingAccountData();
+      if (acct.isExisting) {
+        // Returning user with existing transactions / wallets!
+        var finnyWelcomeSVG = getFinnySVG('celebrating', 'enjoying', 92);
+        var bBal = Math.round(acct.balances.bank || 0);
+        var cBal = Math.round(acct.balances.cash || 0);
+        var cardBal = Math.round(acct.balances.card || 0);
+
+        html += '<div style="margin-bottom:8px;">' + finnyWelcomeSVG + '</div>' +
+          '<h2 style="font-size:20px;font-weight:800;color:#fff;margin:0 0 4px;">' +
+            (isHi ? 'क्या यह आपका वर्तमान बैलेंस है?' : 'Is this your current balance?') +
+          '</h2>' +
+          '<p style="font-size:12.5px;color:var(--text-dim);margin:0 0 14px;max-width:320px;margin-left:auto;margin-right:auto;">' +
+            (isHi
+              ? 'हमें आपके पिछले खाते का डेटा और ' + acct.entriesCount + ' लेन-देन मिले हैं। क्या यह बैलेंस सही है?'
+              : 'We found your existing account with ' + acct.entriesCount + ' transactions. Please confirm your balance:') +
+          '</p>' +
+          // Existing Balance Card
+          '<div style="background:rgba(15,23,42,0.85);border:1px solid rgba(52,211,153,0.35);border-radius:18px;padding:16px;max-width:320px;margin:0 auto 16px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">' +
+            '<div style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">' +
+              (isHi ? 'कुल उपलब्ध बैलेंस' : 'Current Tracked Balance') +
+            '</div>' +
+            '<div style="font-size:30px;font-weight:900;color:#34d399;font-family:\'Space Grotesk\',sans-serif;margin-bottom:14px;">' +
+              '₹' + Math.round(acct.totalBalance).toLocaleString('en-IN') +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;">' +
+              '<div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">' +
+                '<div style="font-size:10.5px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">📱 Bank / UPI</div>' +
+                '<div style="font-size:13.5px;font-weight:700;color:#60a5fa;margin-top:2px;">₹' + bBal.toLocaleString('en-IN') + '</div>' +
+              '</div>' +
+              '<div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">' +
+                '<div style="font-size:10.5px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">💵 Cash</div>' +
+                '<div style="font-size:13.5px;font-weight:700;color:#34d399;margin-top:2px;">₹' + cBal.toLocaleString('en-IN') + '</div>' +
+              '</div>' +
+            '</div>' +
+            (cardBal !== 0 ? '<div style="margin-top:8px;font-size:11px;color:#f43f5e;text-align:left;">💳 Credit Card: ₹' + Math.abs(cardBal).toLocaleString('en-IN') + '</div>' : '') +
           '</div>' +
-        '</div>';
+          '<div style="font-size:11.5px;color:#94a3b8;line-height:1.4;max-width:300px;margin:0 auto 10px;">' +
+            '🔒 ' + (isHi ? 'आपका लेन-देन इतिहास सुरक्षित है और Finny से जुड़ गया है।' : 'Your previous entries & wallet balances are preserved.') +
+          '</div>';
+      } else {
+        // Brand new user flow
+        var finnyReadySVG = getFinnySVG('greeting', 'enjoying', 90);
+        html += '<div style="margin-bottom:8px;">' + finnyReadySVG + '</div>' +
+          '<h2 style="font-size:20px;font-weight:800;color:#fff;margin:0 0 4px;">' +
+            (isHi ? 'सब तैयार है! शुरू करें' : 'You\'re All Set to Win!') +
+          '</h2>' +
+          '<p style="font-size:12.5px;color:var(--text-dim);margin:0 0 16px;">' +
+            (isHi ? 'शुरुआती बैलेंस दर्ज करें (बाद में भी बदल सकते हैं):' : 'Optionally set your starting balance:') +
+          '</p>' +
+          '<div style="width:100%;max-width:320px;margin:0 auto 16px;">' +
+            '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;text-align:left;">' +
+              (isHi ? 'शुरुआती वॉलेट बैलेंस (₹)' : 'Starting Balance (₹)') +
+            '</label>' +
+            '<input type="number" id="ob-start-bal" class="ob-text-input" value="' + state.startingBalance + '" oninput="window.setObStartBal(this.value)">' +
+          '</div>' +
+          '<div style="width:100%;max-width:320px;margin:0 auto 20px;">' +
+            '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;text-align:left;">' +
+              (isHi ? 'प्राथमिक वॉलेट' : 'Primary Account') +
+            '</label>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+              '<button type="button" class="ob-goal-btn ' + (state.walletType === 'bank' ? 'selected' : '') + '" onclick="window.setObWallet(\'bank\')">📱 Bank / UPI</button>' +
+              '<button type="button" class="ob-goal-btn ' + (state.walletType === 'cash' ? 'selected' : '') + '" onclick="window.setObWallet(\'cash\')">💵 Cash Vault</button>' +
+            '</div>' +
+          '</div>';
+      }
     }
 
     html += '</div>'; // End ob-content-card
@@ -308,7 +395,14 @@
     var nextText = isHi ? 'आगे बढ़ें →' : 'Continue →';
     if (state.step === 0) nextText = isHi ? 'शुरू करें 🚀' : 'Get Started 🚀';
     else if (state.step === 5) nextText = isHi ? 'योजना स्वीकारें →' : 'Accept Blueprint →';
-    else if (state.step === 6) nextText = isHi ? 'डैशबोर्ड खोलें 🚀' : 'Launch PocketTrack 🚀';
+    else if (state.step === 6) {
+      var acctCheck = getExistingAccountData();
+      if (acctCheck.isExisting) {
+        nextText = isHi ? 'हाँ, यह सही है 🚀' : 'Confirm & Continue 🚀';
+      } else {
+        nextText = isHi ? 'डैशबोर्ड खोलें 🚀' : 'Launch PocketTrack 🚀';
+      }
+    }
 
     // Don't show footer on calibrating slide (step 4 auto advances)
     if (state.step !== 4) {
@@ -437,6 +531,7 @@
   };
 
   window.finishOnboarding = function() {
+    var acct = getExistingAccountData();
     try {
       localStorage.setItem(ONBOARDING_FLAG, 'true');
       localStorage.setItem('pockettrack_onboarded', 'true');
@@ -445,13 +540,27 @@
         selectedTriggers: state.selectedTriggers,
         primaryGoal: state.primaryGoal,
         monthlyIncome: state.monthlyIncome,
-        startingBalance: state.startingBalance,
+        startingBalance: acct.isExisting ? acct.totalBalance : state.startingBalance,
         walletType: state.walletType,
+        isExistingAccount: acct.isExisting,
         completedAt: new Date().toISOString()
       }));
       localStorage.setItem('pockettrack_monthly_income', String(state.monthlyIncome));
 
-      // Refresh Envelopes & Daily Burn Meter if loaded
+      // For brand new accounts: assign starting balance to chosen wallet cleanly
+      if (!acct.isExisting && state.startingBalance > 0) {
+        if (typeof window.userWallets !== 'undefined' && Array.isArray(window.userWallets)) {
+          var targetWallet = window.userWallets.find(function(w) { return w.id === state.walletType; });
+          if (targetWallet) {
+            targetWallet.initialBalance = Number(state.startingBalance) || 0;
+            if (typeof window.saveWallets === 'function') window.saveWallets();
+            if (typeof window.renderWallets === 'function') window.renderWallets();
+            if (typeof window.renderWalletSwitcher === 'function') window.renderWalletSwitcher();
+          }
+        }
+      }
+
+      // Refresh Envelopes & Daily Burn Meter & Finny if loaded
       if (window.Envelopes && window.Envelopes.render) {
         window.Envelopes.render();
       }
@@ -460,6 +569,9 @@
       }
       if (window.FinnyMascot && window.FinnyMascot.render) {
         window.FinnyMascot.render();
+      }
+      if (typeof window.updateHeaderStats === 'function') {
+        window.updateHeaderStats();
       }
     } catch(e) {}
 
@@ -470,6 +582,7 @@
       screen.style.transform = 'scale(0.96)';
       setTimeout(function() {
         screen.style.display = 'none';
+        screen.innerHTML = ''; // Wipe DOM so hidden SVG defs never shadow live dashboard Finny
         if (typeof window.openAgeModeModal === 'function') {
           window.openAgeModeModal();
         }
