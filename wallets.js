@@ -30,6 +30,16 @@ function escapeWalletHTML(str) {
       scrollbar-width: none;
     }
     .wallet-switcher-bar::-webkit-scrollbar { display: none; }
+    .insights-wallet-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 2px 0 4px 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .insights-wallet-pills::-webkit-scrollbar { display: none; }
 
     .wallet-pill {
       display: inline-flex;
@@ -256,23 +266,15 @@ window.renderWalletSwitcher = function() {
   window.loadWallets();
   const barEl = document.getElementById('wallet-switcher-bar');
   const listEl = document.getElementById('wallet-pills-list');
+  const insightsListEl = document.getElementById('insights-wallet-pills-list');
 
   const balances = window.computeWalletBalances();
   let totalNetWorth = 0;
   Object.values(balances).forEach(b => { totalNetWorth += b; });
 
-  // Only show the switcher bar if user actually has multiple wallets with active balances
-  const nonCashWithBalance = userWallets.filter(w => w.id !== 'cash' && (balances[w.id] || 0) !== 0);
-  const hasCustomWallets = userWallets.some(w => w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card');
-
-  if (!hasCustomWallets && nonCashWithBalance.length === 0) {
-    if (barEl) barEl.style.display = 'none';
-    const insightsBar = document.getElementById('insights-wallet-switcher-bar');
-    if (insightsBar) insightsBar.style.display = 'none';
-    return;
-  }
+  // Keep switcher bar visible on Home and in Insights so user always sees wallet balances
   if (barEl) barEl.style.display = 'flex';
-  if (!listEl) return;
+  if (!listEl && !insightsListEl) return;
 
   const allPillActive = (window.activeWalletId === 'all');
 
@@ -308,7 +310,6 @@ window.renderWalletSwitcher = function() {
     `;
   }
 
-  const insightsListEl = document.getElementById('insights-wallet-pills-list');
   if (insightsListEl) {
     insightsListEl.innerHTML = `
       ${allBtn}

@@ -143,23 +143,17 @@ function openQuickComposer(mode='expense', editEntry=null){
   const wChipsEl = document.getElementById('composer-wallet-chips');
   if (wChipsEl) {
     const wSection = wChipsEl.closest('div[style*="margin-bottom"]');
-    const hasCustom = (typeof userWallets !== 'undefined' && Array.isArray(userWallets))
-      ? userWallets.some(w => w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card')
-      : false;
-    if (!hasCustom) {
-      if (wSection) wSection.style.display = 'none';
-      composerWallet = 'cash';
-    } else {
-      if (wSection) wSection.style.display = 'block';
-      const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [
-        { id: 'cash', name: 'Cash', icon: '💵' }
-      ];
-      wChipsEl.innerHTML = wList.map(w => `
-        <button type="button" class="composer-chip ${w.id === composerWallet ? 'active' : ''}" data-wallet="${w.id}" onclick="selectComposerWallet(this,'${w.id}')">
-          ${w.icon || '💳'} ${(typeof escapeHTML === 'function') ? escapeHTML(w.name) : w.name}
-        </button>
-      `).join('');
-    }
+    if (wSection) wSection.style.display = 'block';
+    const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [
+      { id: 'cash', name: 'Cash', icon: '💵' },
+      { id: 'bank', name: 'Bank / UPI', icon: '📱' },
+      { id: 'card', name: 'Credit Card', icon: '💳' }
+    ];
+    wChipsEl.innerHTML = wList.map(w => `
+      <button type="button" class="composer-chip ${w.id === composerWallet ? 'active' : ''}" data-wallet="${w.id}" onclick="selectComposerWallet(this,'${w.id}')">
+        ${w.icon || '💳'} ${(typeof escapeHTML === 'function') ? escapeHTML(w.name) : w.name}
+      </button>
+    `).join('');
   }
 
   setComposerMode(composerMode);
