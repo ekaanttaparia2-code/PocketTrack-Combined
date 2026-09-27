@@ -131,14 +131,15 @@
     </div>
     <input type="password" id="auth-pass" placeholder="At least 6 characters" data-i18n-ph="ph_pass"/>
 
-    <label class="auth-consent-box" for="auth-consent-check">
-      <input type="checkbox" id="auth-consent-check" class="auth-checkbox" checked/>
+    <!-- Red warning message directly ABOVE the consent box -->
+    <div id="auth-error" class="auth-error-banner" style="display:none;" role="alert"></div>
+
+    <label class="auth-consent-box" id="auth-consent-box" for="auth-consent-check">
+      <input type="checkbox" id="auth-consent-check" class="auth-checkbox" checked onchange="handleConsentChange(this)"/>
       <span class="auth-consent-text">
         I agree to the <a href="terms.html" target="_blank" class="auth-legal-link" onclick="event.stopPropagation()">Terms of Service</a> &amp; <a href="privacy.html" target="_blank" class="auth-legal-link" onclick="event.stopPropagation()">Privacy Policy</a>
       </span>
     </label>
-
-    <div id="auth-error" class="auth-error-banner" style="display:none;"></div>
 
     <div class="btn-row" style="margin-top:14px">
       <button class="btn primary auth-action-btn" id="auth-login-btn" onclick="authAction('login')"><i class="ti ti-login"></i> <span data-i18n="btn_login">Log in</span></button>

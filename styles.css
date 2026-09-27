@@ -1164,8 +1164,8 @@ body[data-theme="midnight"]{
   display:flex;
   align-items:center;
   gap:11px;
-  margin:16px 0 12px;
-  padding:10px 14px;
+  margin:14px 0 14px;
+  padding:11px 14px;
   background:rgba(255,255,255,0.04);
   border:1px solid rgba(255,255,255,0.09);
   border-radius:14px;
@@ -1180,6 +1180,18 @@ body[data-theme="midnight"]{
 .auth-consent-box:focus-within{
   border-color:var(--accent);
   box-shadow:0 0 0 3px rgba(139,92,246,0.18);
+}
+.auth-consent-box.auth-consent-error{
+  border-color:#ef4444 !important;
+  background:rgba(239,68,68,0.10) !important;
+  box-shadow:0 0 0 3.5px rgba(239,68,68,0.25) !important;
+  animation:authShake 0.42s cubic-bezier(0.36,0.07,0.19,0.97) both;
+}
+@keyframes authShake{
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 .auth-checkbox{
   appearance:auto !important;
@@ -1216,20 +1228,23 @@ body[data-theme="midnight"]{
   color:#ffffff;
 }
 
-/* Auth error alert banner */
+/* Auth error alert banner placed directly above consent box */
 .auth-error-banner{
-  background:rgba(239,68,68,0.12);
-  border:1px solid rgba(239,68,68,0.38);
-  color:#fca5a5;
+  background:rgba(239,68,68,0.15);
+  border:1px solid rgba(239,68,68,0.45);
+  color:#fecaca;
   border-radius:12px;
-  padding:9px 13px;
+  padding:10px 14px;
   font-size:12px;
-  line-height:1.4;
-  margin-top:12px;
+  font-weight:500;
+  line-height:1.45;
+  margin-top:14px;
+  margin-bottom:2px;
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:8px;
   animation:fadeIn 0.2s ease;
+  box-shadow:0 4px 18px rgba(239,68,68,0.16);
 }
 .auth-google-btn{
   width:100%;

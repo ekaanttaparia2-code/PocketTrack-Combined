@@ -28,20 +28,41 @@ function hideAuthError(){
   }
 }
 
+function promptConsentRequired(){
+  const msg = (typeof currentLang !== 'undefined' && currentLang === 'hi')
+    ? '⚠️ जारी रखने के लिए कृपया नीचे दिए गए चेकबॉक्स को चुनें और नियमों को स्वीकार करें।'
+    : '⚠️ Please check the box below to agree to the Terms of Service & Privacy Policy.';
+  showAuthError(msg);
+  const box = document.getElementById('auth-consent-box');
+  if(box){
+    box.classList.remove('auth-consent-error');
+    void box.offsetWidth;
+    box.classList.add('auth-consent-error');
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function handleConsentChange(el){
+  if(el && el.checked){
+    hideAuthError();
+    const box = document.getElementById('auth-consent-box');
+    if(box) box.classList.remove('auth-consent-error');
+  }
+}
+window.handleConsentChange = handleConsentChange;
+
 function authAction(mode){
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
   hideAuthError();
   if(!email||!pass||pass.length<6){
-    showAuthError(currentLang==='hi' ? 'सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड डालें।' : 'Enter a valid email and a password with 6+ characters.');
+    showAuthError(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड डालें।' : 'Enter a valid email and a password with 6+ characters.');
     return;
   }
   if (mode === 'signup') {
     const consent = document.getElementById('auth-consent-check');
     if (consent && !consent.checked) {
-      showAuthError(currentLang === 'hi' 
-        ? 'कृपया आगे बढ़ने के लिए नियम व शर्तों और गोपनीयता नीति को स्वीकार करें।' 
-        : 'Please accept the Terms of Service & Privacy Policy to create an account.');
+      promptConsentRequired();
       return;
     }
   }
@@ -64,11 +85,11 @@ function handleForgotPassword(){
   const email=document.getElementById('auth-email').value.trim();
   hideAuthError();
   if(!email){
-    showAuthError(currentLang==='hi' ? 'पासवर्ड रीसेट लिंक पाने के लिए पहले अपना ईमेल डालें।' : 'Enter your email above first to get a reset link.');
+    showAuthError(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'पासवर्ड रीसेट लिंक पाने के लिए पहले अपना ईमेल डालें।' : 'Enter your email above first to get a reset link.');
     return;
   }
   auth.sendPasswordResetEmail(email).then(()=>{
-    toast(currentLang==='hi' ? 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दिया गया है' : 'Password reset link sent to your email', 'success');
+    toast(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दिया गया है' : 'Password reset link sent to your email', 'success');
   }).catch(err=>{
     showAuthError(err.message);
   });
@@ -78,29 +99,57 @@ function signInWithGoogle(){
   hideAuthError();
   const consent = document.getElementById('auth-consent-check');
   if (consent && !consent.checked) {
-    showAuthError(currentLang === 'hi' 
-      ? 'कृपया आगे बढ़ने के लिए नियम व शर्तों और गोपनीयता नीति को स्वीकार करें।' 
-      : 'Please accept the Terms of Service & Privacy Policy to continue.');
+    promptConsentRequired();
     return;
   }
   const btn=document.getElementById('auth-google-btn');
-  const originalHTML=btn.innerHTML;
-  btn.disabled=true;
-  btn.style.opacity='0.6';
-  btn.innerHTML='<span class="mini-spinner"></span>';
+  const originalHTML=btn ? btn.innerHTML : 'Continue with Google';
+  if(btn){
+    btn.disabled=true;
+    btn.style.opacity='0.6';
+    btn.innerHTML='<span class="mini-spinner"></span> ' + (typeof currentLang !== 'undefined' && currentLang === 'hi' ? 'कनेक्ट हो रहा है...' : 'Connecting...');
+  }
+  
+  if (typeof firebase === 'undefined' || typeof auth === 'undefined') {
+    showAuthError(typeof currentLang !== 'undefined' && currentLang === 'hi' 
+      ? 'Firebase उपलब्ध नहीं है। कृपया इंटरनेट कनेक्शन जांचें।' 
+      : 'Firebase Authentication is unavailable. Please check your internet connection.');
+    if(btn){
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.innerHTML = originalHTML;
+    }
+    return;
+  }
+
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err=>{
-    if(err.code==='auth/popup-blocked' || err.code==='auth/cancelled-popup-request'){
-      auth.signInWithRedirect(provider);
+  provider.addScope('email');
+  provider.addScope('profile');
+  
+  auth.signInWithPopup(provider).then(cred=>{
+    hideAuthError();
+  }).catch(err=>{
+    console.warn('Google Sign-In notice:', err);
+    if(err.code==='auth/popup-blocked' || err.code==='auth/cancelled-popup-request' || err.code==='auth/popup-closed-by-user'){
+      showAuthError(typeof currentLang !== 'undefined' && currentLang === 'hi'
+        ? 'पॉपअप विंडो बंद हो गई। Google साइन-इन रीडायरेक्ट के ज़रिए खोला जा रहा है...'
+        : 'Sign-in popup was closed or blocked. Redirecting to Google...');
+      auth.signInWithRedirect(provider).catch(redirErr=>{
+        showAuthError(redirErr.message || 'Google Sign-in failed. Please try email login.');
+      });
       return;
     }
-    if(err.code!=='auth/popup-closed-by-user'){
-      showAuthError(err.message);
+    if (err.code === 'auth/unauthorized-domain') {
+      showAuthError('This domain is not authorized in Firebase OAuth. Add it in Firebase Console -> Auth -> Settings.');
+    } else {
+      showAuthError(err.message || 'Google Sign-in failed. Please try again.');
     }
   }).finally(()=>{
-    btn.disabled=false;
-    btn.style.opacity='1';
-    btn.innerHTML=originalHTML;
+    if(btn){
+      btn.disabled=false;
+      btn.style.opacity='1';
+      btn.innerHTML=originalHTML;
+    }
   });
 }
 
