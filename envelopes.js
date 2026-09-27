@@ -27,7 +27,7 @@
     ],
     savings: [
       'savings', 'investment', 'investments', 'mutual fund', 'sip',
-      'stocks', 'equity', 'gold', 'silver', 'chillar', 'vault',
+      'stocks', 'equity', 'gold', 'silver',
       'fd', 'rd', 'emergency fund', 'ppf', 'nps', 'crypto'
     ]
   };

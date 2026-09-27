@@ -29,7 +29,6 @@ const SHELL = [
   './wrapped.js',
   './shared_portfolios.js',
   './daily_burn_meter.js',
-  './digital_vault.js',
   './upi_qr_generator.js',
   './goal_sip_planner.js',
   './NotoSansDevanagari-Regular.ttf'

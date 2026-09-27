@@ -241,7 +241,6 @@ function applyLanguage(){
   if(typeof renderFinancialDNACard==='function') renderFinancialDNACard();
   if(typeof renderWrappedButton==='function') renderWrappedButton();
   if(typeof renderDailyBurnMeter==='function') renderDailyBurnMeter();
-  if(typeof renderDigitalVault==='function') renderDigitalVault();
   if(typeof renderActiveGoalCard==='function') renderActiveGoalCard();
   if(typeof renderPortfolioSwitcher==='function') renderPortfolioSwitcher();
   updateSmartLogPlaceholder();
@@ -2887,7 +2886,7 @@ window.openAgeModeModal = function() {
               ${currentMode==='power'?'<span style="font-size:11px;background:#8b5cf6;color:#fff;font-weight:800;padding:2px 8px;border-radius:99px;">ACTIVE</span>':''}
             </div>
             <div style="font-size:12px;color:#94a3b8;margin-top:3px;line-height:1.35;">
-              ${isHi ? 'मल्टी-वॉलेट्स, फ्यूचर मनी सिम्युलेटर, चिल्लर वॉल्ट, वित्तीय डीएनए और प्रो टूल्स।' : 'Multi-wallets & accounts, Future Simulator, Chillar Vault, Financial DNA & Pro tools.'}
+              ${isHi ? 'मल्टी-वॉलेट्स, फ्यूचर मनी सिम्युलेटर, वित्तीय डीएनए और प्रो टूल्स।' : 'Multi-wallets & accounts, Future Simulator, Financial DNA & Pro tools.'}
             </div>
           </div>
         </div>

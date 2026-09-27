@@ -74,9 +74,6 @@ function updateHeaderStats(){
   if (typeof window.updateFinancialDNA === 'function') {
     try { window.updateFinancialDNA(); } catch(e) {}
   }
-  if (typeof window.renderDigitalVault === 'function') {
-    try { window.renderDigitalVault(); } catch(e) {}
-  }
   if (typeof window.renderActiveGoalCard === 'function') {
     try { window.renderActiveGoalCard(); } catch(e) {}
   }
@@ -348,12 +345,6 @@ function openCommandHubModal(){
           <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'खर्च व्यक्तित्व और लीक्स' : 'DNA archetype & cash drag'}</span>
         </div>
 
-        <!-- 4. Digital Chillar Vault -->
-        <div onclick="closeCommandHubModal();openDigitalVaultModal();" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-          <div style="font-size:24px;margin-bottom:6px;">🪙</div>
-          <strong style="display:block;font-size:14px;color:#fde047;">${isHi ? 'डिजिटल चिल्लर वॉल्ट' : 'Digital Chillar Vault'}</strong>
-          <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${isHi ? 'पैसिव राउंड-अप बचत' : 'Silent round-ups piggy'}</span>
-        </div>
 
         <!-- 5. Emergency Fund & Goal SIP -->
         <div onclick="closeCommandHubModal();if(typeof openGoalPlannerModal==='function')openGoalPlannerModal();" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.35);border-radius:18px;padding:16px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
@@ -737,59 +728,6 @@ window.openFinancialDnaModal = function() {
   document.body.appendChild(modal);
 };
 
-window.openDigitalVaultModal = function() {
-  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
-  const data = (typeof computeRoundUpVault === 'function') ? computeRoundUpVault() : { totalSaved: 0, monthSaved: 0 };
-  const displayAmt = data.monthSaved || 0;
-  const totalAmt = data.totalSaved || 0;
-
-  const existing = document.getElementById('digital-vault-modal-backdrop');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'digital-vault-modal-backdrop';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
-
-  modal.innerHTML = `
-    <div class="card" style="max-width:440px;width:100%;background:linear-gradient(160deg,#181432,#0d0a21);border:1px solid rgba(251,191,36,0.4);border-radius:28px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:24px;">🪙</span>
-          <div>
-            <h3 style="margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;">${isHi ? 'डिजिटल चिल्लर वॉल्ट' : 'Digital Chillar Vault'}</h3>
-            <span style="font-size:11px;color:#fbbf24;font-weight:600;">${isHi ? 'पैसिव राउंड-अप बचत' : 'Micro Round-Ups Simulator'}</span>
-          </div>
-        </div>
-        <button onclick="document.getElementById('digital-vault-modal-backdrop').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
-      </div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px;">
-        <div id="vault-piggy-interactive" onclick="this.style.transform='scale(1.25) rotate(10deg)';setTimeout(()=>{this.style.transform='scale(1)';},300);" style="font-size:48px;cursor:pointer;transition:transform 0.2s;" title="Tap to shake!">
-          🪙
-        </div>
-        <span style="font-size:11px;text-transform:uppercase;color:var(--text-dim,#94a3b8);letter-spacing:0.5px;margin-top:6px;">${isHi ? 'इस महीने की राउंड-अप बचत' : 'Round-Up Savings This Month'}</span>
-        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:#fbbf24;margin-top:2px;">
-          ₹${displayAmt.toLocaleString('en-IN')}
-        </div>
-        <span style="font-size:11px;color:#cbd5e1;margin-top:4px;">${isHi ? 'कुल संचित चिल्लर: ₹' + totalAmt.toLocaleString('en-IN') : 'Lifetime Chillar Saved: ₹' + totalAmt.toLocaleString('en-IN')}</span>
-      </div>
-
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:14px;margin-bottom:16px;">
-        <strong style="display:block;font-size:12.5px;color:#fff;margin-bottom:6px;">⚡ ${isHi ? 'यह कैसे काम करता है?' : 'How Chillar Works'}:</strong>
-        <p style="margin:0;font-size:11.5px;color:var(--text-dim,#94a3b8);line-height:1.5;">
-          ${isHi 
-            ? 'जब भी आप ₹42 की चाय पीते हैं, PocketTrack इसे ₹50 तक राउंड-अप करके बचे ₹8 आपके डिजिटल चिल्लर वॉल्ट में जोड़ता है। महीने भर में यह चुपचाप एक बड़ा फंड बन जाता है!'
-            : 'Every time you spend ₹42 on chai, PocketTrack rounds it to ₹50, putting ₹8 into your digital vault silently. Without feeling any pinch, you build wealth automatically!'}
-        </p>
-      </div>
-
-      <button onclick="document.getElementById('digital-vault-modal-backdrop').remove();" class="btn primary" style="width:100%;padding:12px;font-size:13px;font-weight:700;">
-        ${isHi ? 'समझ गया' : 'Got it!'}
-      </button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-};
 
 function listenToEntries(){
   if(!currentUser) return;
