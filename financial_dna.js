@@ -210,8 +210,12 @@ const DNA_TYPES = {
 
 function computeFinancialDNA() {
     let entries = [];
-    if (typeof mainEntries === 'function') {
+    if (typeof allRawMainEntries === 'function') {
+        entries = allRawMainEntries();
+    } else if (typeof mainEntries === 'function') {
         entries = mainEntries();
+    } else if (typeof window !== 'undefined' && Array.isArray(window.entries)) {
+        entries = window.entries;
     }
     
     if (!entries || entries.length === 0) {
@@ -366,7 +370,7 @@ function renderFinancialDNACard() {
             </ul>
 
             <div class="dna-footer">
-                <span>Based on ${m.entryCount} entries</span>
+                <span>${m.entryCount === 0 ? 'No entries logged yet' : `Based on ${m.entryCount} ${m.entryCount === 1 ? 'entry' : 'entries'}`}</span>
                 <button class="dna-share-btn" onclick="shareFinancialDNA()">Share ↗</button>
             </div>
         </div>
@@ -379,6 +383,7 @@ function getFinancialDNAShareText() {
     return `🧬 My Financial DNA: ${dna.emoji} ${dna.title}\n"${dna.tagline}"\n📊 Savings Rate: ${m.savingsRatio.toFixed(0)}% | Social Spend: ${m.socialSpendPct.toFixed(0)}% | Impulse Rate: ${m.impulseRate.toFixed(0)}%\nDiscover yours → PocketTrack`;
 }
 
+window.computeFinancialDNA = computeFinancialDNA;
 window.shareFinancialDNA = function() {
     const text = getFinancialDNAShareText();
     if (navigator.share) {

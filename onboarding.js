@@ -17,9 +17,9 @@
     stressLevel: 3, // 1 to 5
     selectedTriggers: ['food_delivery', 'online_shopping', 'subscriptions'],
     primaryGoal: 'emergency_fund',
-    monthlyIncome: 40000,
+    monthlyIncome: 0,
     userName: '',
-    startingBalance: 5000,
+    startingBalance: 0,
     walletType: 'cash',
     calcProgress: 0
   };
@@ -219,7 +219,7 @@
           '</label>' +
           '<div style="position:relative;">' +
             '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#34d399;font-weight:700;">₹</span>' +
-            '<input type="number" id="ob-income-input" class="ob-text-input" style="padding-left:32px;" value="' + state.monthlyIncome + '" oninput="window.setObIncome(this.value)">' +
+            '<input type="number" id="ob-income-input" class="ob-text-input" style="padding-left:32px;" value="' + (state.monthlyIncome > 0 ? state.monthlyIncome : '') + '" placeholder="' + (isHi ? 'उदा. 25000' : 'e.g. 25000') + '" oninput="window.setObIncome(this.value)">' +
           '</div>' +
           // Presets
           '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">';
@@ -366,7 +366,7 @@
             '</label>' +
             '<div style="position:relative;">' +
               '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#34d399;font-weight:700;">₹</span>' +
-              '<input type="number" id="ob-start-bal" class="ob-text-input" style="padding-left:32px;" value="' + state.startingBalance + '" oninput="window.setObStartBal(this.value)">' +
+              '<input type="number" id="ob-start-bal" class="ob-text-input" style="padding-left:32px;" value="' + (state.startingBalance > 0 ? state.startingBalance : '') + '" placeholder="0" oninput="window.setObStartBal(this.value)">' +
             '</div>' +
           '</div>';
       }
@@ -531,11 +531,12 @@
       localStorage.setItem('pockettrack_monthly_income', String(state.monthlyIncome));
 
       // For brand new accounts: assign starting balance to primary unified cash wallet cleanly
-      if (!acct.isExisting && state.startingBalance > 0) {
+      if (!acct.isExisting) {
+        var startAmt = Number(state.startingBalance) || 0;
         if (typeof window.userWallets !== 'undefined' && Array.isArray(window.userWallets)) {
           var targetWallet = window.userWallets.find(function(w) { return w.id === 'cash'; }) || window.userWallets[0];
           if (targetWallet) {
-            targetWallet.initialBalance = Number(state.startingBalance) || 0;
+            targetWallet.initialBalance = startAmt;
             if (typeof window.saveWallets === 'function') window.saveWallets();
             if (typeof window.renderWallets === 'function') window.renderWallets();
             if (typeof window.renderWalletSwitcher === 'function') window.renderWalletSwitcher();

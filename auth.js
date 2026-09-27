@@ -101,9 +101,23 @@ function updateBottomBarVisibility(){
 window.updateBottomBarVisibility = updateBottomBarVisibility;
 
 if (typeof auth !== 'undefined') {
+  if (typeof auth.getRedirectResult === 'function') {
+    auth.getRedirectResult().catch(err => {
+      if (err && err.code !== 'auth/popup-closed-by-user') {
+        const errEl = document.getElementById('auth-error');
+        if (errEl && err.message) {
+          errEl.textContent = err.message;
+          errEl.style.display = 'block';
+        }
+      }
+    });
+  }
+
   auth.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
+    if (typeof loadWallets === 'function') loadWallets();
+    if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
     document.getElementById('auth-screen').style.display='none';
     updateBottomBarVisibility();
     if(typeof updateSyncIndicator==='function') updateSyncIndicator();
@@ -115,6 +129,7 @@ if (typeof auth !== 'undefined') {
     if(typeof updateVoiceFabVisibility === 'function') updateVoiceFabVisibility();
     if(typeof updateAIWidgetVisibility === 'function') updateAIWidgetVisibility();
     loadBudget();
+    if(typeof updateHeaderStats === 'function') updateHeaderStats();
     if(typeof db!=='undefined' && typeof PT_STORE!=='undefined'){
       db.collection('users').doc(user.uid).get().then(snap=>{
         const pro = !!(snap.exists && snap.data().pro === true);
@@ -159,6 +174,9 @@ if (typeof auth !== 'undefined') {
     if(typeof updateAIWidgetVisibility === 'function') updateAIWidgetVisibility();
     entries=[];
     if(typeof window !== 'undefined') window.entries = entries;
+    if (typeof loadWallets === 'function') loadWallets();
+    if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+    if (typeof updateHeaderStats === 'function') updateHeaderStats();
     if(typeof resetLedgerLocal==='function') resetLedgerLocal();
     if(typeof resetRecurringLocal==='function') resetRecurringLocal();
     if(typeof pendingWriteState!=='undefined'){ pendingWriteState.entries=false; pendingWriteState.events=false; }

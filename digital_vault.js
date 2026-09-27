@@ -112,12 +112,14 @@ function computeRoundUpVault() {
   };
 }
 
+window.computeRoundUpVault = computeRoundUpVault;
+
 window.renderDigitalVault = function() {
   const slot = document.getElementById('home-vault-slot');
   if (!slot) return;
 
   const data = computeRoundUpVault();
-  const displayAmt = data.monthSaved > 0 ? data.monthSaved : 450; // default preview if low data
+  const displayAmt = data.monthSaved || 0;
 
   slot.innerHTML = `
     <div class="vault-card">

@@ -2692,6 +2692,12 @@ window.triggerManualSync = async function() {
   }
 };
 
+window.closeAgeModeModal = function() {
+  localStorage.setItem('pockettrack_app_mode_chosen', 'true');
+  const m = document.getElementById('age-mode-modal');
+  if (m) m.remove();
+};
+
 window.openAgeModeModal = function() {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   const existing = document.getElementById('age-mode-modal');
@@ -2705,6 +2711,7 @@ window.openAgeModeModal = function() {
 
   modal.innerHTML = `
     <div style="max-width:440px;width:100%;background:linear-gradient(160deg,#1a133d,#0d0a21);border:1px solid rgba(139,92,246,0.5);border-radius:28px;padding:26px 22px;box-shadow:0 25px 70px rgba(0,0,0,0.85);color:#fff;text-align:center;position:relative;">
+      <button type="button" aria-label="Close" onclick="window.closeAgeModeModal()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.08);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">✕</button>
       <div style="font-size:38px;margin-bottom:8px;">🎯</div>
       <h3 style="margin:0 0 6px;font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:800;">
         ${isHi ? 'अपनी आयु चुनें' : 'Choose Your Experience'}
@@ -2743,11 +2750,17 @@ window.openAgeModeModal = function() {
         </div>
       </div>
 
-      <button onclick="document.getElementById('age-mode-modal')?.remove()" style="background:transparent;border:none;color:var(--text-dim,#94a3b8);font-size:12px;cursor:pointer;padding:6px 12px;">
-        ${isHi ? 'बाद में तय करें ✕' : 'Close / Decide Later ✕'}
+      <button type="button" onclick="window.closeAgeModeModal()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:#cbd5e1;font-size:13px;font-weight:600;cursor:pointer;padding:11px 18px;width:100%;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+        ${isHi ? 'बाद में तय करें (बंद करें) ✕' : 'Close / Decide Later ✕'}
       </button>
     </div>
   `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      window.closeAgeModeModal();
+    }
+  });
 
   document.body.appendChild(modal);
 };

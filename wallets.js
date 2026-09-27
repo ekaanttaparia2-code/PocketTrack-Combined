@@ -171,7 +171,8 @@ window.loadWallets = function() {
   try {
     let saved = null;
     const uidKey = (typeof currentUser !== 'undefined' && currentUser) ? ('pockettrack_wallets_' + currentUser.uid) : null;
-    const keysToCheck = [uidKey, 'pockettrack_wallets_guest', 'pockettrack_wallets'].filter(Boolean);
+    // Logged in users must only load their own wallets, preventing pollution from guest/demo data
+    const keysToCheck = uidKey ? [uidKey] : ['pockettrack_wallets_guest', 'pockettrack_wallets'];
 
     for (const k of keysToCheck) {
       const raw = localStorage.getItem(k);
@@ -206,6 +207,16 @@ window.loadWallets = function() {
         cashW.initialBalance = (parseFloat(cashW.initialBalance) || 0) + (parseFloat(bankW.initialBalance) || 0);
         bankW.initialBalance = 0;
       }
+    }
+
+    // Reset legacy fake demo balance (5000) for clean first-run experience if user has no entries
+    const entriesList = (typeof mainEntries === 'function') ? mainEntries() : [];
+    if (!entriesList.length) {
+      userWallets.forEach(w => {
+        if (parseFloat(w.initialBalance) === 5000) {
+          w.initialBalance = 0;
+        }
+      });
     }
 
     window.userWallets = userWallets;

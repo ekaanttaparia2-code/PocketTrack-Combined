@@ -137,10 +137,26 @@ function computeSafeToSpend() {
   if (typeof weeklyBudget !== 'undefined' && weeklyBudget > 0) {
     budgetPool = Math.max(budgetPool, weeklyBudget * 4.2);
   }
-  if (budgetPool <= 0) budgetPool = 25000; // Sensible default student/young-pro benchmark
+  const storedIncome = parseFloat(localStorage.getItem('pockettrack_monthly_income')) || 0;
+  if (storedIncome > 0) {
+    budgetPool = Math.max(budgetPool, storedIncome);
+  }
+
+  const hasBudgetOrIncome = budgetPool > 0;
+  if (!hasBudgetOrIncome) {
+    return {
+      remainingDays,
+      dailyAllowance: 0,
+      todaySpent,
+      todayRemaining: 0,
+      burnPercent: 0,
+      isSafe: true,
+      hasBudgetOrIncome: false
+    };
+  }
 
   const remainingMonthPool = Math.max(0, budgetPool - monthSpent + todaySpent);
-  const dailyAllowance = Math.max(100, Math.round(remainingMonthPool / remainingDays));
+  const dailyAllowance = Math.max(10, Math.round(remainingMonthPool / remainingDays));
   const todayRemaining = dailyAllowance - todaySpent;
   const burnPercent = Math.min(100, Math.round((todaySpent / dailyAllowance) * 100));
 
@@ -150,9 +166,12 @@ function computeSafeToSpend() {
     todaySpent,
     todayRemaining,
     burnPercent,
-    isSafe: todayRemaining >= 0
+    isSafe: todayRemaining >= 0,
+    hasBudgetOrIncome: true
   };
 }
+
+window.computeSafeToSpend = computeSafeToSpend;
 
 window.renderDailyBurnMeter = function() {
   const slot = document.getElementById('home-daily-burn-slot');

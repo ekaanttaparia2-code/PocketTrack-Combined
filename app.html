@@ -912,8 +912,8 @@
         <span class="rec-manage-sub">rent · bills · subs — auto-logged</span>
       </button>
 
-      <div class="composer-amount-wrap">
-        <span>₹</span><input id="composer-amount" inputmode="decimal" type="number" min="0.01" step="0.01" placeholder="0" autocomplete="off"/>
+      <div class="composer-amount-wrap" onclick="document.getElementById('composer-amount')?.focus()" title="Tap to enter amount">
+        <span>₹</span><input id="composer-amount" inputmode="decimal" type="text" pattern="[0-9]*[.]?[0-9]*" placeholder="0" autocomplete="off"/>
       </div>
 
       <div id="composer-expense-fields">

@@ -623,8 +623,8 @@ function renderFutureMoneySimulator() {
   const list = mainEntries();
   const income = list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
   const spent = list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
-  const balance = Math.max(5000, income - spent);
-  const estSavingsPerMo = Math.max(1000, Math.round(balance * 0.15));
+  const balance = Math.max(0, income - spent);
+  const estSavingsPerMo = balance > 0 ? Math.max(500, Math.round(balance * 0.15)) : 1000;
 
   const inner = `
     <div class="health-head" style="margin-bottom:14px;">

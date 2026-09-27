@@ -61,7 +61,7 @@
       .reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
 
     if (monthIncome > 0) return monthIncome;
-    return 40000; // Default sensible fallback
+    return 0;
   }
 
   function classifyEntry(entry) {

@@ -23,7 +23,20 @@ function updateHeaderStats(){
   const list = mainEntries();
   const income=list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
   const spent=list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
-  const balance=income-spent;
+
+  // Sync hero balance precisely with wallet balances (including initial balances)
+  let balance = 0;
+  if (typeof computeWalletBalances === 'function') {
+    const balances = computeWalletBalances();
+    const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : (typeof activeWalletId !== 'undefined' ? activeWalletId : 'all');
+    if (activeW && activeW !== 'all' && balances[activeW] !== undefined) {
+      balance = balances[activeW];
+    } else {
+      Object.values(balances).forEach(b => { balance += b; });
+    }
+  } else {
+    balance = income - spent;
+  }
 
   if (typeof animateNumber === 'function') {
     animateNumber('hdr-income', income);
@@ -51,6 +64,21 @@ function updateHeaderStats(){
   }
   if (typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
     try { window.Envelopes.render(); } catch(e) {}
+  }
+  if (typeof window.renderWalletSwitcher === 'function') {
+    try { window.renderWalletSwitcher(); } catch(e) {}
+  }
+  if (typeof window.renderDailyBurnMeter === 'function') {
+    try { window.renderDailyBurnMeter(); } catch(e) {}
+  }
+  if (typeof window.updateFinancialDNA === 'function') {
+    try { window.updateFinancialDNA(); } catch(e) {}
+  }
+  if (typeof window.renderDigitalVault === 'function') {
+    try { window.renderDigitalVault(); } catch(e) {}
+  }
+  if (typeof window.renderActiveGoalCard === 'function') {
+    try { window.renderActiveGoalCard(); } catch(e) {}
   }
 }
 window.updateHeaderStats = updateHeaderStats;
@@ -213,7 +241,8 @@ function selectComposerChip(btn,value){
 }
 
 async function submitTransactionComposer(){
-  const amt=parseFloat(document.getElementById('composer-amount')?.value);
+  const rawAmtStr = (document.getElementById('composer-amount')?.value || '').toString().replace(/[₹$,\s]/g, '');
+  const amt = parseFloat(rawAmtStr);
   const date=document.getElementById('composer-date')?.value||todayStr();
   const note=(document.getElementById('composer-note')?.value||'').trim().slice(0,60);
   const checkAmt = (typeof isValidAmount === 'function') ? isValidAmount : ((typeof window !== 'undefined' && typeof window.isValidAmount === 'function') ? window.isValidAmount : ((a) => typeof a === 'number' && isFinite(a) && a > 0));
@@ -439,7 +468,7 @@ function selectHubTool(tabName){
 window.openDailyBurnModal = function() {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   const data = (typeof computeSafeToSpend === 'function') ? computeSafeToSpend() : {
-    remainingDays: 15, dailyAllowance: 500, todaySpent: 0, todayRemaining: 500, burnPercent: 0, isSafe: true
+    remainingDays: 1, dailyAllowance: 0, todaySpent: 0, todayRemaining: 0, burnPercent: 0, isSafe: true
   };
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
@@ -523,7 +552,7 @@ window.openEnvelopesModal = function() {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   const data = (window.Envelopes && typeof window.Envelopes.getSummary === 'function') 
     ? window.Envelopes.getSummary() 
-    : { income: 25000, needs: { allocated: 12500, spent: 0, pct: 0 }, wants: { allocated: 7500, spent: 0, pct: 0 }, savings: { allocated: 5000, spent: 0, pct: 0 } };
+    : { income: 0, needs: { allocated: 0, spent: 0, pct: 0 }, wants: { allocated: 0, spent: 0, pct: 0 }, savings: { allocated: 0, spent: 0, pct: 0 } };
 
   const existing = document.getElementById('envelopes-modal-backdrop');
   if (existing) existing.remove();
@@ -605,12 +634,12 @@ window.openEnvelopesModal = function() {
 window.openFinancialDnaModal = function() {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   const dna = (typeof computeFinancialDNA === 'function') ? computeFinancialDNA() : {
-    type: 'leaker', title: 'The Invisible Leaker', emoji: '💸',
-    tagline: 'Little leaks sink big ships.', color: '#a855f7',
-    tips: ['Audit daily small coffees and snacks', 'Use the 24-hour rule before non-essential purchases'],
-    metrics: { savingsRatio: 15, socialSpendPct: 35, impulseRate: 25, entryCount: 8 }
+    type: 'awakening', title: 'The Awakening', emoji: '🌱',
+    tagline: 'You started paying attention. Build the tracking habit.', color: '#4ade80',
+    tips: ['Log every single expense for the next 7 days, even the small ones.', 'Build the habit of tracking your transactions.'],
+    metrics: { savingsRatio: 0, socialSpendPct: 0, impulseRate: 0, entryCount: 0 }
   };
-  const m = dna.metrics || { savingsRatio: 15, socialSpendPct: 35, impulseRate: 25, entryCount: 0 };
+  const m = dna.metrics || { savingsRatio: 0, socialSpendPct: 0, impulseRate: 0, entryCount: 0 };
 
   const existing = document.getElementById('financial-dna-modal-backdrop');
   if (existing) existing.remove();
@@ -692,9 +721,9 @@ window.openFinancialDnaModal = function() {
 
 window.openDigitalVaultModal = function() {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
-  const data = (typeof computeRoundUpVault === 'function') ? computeRoundUpVault() : { totalSaved: 1240, monthSaved: 450 };
-  const displayAmt = data.monthSaved > 0 ? data.monthSaved : 450;
-  const totalAmt = data.totalSaved > 0 ? data.totalSaved : 1240;
+  const data = (typeof computeRoundUpVault === 'function') ? computeRoundUpVault() : { totalSaved: 0, monthSaved: 0 };
+  const displayAmt = data.monthSaved || 0;
+  const totalAmt = data.totalSaved || 0;
 
   const existing = document.getElementById('digital-vault-modal-backdrop');
   if (existing) existing.remove();
@@ -747,9 +776,9 @@ window.openDigitalVaultModal = function() {
 function listenToEntries(){
   if(!currentUser) return;
 
-  // 1. Instantly hydrate from local cache if memory array is empty
+  // 1. Instantly hydrate from local cache strictly scoped to current user
   try {
-    const userCache = localStorage.getItem('pockettrack_entries_cache_' + currentUser.uid) || localStorage.getItem('pockettrack_entries_cache');
+    const userCache = localStorage.getItem('pockettrack_entries_cache_' + currentUser.uid);
     if (userCache) {
       const parsed = JSON.parse(userCache);
       if (Array.isArray(parsed) && parsed.length && (!entries || !entries.length)) {
@@ -768,6 +797,9 @@ function listenToEntries(){
         if(typeof window.renderDailyBurnMeter === 'function') {
           try { window.renderDailyBurnMeter(); } catch(e) {}
         }
+        if(typeof window.updateFinancialDNA === 'function') {
+          try { window.updateFinancialDNA(); } catch(e) {}
+        }
       }
     }
   } catch(e){}
@@ -779,7 +811,6 @@ function listenToEntries(){
       if (typeof window !== 'undefined') window.entries = entries;
       try {
         localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
-        localStorage.setItem('pockettrack_entries_cache', JSON.stringify(entries));
       } catch(e){}
       if(typeof pendingWriteState!=='undefined') pendingWriteState.entries = !!snap.metadata && snap.metadata.hasPendingWrites;
       if(typeof updateSyncIndicator==='function') updateSyncIndicator();
@@ -797,6 +828,9 @@ function listenToEntries(){
       }
       if(typeof window.renderDailyBurnMeter === 'function') {
         try { window.renderDailyBurnMeter(); } catch(e) {}
+      }
+      if(typeof window.updateFinancialDNA === 'function') {
+        try { window.updateFinancialDNA(); } catch(e) {}
       }
       checkBudget();
       refreshEventsViewsIfOpen();
@@ -869,7 +903,39 @@ function refreshEventsViewsIfOpen(){
 
 async function saveEntry(entry){
   if(!currentUser){toast(TT('not_logged_in'),'error');return;}
-  await db.collection('users').doc(currentUser.uid).collection('entries').add(entry);
+  const tempId = 'temp_' + Date.now();
+  const optimisticItem = { ...entry, _id: tempId };
+  if (!Array.isArray(entries)) entries = [];
+  entries.unshift(optimisticItem);
+  if (typeof window !== 'undefined') window.entries = entries;
+  try {
+    localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+  } catch(e) {}
+
+  if (typeof updateHeaderStats === 'function') updateHeaderStats();
+  if (typeof renderEntries === 'function') renderEntries();
+  if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+  if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+  if (typeof window.FinnyMascot !== 'undefined' && window.FinnyMascot.render) {
+    try { window.FinnyMascot.render(); } catch(e) {}
+  }
+  if (typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
+    try { window.Envelopes.render(); } catch(e) {}
+  }
+  if (typeof window.renderDailyBurnMeter === 'function') {
+    try { window.renderDailyBurnMeter(); } catch(e) {}
+  }
+  if (typeof window.updateFinancialDNA === 'function') {
+    try { window.updateFinancialDNA(); } catch(e) {}
+  }
+  if (typeof checkBudget === 'function') checkBudget();
+  if (typeof renderStreak === 'function') renderStreak();
+
+  const docRef = await db.collection('users').doc(currentUser.uid).collection('entries').add(entry);
+  optimisticItem._id = docRef.id;
+  try {
+    localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+  } catch(e) {}
 }
 
 /* --- Smart duplicate guard: same amount + similar label within 3 days --- */
