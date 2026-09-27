@@ -384,7 +384,7 @@ function mainEntries(){
   const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : (typeof activeWalletId !== 'undefined' ? activeWalletId : 'all');
   if (activeW && activeW !== 'all') {
     return base.filter(e => {
-      const wId = (typeof resolveEntryWalletId === 'function') ? resolveEntryWalletId(e) : (e.walletId || (e.type === 'income' ? 'bank' : 'cash'));
+      const wId = (typeof resolveEntryWalletId === 'function') ? resolveEntryWalletId(e) : (e.walletId || 'cash');
       return wId === activeW;
     });
   }
@@ -1052,7 +1052,7 @@ function renderBudgetEditor(){
   if (isSimple) {
     let list = isWeek ? getThisWeekEntries() : getThisMonthEntries();
     if (selectedWId !== 'all') {
-      list = list.filter(e => (e.walletId || (e.type === 'income' ? 'bank' : 'cash')) === selectedWId);
+      list = list.filter(e => ((typeof resolveEntryWalletId === 'function' ? resolveEntryWalletId(e) : (e.walletId || 'cash')) === selectedWId));
     }
     const totalSpent = list.filter(e => e.type === 'expense').reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
     const totalBudget = isWeek ? window.getSavedWeeklyBudget(selectedWId) : window.getSavedMonthlyBudget(selectedWId);

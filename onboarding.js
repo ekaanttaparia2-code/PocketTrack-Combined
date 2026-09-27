@@ -20,7 +20,7 @@
     monthlyIncome: 40000,
     userName: '',
     startingBalance: 5000,
-    walletType: 'bank',
+    walletType: 'cash',
     calcProgress: 0
   };
 
@@ -323,46 +323,35 @@
     else if (state.step === 6) {
       var acct = getExistingAccountData();
       if (acct.isExisting) {
-        // Returning user with existing transactions / wallets!
+        // Returning user with existing account data
         var finnyWelcomeSVG = getFinnySVG('celebrating', 'enjoying', 92);
-        var bBal = Math.round(acct.balances.bank || 0);
-        var cBal = Math.round(acct.balances.cash || 0);
-        var cardBal = Math.round(acct.balances.card || 0);
 
         html += '<div style="margin-bottom:8px;">' + finnyWelcomeSVG + '</div>' +
           '<h2 style="font-size:20px;font-weight:800;color:#fff;margin:0 0 4px;">' +
             (isHi ? 'क्या यह आपका वर्तमान बैलेंस है?' : 'Is this your current balance?') +
           '</h2>' +
-          '<p style="font-size:12.5px;color:var(--text-dim);margin:0 0 14px;max-width:320px;margin-left:auto;margin-right:auto;">' +
+          '<p style="font-size:12.5px;color:var(--text-dim);margin:0 0 16px;max-width:320px;margin-left:auto;margin-right:auto;">' +
             (isHi
-              ? 'हमें आपके पिछले खाते का डेटा और ' + acct.entriesCount + ' लेन-देन मिले हैं। क्या यह बैलेंस सही है?'
-              : 'We found your existing account with ' + acct.entriesCount + ' transactions. Please confirm your balance:') +
+              ? 'हमें आपके खाते में ' + acct.entriesCount + ' लेन-देन मिले हैं। क्या यह बैलेंस सही है?'
+              : 'We found your account with ' + acct.entriesCount + ' transactions. Please confirm your balance:') +
           '</p>' +
-          // Existing Balance Card
-          '<div style="background:rgba(15,23,42,0.85);border:1px solid rgba(52,211,153,0.35);border-radius:18px;padding:16px;max-width:320px;margin:0 auto 16px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">' +
-            '<div style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">' +
+          // Single Unified Balance Card (No division into cash and bank)
+          '<div style="background:rgba(15,23,42,0.85);border:1px solid rgba(52,211,153,0.35);border-radius:20px;padding:22px 18px;max-width:320px;margin:0 auto 16px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.3);">' +
+            '<div style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">' +
               (isHi ? 'कुल उपलब्ध बैलेंस' : 'Current Tracked Balance') +
             '</div>' +
-            '<div style="font-size:30px;font-weight:900;color:#34d399;font-family:\'Space Grotesk\',sans-serif;margin-bottom:14px;">' +
+            '<div style="font-size:36px;font-weight:900;color:#34d399;font-family:\'Space Grotesk\',sans-serif;margin-bottom:12px;">' +
               '₹' + Math.round(acct.totalBalance).toLocaleString('en-IN') +
             '</div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;">' +
-              '<div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">' +
-                '<div style="font-size:10.5px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">📱 Bank / UPI</div>' +
-                '<div style="font-size:13.5px;font-weight:700;color:#60a5fa;margin-top:2px;">₹' + bBal.toLocaleString('en-IN') + '</div>' +
-              '</div>' +
-              '<div style="background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">' +
-                '<div style="font-size:10.5px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">💵 Cash</div>' +
-                '<div style="font-size:13.5px;font-weight:700;color:#34d399;margin-top:2px;">₹' + cBal.toLocaleString('en-IN') + '</div>' +
-              '</div>' +
+            '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#94a3b8;background:rgba(255,255,255,0.05);padding:4px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.08);">' +
+              '<span>✓</span> ' + (isHi ? '100% सुरक्षित और सिंक' : '100% Private & Synced') +
             '</div>' +
-            (cardBal !== 0 ? '<div style="margin-top:8px;font-size:11px;color:#f43f5e;text-align:left;">💳 Credit Card: ₹' + Math.abs(cardBal).toLocaleString('en-IN') + '</div>' : '') +
           '</div>' +
           '<div style="font-size:11.5px;color:#94a3b8;line-height:1.4;max-width:300px;margin:0 auto 10px;">' +
-            '🔒 ' + (isHi ? 'आपका लेन-देन इतिहास सुरक्षित है और Finny से जुड़ गया है।' : 'Your previous entries & wallet balances are preserved.') +
+            '🔒 ' + (isHi ? 'आपका पूरा लेन-देन इतिहास सुरक्षित है और Finny से जुड़ गया है।' : 'All your entries and balances are safely preserved.') +
           '</div>';
       } else {
-        // Brand new user flow
+        // Brand new user flow (single unified balance input, no bank vs cash buttons)
         var finnyReadySVG = getFinnySVG('greeting', 'enjoying', 90);
         html += '<div style="margin-bottom:8px;">' + finnyReadySVG + '</div>' +
           '<h2 style="font-size:20px;font-weight:800;color:#fff;margin:0 0 4px;">' +
@@ -371,19 +360,13 @@
           '<p style="font-size:12.5px;color:var(--text-dim);margin:0 0 16px;">' +
             (isHi ? 'शुरुआती बैलेंस दर्ज करें (बाद में भी बदल सकते हैं):' : 'Optionally set your starting balance:') +
           '</p>' +
-          '<div style="width:100%;max-width:320px;margin:0 auto 16px;">' +
-            '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;text-align:left;">' +
-              (isHi ? 'शुरुआती वॉलेट बैलेंस (₹)' : 'Starting Balance (₹)') +
-            '</label>' +
-            '<input type="number" id="ob-start-bal" class="ob-text-input" value="' + state.startingBalance + '" oninput="window.setObStartBal(this.value)">' +
-          '</div>' +
           '<div style="width:100%;max-width:320px;margin:0 auto 20px;">' +
-            '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;text-align:left;">' +
-              (isHi ? 'प्राथमिक वॉलेट' : 'Primary Account') +
+            '<label style="display:block;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;text-align:left;">' +
+              (isHi ? 'शुरुआती बैलेंस (₹)' : 'Starting Balance (₹)') +
             '</label>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-              '<button type="button" class="ob-goal-btn ' + (state.walletType === 'bank' ? 'selected' : '') + '" onclick="window.setObWallet(\'bank\')">📱 Bank / UPI</button>' +
-              '<button type="button" class="ob-goal-btn ' + (state.walletType === 'cash' ? 'selected' : '') + '" onclick="window.setObWallet(\'cash\')">💵 Cash Vault</button>' +
+            '<div style="position:relative;">' +
+              '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#34d399;font-weight:700;">₹</span>' +
+              '<input type="number" id="ob-start-bal" class="ob-text-input" style="padding-left:32px;" value="' + state.startingBalance + '" oninput="window.setObStartBal(this.value)">' +
             '</div>' +
           '</div>';
       }
@@ -547,10 +530,10 @@
       }));
       localStorage.setItem('pockettrack_monthly_income', String(state.monthlyIncome));
 
-      // For brand new accounts: assign starting balance to chosen wallet cleanly
+      // For brand new accounts: assign starting balance to primary unified cash wallet cleanly
       if (!acct.isExisting && state.startingBalance > 0) {
         if (typeof window.userWallets !== 'undefined' && Array.isArray(window.userWallets)) {
-          var targetWallet = window.userWallets.find(function(w) { return w.id === state.walletType; });
+          var targetWallet = window.userWallets.find(function(w) { return w.id === 'cash'; }) || window.userWallets[0];
           if (targetWallet) {
             targetWallet.initialBalance = Number(state.startingBalance) || 0;
             if (typeof window.saveWallets === 'function') window.saveWallets();

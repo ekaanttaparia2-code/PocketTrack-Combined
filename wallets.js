@@ -100,17 +100,22 @@ function getWalletsStorageKey() {
 
 /**
  * Smart Retroactive Classifier:
- * Determines the true wallet for any transaction (especially legacy entries that have no walletId).
+ * Determines the wallet for any transaction. Does NOT artificially divide entries
+ * into Bank vs Cash so standard accounts remain completely unified.
  */
 window.resolveEntryWalletId = function(tx) {
   if (!tx) return 'cash';
-  if (tx.walletId) return tx.walletId;
+  if (tx.walletId) {
+    if (typeof userWallets !== 'undefined' && Array.isArray(userWallets)) {
+      const isCustom = userWallets.some(w => w.id === tx.walletId && w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card');
+      if (isCustom) return tx.walletId;
+    }
+    return 'cash';
+  }
 
-  // Run Smart NLP text classification on label and note
-  const text = ((tx.label || '') + ' ' + (tx.note || '')).toLowerCase();
-
-  // 1. Match custom wallet names
+  // Match only if explicit custom wallet name was typed in label/note
   if (typeof userWallets !== 'undefined' && Array.isArray(userWallets)) {
+    const text = ((tx.label || '') + ' ' + (tx.note || '')).toLowerCase();
     for (const w of userWallets) {
       if (w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card') {
         if (text.includes(w.name.toLowerCase())) return w.id;
@@ -118,39 +123,25 @@ window.resolveEntryWalletId = function(tx) {
     }
   }
 
-  // 2. UPI / Bank indicators (salary, credited, account, upi, bank, gpay, phonepe)
-  if (/\b(?:upi|gpay|google pay|phonepe|paytm|bank|online|netbanking|neft|imps|account|salary|credited|transfer|खाते|बैंक|यूपीआई)\b/i.test(text)) {
-    return 'bank';
-  }
-
-  // 3. Credit Card indicators (credit card, onecard, amex, hdfc card, sbi card, icici card, axis card)
-  if (/\b(?:credit card|onecard|amex|hdfc card|sbi card|icici card|axis card|card payment|cc bill|क्रेडिट कार्ड|कार्ड)\b/i.test(text) || (/\bcard\b/i.test(text) && !/\b(scratch card|postcard|cardboard)\b/i.test(text))) {
-    return 'card';
-  }
-
-  // 4. Cash indicators (cash, nagad, rokad, chai, tea, auto, rickshaw, sabzi)
-  if (/\b(?:cash|nagad|rokad|in cash|cash diya|नकद|कैश|हाथ में|chai|tea|auto|rickshaw|sabzi|vegetable)\b/i.test(text)) {
-    return 'cash';
-  }
-
-  // 5. Fallback heuristics based on category & type
-  if (tx.type === 'income') return 'bank';
-  if (tx.cat === 'travel' || tx.cat === 'food') return 'cash';
-  return 'bank';
+  // Do NOT artificially divide regular entries into Bank and Cash!
+  // All standard entries default to 'cash' so user balance remains unified.
+  return 'cash';
 };
 
 /**
  * Universal Wallet Badge Generator (Polymorphic: accepts entry object or walletId string)
+ * Only displays badge when an entry was explicitly assigned a non-default wallet.
  */
 window.getWalletBadgeHtml = function(entryOrId) {
   if (!entryOrId) return '';
   let wId = '';
   if (typeof entryOrId === 'object' && entryOrId !== null) {
-    wId = (typeof window.resolveEntryWalletId === 'function') ? window.resolveEntryWalletId(entryOrId) : (entryOrId.walletId || 'cash');
+    if (!entryOrId.walletId) return ''; // No badge if not explicitly assigned
+    wId = entryOrId.walletId;
   } else if (typeof entryOrId === 'string') {
     wId = entryOrId;
   }
-  if (!wId) return '';
+  if (!wId || wId === 'cash' || wId === 'bank') return '';
 
   const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [
     { id: 'cash', name: 'Cash', icon: '💵' },
@@ -158,7 +149,7 @@ window.getWalletBadgeHtml = function(entryOrId) {
     { id: 'card', name: 'Credit Card', icon: '💳' }
   ];
   const w = wList.find(x => x.id === wId) || { name: wId, icon: '💳' };
-  const cls = wId === 'cash' ? 'wallet-tag-cash' : (wId === 'bank' ? 'wallet-tag-bank' : (wId === 'card' ? 'wallet-tag-card' : ''));
+  const cls = wId === 'bank' ? 'wallet-tag-bank' : (wId === 'card' ? 'wallet-tag-card' : '');
   const safeName = (typeof escapeHTML === 'function') ? escapeHTML(w.name) : w.name;
   return `<span class="wallet-badge-tag ${cls}" style="margin-left:4px;">${w.icon || '💳'} ${safeName}</span>`;
 };
@@ -195,6 +186,18 @@ window.loadWallets = function() {
     } else {
       userWallets = JSON.parse(JSON.stringify(DEFAULT_WALLETS));
     }
+
+    // Clean up any legacy starting balance in 'bank' and unify into 'cash'
+    const hasCustomWallets = userWallets.some(w => w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card');
+    if (!hasCustomWallets) {
+      const bankW = userWallets.find(w => w.id === 'bank');
+      const cashW = userWallets.find(w => w.id === 'cash');
+      if (bankW && cashW && parseFloat(bankW.initialBalance)) {
+        cashW.initialBalance = (parseFloat(cashW.initialBalance) || 0) + (parseFloat(bankW.initialBalance) || 0);
+        bankW.initialBalance = 0;
+      }
+    }
+
     window.userWallets = userWallets;
   } catch (e) {
     userWallets = JSON.parse(JSON.stringify(DEFAULT_WALLETS));
@@ -251,12 +254,25 @@ window.computeWalletBalances = function() {
  */
 window.renderWalletSwitcher = function() {
   window.loadWallets();
+  const barEl = document.getElementById('wallet-switcher-bar');
   const listEl = document.getElementById('wallet-pills-list');
-  if (!listEl) return;
 
   const balances = window.computeWalletBalances();
   let totalNetWorth = 0;
   Object.values(balances).forEach(b => { totalNetWorth += b; });
+
+  // Only show the switcher bar if user actually has multiple wallets with active balances
+  const nonCashWithBalance = userWallets.filter(w => w.id !== 'cash' && (balances[w.id] || 0) !== 0);
+  const hasCustomWallets = userWallets.some(w => w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card');
+
+  if (!hasCustomWallets && nonCashWithBalance.length === 0) {
+    if (barEl) barEl.style.display = 'none';
+    const insightsBar = document.getElementById('insights-wallet-switcher-bar');
+    if (insightsBar) insightsBar.style.display = 'none';
+    return;
+  }
+  if (barEl) barEl.style.display = 'flex';
+  if (!listEl) return;
 
   const allPillActive = (window.activeWalletId === 'all');
 
@@ -341,25 +357,12 @@ window.detectWalletFromText = function(text) {
   const t = text.toLowerCase();
 
   // 1. Match custom wallet names
-  for (const w of userWallets) {
-    if (w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card') {
-      if (t.includes(w.name.toLowerCase())) return w.id;
+  if (typeof userWallets !== 'undefined' && Array.isArray(userWallets)) {
+    for (const w of userWallets) {
+      if (w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card') {
+        if (t.includes(w.name.toLowerCase())) return w.id;
+      }
     }
-  }
-
-  // 2. Match Cash keywords
-  if (/(?:cash|nagad|rokad|in cash|cash diya|नकद|कैश|हाथ में)/.test(t)) {
-    return 'cash';
-  }
-
-  // 3. Match Credit Card keywords
-  if (/(?:credit card|credit|card|hdfc card|sbi card|icici card|axis card|amex|onecard|क्रेडिट कार्ड|कार्ड)/.test(t)) {
-    return 'card';
-  }
-
-  // 4. Match UPI & Bank keywords
-  if (/(?:upi|gpay|google pay|phonepe|paytm|bank|online|netbanking|account|खाते|बैंक|यूपीआई|transfer)/.test(t)) {
-    return 'bank';
   }
 
   return window.activeWalletId !== 'all' ? window.activeWalletId : 'cash';

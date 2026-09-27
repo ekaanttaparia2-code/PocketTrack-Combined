@@ -130,7 +130,7 @@ function openQuickComposer(mode='expense', editEntry=null){
     document.getElementById('composer-amount').value = '';
     document.getElementById('composer-date').value = todayStr();
     document.getElementById('composer-note').value = '';
-    composerWallet = (typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : (mode === 'income' ? 'bank' : 'cash');
+    composerWallet = (typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : 'cash';
     composerSelection = composerMode === 'expense' ? 'food' : 'Salary';
     
     const titleEl = document.getElementById('composer-title');
@@ -142,16 +142,24 @@ function openQuickComposer(mode='expense', editEntry=null){
   
   const wChipsEl = document.getElementById('composer-wallet-chips');
   if (wChipsEl) {
-    const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [
-      { id: 'cash', name: 'Cash', icon: '💵' },
-      { id: 'bank', name: 'Bank / UPI', icon: '📱' },
-      { id: 'card', name: 'Credit Card', icon: '💳' }
-    ];
-    wChipsEl.innerHTML = wList.map(w => `
-      <button type="button" class="composer-chip ${w.id === composerWallet ? 'active' : ''}" data-wallet="${w.id}" onclick="selectComposerWallet(this,'${w.id}')">
-        ${w.icon || '💳'} ${(typeof escapeHTML === 'function') ? escapeHTML(w.name) : w.name}
-      </button>
-    `).join('');
+    const wSection = wChipsEl.closest('div[style*="margin-bottom"]');
+    const hasCustom = (typeof userWallets !== 'undefined' && Array.isArray(userWallets))
+      ? userWallets.some(w => w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card')
+      : false;
+    if (!hasCustom) {
+      if (wSection) wSection.style.display = 'none';
+      composerWallet = 'cash';
+    } else {
+      if (wSection) wSection.style.display = 'block';
+      const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [
+        { id: 'cash', name: 'Cash', icon: '💵' }
+      ];
+      wChipsEl.innerHTML = wList.map(w => `
+        <button type="button" class="composer-chip ${w.id === composerWallet ? 'active' : ''}" data-wallet="${w.id}" onclick="selectComposerWallet(this,'${w.id}')">
+          ${w.icon || '💳'} ${(typeof escapeHTML === 'function') ? escapeHTML(w.name) : w.name}
+        </button>
+      `).join('');
+    }
   }
 
   setComposerMode(composerMode);
@@ -228,7 +236,7 @@ async function submitTransactionComposer(){
   if(btn)btn.disabled=true;
   try{
     let payload;
-    const chosenWallet = composerWallet || ((typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : (composerMode === 'income' ? 'bank' : 'cash'));
+    const chosenWallet = composerWallet || ((typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : 'cash');
     if(composerMode==='expense'){
       const labels={food:'Food & snacks',travel:'Travel/Convenience',friends:'Friends plan',home:'Household items',shopping:'Shopping',other:'Other'};
       const label=note||labels[composerSelection]||'Expense';
@@ -618,7 +626,7 @@ async function addIncome(){
     if(!isValidAmount(amt)){toast(TT('enter_valid_amount'),'error');return;}
     if(!note){toast(TT('add_description'),'error');return;}
     if(!isValidDate(date)){toast(TT('enter_valid_date'),'error');return;}
-    const chosenW = document.getElementById('inc-wallet')?.value || ((typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : 'bank');
+    const chosenW = document.getElementById('inc-wallet')?.value || ((typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : 'cash');
     const payload={type:'income',cat:'income',label:src,note,amt:Math.round(amt*100)/100,walletId:chosenW,date};
     try{
       if(editingId){

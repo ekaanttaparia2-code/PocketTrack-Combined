@@ -176,7 +176,7 @@ function parseVoiceInput(text) {
   // Smart Context Wallet Detection
   const detectedWallet = (typeof detectWalletFromText === 'function')
     ? detectWalletFromText(rawText)
-    : ((typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : (type === 'income' ? 'bank' : 'cash'));
+    : ((typeof activeWalletId !== 'undefined' && activeWalletId !== 'all') ? activeWalletId : 'cash');
 
   parsedVoiceData = {
     amount,
