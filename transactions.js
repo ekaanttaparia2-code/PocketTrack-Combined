@@ -746,6 +746,10 @@ window.openFinancialDnaModal = function() {
 
 function listenToEntries(){
   if(!currentUser) return;
+  
+  // Clear any existing entries from a previous session/user to prevent duplicate detection false positives on brand-new accounts
+  entries = [];
+  if (typeof window !== 'undefined') window.entries = entries;
 
   // 1. Instantly hydrate from local cache strictly scoped to current user
   try {
@@ -958,9 +962,13 @@ function maybeGuardAndSave(payload,doSave){
   const isHi=currentLang==='hi';
   const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
   const when=isHi?(dd===0?'आज ही':dd===1?'कल':dd+' दिन पहले'):(dd===0?'earlier today':dd===1?'yesterday':dd+' days ago');
+  
+  // Sanitize label by completely stripping HTML tags to prevent ugly reflection in the confirm dialog
+  const safeLabel = String(dup.label).replace(/<[^>]*>?/gm, '').trim();
+  
   showAppConfirm(
-    isHi?`⚠️ "${dup.label}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
-        :`⚠️ "${dup.label}" ₹${dup.amt} was already logged ${when}. Add it again?`,
+    isHi?`⚠️ "${safeLabel}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
+        :`⚠️ "${safeLabel}" ₹${dup.amt} was already logged ${when}. Add it again?`,
     run
   );
 }
