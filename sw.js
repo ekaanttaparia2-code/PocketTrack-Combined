@@ -1,4 +1,4 @@
-const CACHE = 'pockettrack-v15-receipt-ocr-suite';
+const CACHE = 'pockettrack-v16-wallet-fix';
 const SHELL = [
   './',
   './index.html',
@@ -37,6 +37,7 @@ const SHELL = [
   './wealth_simulator.js',
   './debt_payoff.js',
   './receipt_scanner.js',
+  './wallets.js',
   './NotoSansDevanagari-Regular.ttf'
 ];
 

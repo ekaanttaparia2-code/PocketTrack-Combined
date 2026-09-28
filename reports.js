@@ -34,18 +34,20 @@ window.setPeriod = setPeriod;
 function getReportEntries(){
   const p = (typeof window !== 'undefined' && window.period) ? window.period : (typeof period !== 'undefined' ? period : 'week');
   const base = (typeof mainEntries === 'function') ? mainEntries() : [];
-  if(p === 'all') return base;
+  // Exclude wallet-transfer legs from all income/spend analytics
+  const nonTransfer = base.filter(e => !e.transferGroupId);
+  if(p === 'all') return nonTransfer;
   if(p === 'custom'){
     const from = document.getElementById('rep-from')?.value;
     const to = document.getElementById('rep-to')?.value;
-    return base.filter(e => (!from || e.date >= from) && (!to || e.date <= to));
+    return nonTransfer.filter(e => (!from || e.date >= from) && (!to || e.date <= to));
   }
   if(p === 'month'){
     const now = new Date();
     const y = now.getFullYear(), m = now.getMonth();
     const start = dateToStr(new Date(y, m, 1));
     const end = dateToStr(new Date(y, m + 1, 0));
-    return base.filter(e => e.date >= start && e.date <= end);
+    return nonTransfer.filter(e => e.date >= start && e.date <= end);
   }
   const now = new Date();
   const day = now.getDay();
@@ -54,7 +56,7 @@ function getReportEntries(){
   const monStr = dateToStr(mon);
   const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
   const sunStr = dateToStr(sun);
-  return base.filter(e => e.date >= monStr && e.date <= sunStr);
+  return nonTransfer.filter(e => e.date >= monStr && e.date <= sunStr);
 }
 window.getReportEntries = getReportEntries;
 
@@ -91,11 +93,12 @@ function getPeriodAccountingData(){
     startDate = document.getElementById('rep-from')?.value || null;
   }
 
-  // 3. Transactions prior to startDate
+  // 3. Transactions prior to startDate (excluding transfers)
   let prevIncome = 0;
   let prevSpent = 0;
   if (startDate) {
     base.forEach(e => {
+      if (e.transferGroupId) return; // skip transfer legs
       if (e.date && e.date < startDate) {
         const amt = Number(e.amt) || 0;
         if (e.type === 'income') prevIncome += amt;

@@ -576,23 +576,95 @@ window.deleteCustomWallet = function(walletId) {
     return;
   }
 
-  // 1. Remove from local array
+  // Check if any transactions reference this wallet
+  const allEntries = (typeof mainEntries === 'function') ? mainEntries() : [];
+  const linkedEntries = allEntries.filter(e => e.walletId === walletId);
+
+  if (linkedEntries.length > 0) {
+    // Show migration dialog — user must choose a target wallet before deletion
+    const targetOptions = userWallets
+      .filter(w => w.id !== walletId)
+      .map(w => `<option value="${w.id}">${escapeWalletHTML(w.icon || '💳')} ${escapeWalletHTML(w.name)}</option>`)
+      .join('');
+
+    const dialogEl = document.createElement('div');
+    dialogEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    dialogEl.innerHTML = `
+      <div style="background:linear-gradient(165deg,rgba(30,20,60,0.98),rgba(15,10,30,0.99));border:1px solid rgba(239,68,68,0.4);border-radius:20px;padding:24px;max-width:360px;width:100%;">
+        <div style="font-size:22px;margin-bottom:8px;">⚠️</div>
+        <h3 style="margin:0 0 8px;color:#fff;font-family:'Space Grotesk',sans-serif;">${isHi ? 'पहले लेनदेन माइग्रेट करें' : 'Migrate Transactions First'}</h3>
+        <p style="color:#94a3b8;font-size:13.5px;margin:0 0 16px;">
+          ${isHi
+            ? `<b style="color:#f87171">${linkedEntries.length} लेनदेन</b> "${escapeWalletHTML(targetWallet.name)}" में हैं। इन्हें किसी अन्य वॉलेट में ले जाएं, अन्यथा बैलेंस गायब हो जाएगा।`
+            : `<b style="color:#f87171">${linkedEntries.length} transaction${linkedEntries.length > 1 ? 's' : ''}</b> in "${escapeWalletHTML(targetWallet.name)}" must be moved to another wallet before deletion, or their balance contribution will be lost.`}
+        </p>
+        <label style="color:#c4b5fd;font-size:13px;display:block;margin-bottom:6px;">${isHi ? 'इस वॉलेट में ले जाएं:' : 'Move transactions to:'}</label>
+        <select id="wallet-migrate-target" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:14px;margin-bottom:16px;">
+          ${targetOptions}
+        </select>
+        <div style="display:flex;gap:10px;">
+          <button id="wallet-migrate-confirm" style="flex:1;padding:11px;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+            ${isHi ? 'माइग्रेट करें और हटाएं' : 'Migrate & Delete'}
+          </button>
+          <button id="wallet-migrate-cancel" style="padding:11px 18px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:pointer;">
+            ${isHi ? 'रद्द करें' : 'Cancel'}
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialogEl);
+
+    dialogEl.querySelector('#wallet-migrate-cancel').onclick = () => dialogEl.remove();
+    dialogEl.querySelector('#wallet-migrate-confirm').onclick = async () => {
+      const newWalletId = dialogEl.querySelector('#wallet-migrate-target').value;
+      if (!newWalletId) return;
+      dialogEl.remove();
+
+      // Migrate entries locally
+      const allEntriesNow = (typeof mainEntries === 'function') ? mainEntries() : [];
+      allEntriesNow.forEach(e => { if (e.walletId === walletId) e.walletId = newWalletId; });
+
+      // Migrate in Firestore
+      if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
+        const colRef = db.collection('users').doc(currentUser.uid).collection('entries');
+        const migrationSnap = await colRef.where('walletId', '==', walletId).get().catch(() => null);
+        if (migrationSnap && !migrationSnap.empty) {
+          let batch = db.batch(), ops = 0;
+          for (const d of migrationSnap.docs) {
+            batch.update(d.ref, { walletId: newWalletId });
+            if (++ops === 400) { await batch.commit(); batch = db.batch(); ops = 0; }
+          }
+          if (ops > 0) await batch.commit();
+        }
+      }
+
+      // Now actually delete the wallet
+      userWallets = userWallets.filter(w => w.id !== walletId);
+      window.userWallets = userWallets;
+      window.saveWallets();
+      if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
+        db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete().catch(() => {});
+      }
+      if (window.activeWalletId === walletId) window.activeWalletId = 'all';
+      if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
+      window.renderWalletSwitcher();
+      if (typeof updateHeaderStats === 'function') updateHeaderStats();
+      if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+      if (typeof renderEntries === 'function') renderEntries();
+      if (typeof renderReport === 'function') renderReport();
+      if (typeof toast === 'function') toast(`Migrated ${linkedEntries.length} transactions and deleted "${targetWallet.name}"`, 'success');
+    };
+    return;
+  }
+
+  // No linked transactions — safe to delete immediately
   userWallets = userWallets.filter(w => w.id !== walletId);
   window.userWallets = userWallets;
   window.saveWallets();
-
-  // 2. Remove from Firestore
   if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
-    try {
-      db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete().catch(()=>{});
-    } catch(e){}
+    try { db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete().catch(() => {}); } catch(e) {}
   }
-
-  // 3. Reset active wallet if it was active
-  if (window.activeWalletId === walletId) {
-    window.activeWalletId = 'all';
-  }
-
+  if (window.activeWalletId === walletId) window.activeWalletId = 'all';
   if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
   window.renderWalletSwitcher();
   if (typeof updateHeaderStats === 'function') updateHeaderStats();
@@ -600,7 +672,7 @@ window.deleteCustomWallet = function(walletId) {
   if (typeof renderEntries === 'function') renderEntries();
   if (typeof renderBudgetEditor === 'function') renderBudgetEditor();
   if (typeof renderReport === 'function') renderReport();
-  if (typeof toast === 'function') toast(`Deleted "${targetWallet.name}"!`, 'info');
+  if (typeof toast === 'function') toast(`Deleted "${targetWallet.name}"`, 'info');
 };
 
 /**

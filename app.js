@@ -2675,16 +2675,22 @@ async function deleteAccountAndPurgeData(){
           var idbs = await window.indexedDB.databases();
           for (var idb of idbs) {
             if (idb.name && (idb.name.includes('firestore') || idb.name.includes('firebase'))) {
-              await new Promise((resolve) => {
+              await new Promise((resolve, reject) => {
                 const req = window.indexedDB.deleteDatabase(idb.name);
                 req.onsuccess = resolve;
-                req.onerror = resolve;
-                req.onblocked = resolve;
+                req.onerror = (ev) => reject(new Error('IDB delete failed: ' + (ev.target?.error?.message || idb.name)));
+                req.onblocked = () => {
+                  // Blocked means another tab has the DB open; log but don't fail the whole flow
+                  console.warn('IDB delete blocked for', idb.name, '— may require all tabs to be closed.');
+                  resolve();
+                };
               });
             }
           }
         }
-      } catch(idbErr) {}
+      } catch(idbErr) {
+        throw new Error(isHi ? 'स्थानीय कैश पूरी तरह से हटाया नहीं जा सका। सभी टैब बंद करके पुनः प्रयास करें।' : 'Local cache could not be fully cleared. Close all other app tabs and try again.');
+      }
 
       if (typeof toast === 'function') {
         toast(isHi ? 'आपका खाता और डेटा हमेशा के लिए हटा दिया गया है।' : 'Your account and data have been permanently deleted.', 'success');
