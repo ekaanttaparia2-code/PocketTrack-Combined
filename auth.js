@@ -30,8 +30,8 @@ function hideAuthError(){
 
 function promptConsentRequired(){
   const msg = (typeof currentLang !== 'undefined' && currentLang === 'hi')
-    ? '⚠️ जारी रखने के लिए कृपया नीचे दिए गए चेकबॉक्स को चुनें और नियमों को स्वीकार करें।'
-    : '⚠️ Please check the box below to agree to the Terms of Service & Privacy Policy.';
+    ? '⚠️ जारी रखने के लिए कृपया पुष्टि करें कि आप 18+ हैं और नियमों को स्वीकार करते हैं।'
+    : '⚠️ Please check the box below to confirm you are 18+ and agree to the Terms.';
   showAuthError(msg);
   const box = document.getElementById('auth-consent-box');
   if(box){
