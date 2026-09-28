@@ -486,7 +486,7 @@ function showAppAlert(message, title){
 function showAppConfirm(message, onConfirm, title){
   title = title || (currentLang==='hi' ? 'पुष्टि करें' : 'Please confirm');
   document.getElementById('app-modal-title').textContent = title;
-  document.getElementById('app-modal-message').innerHTML = message;
+  document.getElementById('app-modal-message').textContent = message;
   const yesLabel = currentLang==='hi' ? 'हां' : 'Yes';
   const cancelLabel = currentLang==='hi' ? 'रद्द करें' : 'Cancel';
   document.getElementById('app-modal-buttons').innerHTML = `
@@ -684,9 +684,8 @@ function startEditCustomOption(oldName){
 }
 
 function confirmDeleteCustomOption(name){
-  const safeName = (typeof escapeHTML === 'function') ? escapeHTML(name) : name;
   showAppConfirm(
-    currentLang==='hi' ? `"${safeName}" हटाएं?` : `Delete "${safeName}"?`,
+    currentLang==='hi' ? `"${name}" हटाएं?` : `Delete "${name}"?`,
     ()=>{
       if(manageOptionsMode==='income') removeCustomIncomeSource(name);
       else removeCustomExpenseCategory(name);
@@ -1827,8 +1826,7 @@ function editCurrentEventFromDetail(){
 async function deleteCurrentEvent(){
   if(!currentEventId)return;
   const idToDelete = currentEventId;
-  const safeName = (typeof escapeHTML === 'function') ? escapeHTML(currentEventName) : currentEventName;
-  showAppConfirm(isHi?`"${safeName}" को हटाएं? यह केवल कार्ड हटाएगा, एंट्रीज़ नहीं।`:`Delete "${safeName}"? This won't delete its logged entries, just the event card.`, async ()=>{
+  showAppConfirm(isHi?`"${currentEventName}" को हटाएं? यह केवल कार्ड हटाएगा, एंट्रीज़ नहीं।`:`Delete "${currentEventName}"? This won't delete its logged entries, just the event card.`, async ()=>{
     try{
       await db.collection('users').doc(currentUser.uid).collection('events').doc(idToDelete).delete();
       toast(TT('event_deleted'),'success');
@@ -1913,9 +1911,8 @@ function closeManageParticipants(){
 }
 
 function confirmRemoveParticipant(name){
-  const safeName = (typeof escapeHTML === 'function') ? escapeHTML(name) : name;
   showAppConfirm(
-    currentLang==='hi' ? `"${safeName}" हटाएं?` : `Remove "${safeName}"?`,
+    currentLang==='hi' ? `"${name}" हटाएं?` : `Remove "${name}"?`,
     ()=>{
       removeParticipant(name);
       setTimeout(renderManageParticipantsList, 300);

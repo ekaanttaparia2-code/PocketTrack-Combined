@@ -95,7 +95,7 @@ function escapeWalletHTML(str) {
 const DEFAULT_WALLETS = [
   { id: 'cash', name: 'Cash', type: 'cash', icon: '💵', initialBalance: 0, color: '#34d399', isDefault: true },
   { id: 'bank', name: 'Bank / UPI', type: 'bank', icon: '📱', initialBalance: 0, color: '#60a5fa', isDefault: true },
-  { id: 'card', name: 'Credit Card', type: 'card', icon: '💳', initialBalance: 0, color: '#f43f5e', isDefault: true }
+  { id: 'card', name: 'Card', type: 'card', icon: '💳', initialBalance: 0, color: '#f43f5e', isDefault: true }
 ];
 
 let userWallets = [];
@@ -150,7 +150,7 @@ window.getWalletBadgeHtml = function(entryOrId) {
   const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [
     { id: 'cash', name: 'Cash', icon: '💵' },
     { id: 'bank', name: 'Bank / UPI', icon: '📱' },
-    { id: 'card', name: 'Credit Card', icon: '💳' }
+    { id: 'card', name: 'Card', icon: '💳' }
   ];
   const w = wList.find(x => x.id === wId) || { name: wId, icon: '💳' };
   const cls = wId === 'bank' ? 'wallet-tag-bank' : (wId === 'card' ? 'wallet-tag-card' : '');
@@ -422,7 +422,7 @@ window.openNewWalletModal = function() {
           <select id="new-wallet-type" style="width:100%;padding:12px 14px;border-radius:14px;background:#181332;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:14px;box-sizing:border-box;outline:none;">
             <option value="bank">📱 Bank / UPI</option>
             <option value="cash">💵 Cash</option>
-            <option value="card">💳 Credit Card</option>
+            <option value="card">💳 Card</option>
             <option value="savings">🏦 Savings / FD</option>
           </select>
         </div>
