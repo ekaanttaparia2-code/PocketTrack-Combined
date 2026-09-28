@@ -627,7 +627,13 @@ window.deleteCustomWallet = function(walletId) {
       // Migrate in Firestore
       if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
         const colRef = db.collection('users').doc(currentUser.uid).collection('entries');
-        const migrationSnap = await colRef.where('walletId', '==', walletId).get().catch(() => null);
+        let migrationSnap;
+        try {
+          migrationSnap = await colRef.where('walletId', '==', walletId).get();
+        } catch (err) {
+          if (typeof toast === 'function') toast('Migration failed: ' + err.message, 'error');
+          return;
+        }
         if (migrationSnap && !migrationSnap.empty) {
           let batch = db.batch(), ops = 0;
           for (const d of migrationSnap.docs) {

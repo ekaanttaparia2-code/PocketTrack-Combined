@@ -96,7 +96,7 @@
 
     var curMonth = new Date().toISOString().slice(0, 7);
     var monthExpenses = entries.filter(function(e) {
-      return e.type === 'expense' && String(e.date || '').slice(0, 7) === curMonth;
+      return e.type === 'expense' && String(e.date || '').slice(0, 7) === curMonth && !e.transferGroupId;
     });
 
     var spentNeeds = 0;
@@ -113,7 +113,7 @@
 
     // Also include savings from investment / vault if recorded as income or transfer
     var monthSavingsEntries = entries.filter(function(e) {
-      return String(e.date || '').slice(0, 7) === curMonth && classifyEntry(e) === 'savings';
+      return String(e.date || '').slice(0, 7) === curMonth && classifyEntry(e) === 'savings' && !e.transferGroupId;
     });
     monthSavingsEntries.forEach(function(e) {
       if (e.type !== 'expense') {

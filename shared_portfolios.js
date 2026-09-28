@@ -209,56 +209,28 @@ function getSharedPortfoliosStorageKey() {
 }
 
 function loadSharedPortfolios() {
-  try {
-    let allSpaces = [];
-    const keysToCheck = [
-      'pockettrack_shared_portfolios',
-      'pockettrack_shared_portfolios_guest',
-      'pockettrack_shared_spaces',
-      'pockettrack_spaces'
-    ];
-    if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) {
-      keysToCheck.unshift('pockettrack_shared_portfolios_' + currentUser.uid);
-    }
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && (k.startsWith('pockettrack_shared_') || k.startsWith('pockettrack_spaces')) && !keysToCheck.includes(k)) {
-        keysToCheck.push(k);
-      }
-    }
-
-    for (const key of keysToCheck) {
-      const raw = localStorage.getItem(key);
+  sharedPortfolios = [];
+  if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) {
+    try {
+      const raw = localStorage.getItem('pockettrack_shared_portfolios_' + currentUser.uid);
       if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(space => {
-              if (space && space.id && !allSpaces.some(s => s.id === space.id)) {
-                allSpaces.push(space);
-              }
-            });
-          }
-        } catch(e){}
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) sharedPortfolios = parsed;
       }
-    }
-    sharedPortfolios = allSpaces;
-  } catch (e) {
-    sharedPortfolios = [];
+    } catch(e) {}
   }
 }
 
 function saveSharedPortfolios() {
   try {
-    const dataStr = JSON.stringify(sharedPortfolios);
-    localStorage.setItem(getSharedPortfoliosStorageKey(), dataStr);
-    localStorage.setItem('pockettrack_shared_portfolios', dataStr);
-    localStorage.setItem('pockettrack_shared_portfolios_guest', dataStr);
-
-    if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
-      sharedPortfolios.forEach(space => {
-        db.collection('users').doc(currentUser.uid).collection('spaces').doc(space.id).set(space, { merge: true }).catch(()=>{});
-      });
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) {
+      const dataStr = JSON.stringify(sharedPortfolios);
+      localStorage.setItem('pockettrack_shared_portfolios_' + currentUser.uid, dataStr);
+      if (typeof db !== 'undefined') {
+        sharedPortfolios.forEach(space => {
+          db.collection('users').doc(currentUser.uid).collection('spaces').doc(space.id).set(space, { merge: true }).catch(()=>{});
+        });
+      }
     }
   } catch (e) {}
 }

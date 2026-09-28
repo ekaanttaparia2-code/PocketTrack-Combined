@@ -236,6 +236,7 @@ function computeFinancialDNA() {
     const dailyExpenses = {};
 
     entries.forEach(e => {
+        if (e.transferGroupId) return;
         const amt = parseFloat(e.amt) || 0;
         if (e.type === 'income') {
             totalIncome += amt;

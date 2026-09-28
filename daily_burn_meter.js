@@ -116,7 +116,7 @@ function computeSafeToSpend() {
   const todayStrVal = (typeof todayStr === 'function') ? todayStr() : new Date().toISOString().split('T')[0];
 
   entries.forEach(e => {
-    if (!e.date) return;
+    if (!e.date || e.transferGroupId) return;
     const parts = e.date.split('-');
     if (parts.length !== 3) return;
     const y = parseInt(parts[0], 10);
@@ -144,8 +144,8 @@ function computeSafeToSpend() {
     }
   } else {
     const allList = (typeof mainEntries === 'function') ? mainEntries() : (window.entries || []);
-    const totalInc = allList.filter(e => e.type === 'income').reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
-    const totalExp = allList.filter(e => e.type === 'expense').reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+    const totalInc = allList.filter(e => e.type === 'income' && !e.transferGroupId).reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+    const totalExp = allList.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
     currentBalance = totalInc - totalExp;
   }
 

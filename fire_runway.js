@@ -19,14 +19,14 @@
     if (!Array.isArray(entries)) entries = [];
 
     // Calculate total liquid balance
-    var incomeTotal = entries.filter(function(e) { return e.type === 'income'; }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
-    var expenseTotal = entries.filter(function(e) { return e.type === 'expense'; }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
+    var incomeTotal = entries.filter(function(e) { return e.type === 'income' && !e.transferGroupId; }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
+    var expenseTotal = entries.filter(function(e) { return e.type === 'expense' && !e.transferGroupId; }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
     var liquidAssets = Math.max(0, incomeTotal - expenseTotal);
 
     // Calculate monthly burn (current month or 30-day average)
     var curMonth = new Date().toISOString().slice(0, 7);
     var curMonthExpenses = entries
-      .filter(function(e) { return e.type === 'expense' && String(e.date || '').slice(0, 7) === curMonth; })
+      .filter(function(e) { return e.type === 'expense' && String(e.date || '').slice(0, 7) === curMonth && !e.transferGroupId; })
       .reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
 
     var monthlyBurn = curMonthExpenses > 0 ? curMonthExpenses : 25000;

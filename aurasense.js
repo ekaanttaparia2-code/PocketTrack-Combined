@@ -23,6 +23,7 @@ function calculateFinancialVelocity() {
   let totalBalance = 0;
 
   list.forEach(e => {
+    if (e.transferGroupId) return;
     const amt = parseFloat(e.amt) || 0;
     if (e.type === 'income') {
       totalBalance += amt;
