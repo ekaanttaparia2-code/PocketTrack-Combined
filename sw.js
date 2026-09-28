@@ -1,4 +1,4 @@
-const CACHE = 'pockettrack-v18-bugfixes';
+const CACHE = 'pockettrack-v19-bugfixes';
 const SHELL = [
   './',
   './index.html',

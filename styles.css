@@ -1848,7 +1848,7 @@ header{margin-bottom:1.1rem}
 .transaction-composer{
   width:min(560px,100%);max-height:min(calc(100vh - 112px - env(safe-area-inset-bottom,0px)),760px);overflow:auto;position:relative;
   border:1px solid rgba(255,255,255,.16);border-radius:30px 30px 22px 22px;
-  padding:24px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  padding:24px 20px calc(115px + env(safe-area-inset-bottom,0px));
   background:
     radial-gradient(120% 90% at 0% 0%,rgba(139,92,246,.32),transparent 52%),
     radial-gradient(100% 90% at 100% 0%,rgba(255,20,160,.20),transparent 48%),
@@ -1882,17 +1882,18 @@ header{margin-bottom:1.1rem}
 .composer-save{width:100%;margin-top:14px;min-height:50px;border:0;border-radius:16px;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 12px 28px rgba(139,92,246,.32)}
 .composer-save span{font-size:18px;margin-left:5px}
 .composer-actions{display:grid;grid-template-columns:1fr 1.45fr;gap:10px;margin-top:12px;position:sticky;bottom:0;padding-top:8px;background:linear-gradient(180deg,rgba(10,7,29,0),rgba(10,7,29,.98) 28%);z-index:3}
-.composer-actions .composer-save{margin-top:0}
+.composer-actions .composer-save{margin-top:0;grid-column:1 / -1}
 .composer-voice-primary{margin:0!important;min-height:52px;border-radius:16px!important;border:1px solid rgba(139,92,246,.45)!important;background:rgba(139,92,246,.14)!important;color:#fff!important;font-weight:800!important}
 .composer-mic-hint{margin:9px 2px 0;text-align:center;font-size:10px;color:rgba(255,255,255,.48)}
-@media(max-width:420px){.transaction-composer-backdrop{padding-left:10px;padding-right:10px;padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.transaction-composer{border-radius:26px 26px 18px 18px;padding:18px 14px calc(14px + env(safe-area-inset-bottom,0px))}.composer-actions{grid-template-columns:1fr 1.2fr;gap:8px}.composer-actions button{font-size:12px!important}}
+@media(max-width:420px){.transaction-composer-backdrop{padding-left:10px;padding-right:10px;padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.transaction-composer{border-radius:26px 26px 18px 18px;padding:18px 14px calc(115px + env(safe-area-inset-bottom,0px))}.composer-actions{grid-template-columns:1fr 1.2fr;gap:8px}.composer-actions button{font-size:12px!important}}
 
 .composer-voice{width:100%;border:0;background:transparent;color:#c4b5fd;padding:11px 8px 2px;font-size:11px;font-weight:700;cursor:pointer}
+.composer-scan-btn{margin:0;min-height:52px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:700;cursor:pointer}
 @keyframes composerUp{from{opacity:0;transform:translateY(30px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes composerFade{from{opacity:0}to{opacity:1}}
 @media(max-width:520px){
  .transaction-composer-backdrop{padding:8px}
- .transaction-composer{padding:21px 14px calc(16px + env(safe-area-inset-bottom,0px));border-radius:27px 27px 18px 18px}
+ .transaction-composer{padding:21px 14px calc(115px + env(safe-area-inset-bottom,0px));border-radius:27px 27px 18px 18px}
  .composer-head h2{font-size:20px}.composer-orb{width:42px;height:42px;font-size:20px;border-radius:15px}
  .composer-amount-wrap{min-height:84px}.composer-amount-wrap input{font-size:38px}
  .composer-chips{grid-template-columns:repeat(2,1fr)}
