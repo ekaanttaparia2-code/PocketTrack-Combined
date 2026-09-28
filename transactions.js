@@ -282,7 +282,7 @@ async function submitTransactionComposer(){
     } else {
       const guardFn = (typeof maybeGuardAndSaveWithSmartEngine === 'function') ? maybeGuardAndSaveWithSmartEngine : maybeGuardAndSave;
       await guardFn(payload, async()=>{
-        await saveEntry(payload);
+        saveEntry(payload);
         if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
         if(composerMode==='expense'){
           if(typeof checkBudget==='function') checkBudget();
@@ -963,8 +963,8 @@ function maybeGuardAndSave(payload,doSave){
   const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
   const when=isHi?(dd===0?'आज ही':dd===1?'कल':dd+' दिन पहले'):(dd===0?'earlier today':dd===1?'yesterday':dd+' days ago');
   
-  // Sanitize label by completely stripping HTML tags to prevent ugly reflection in the confirm dialog
-  const safeLabel = String(dup.label).replace(/<[^>]*>?/gm, '').trim();
+  // Sanitize label by escaping HTML to prevent ugly reflection in the confirm dialog
+  const safeLabel = (typeof escapeHTML === 'function') ? escapeHTML(dup.label) : String(dup.label).replace(/<[^>]*>?/gm, '').trim();
   
   showAppConfirm(
     isHi?`⚠️ "${safeLabel}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
@@ -1089,7 +1089,7 @@ async function addExpense(){
       } else {
         const guardFn = (typeof maybeGuardAndSaveWithSmartEngine === 'function') ? maybeGuardAndSaveWithSmartEngine : maybeGuardAndSave;
         await guardFn(payload, async()=>{
-          await saveEntry(payload);
+          saveEntry(payload);
           if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
           toast(TT('expense_added'),'success');
           checkBudget();
