@@ -107,11 +107,15 @@ function animateNumber(elementId, targetValue, prefix = '₹', suffix = '', dura
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duration);
     const eased = easeOutExpo(progress);
-    const current = Math.round(start + (target - start) * eased);
+    const current = start + (target - start) * eased;
+    const isEnd = progress >= 1;
+    const val = isEnd ? target : current;
+    
+    // Format with 2 decimals if it's not an integer, otherwise 0
+    const fmt = Number.isInteger(val) ? val.toLocaleString('en-IN') : val.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    el.textContent = `${prefix}${fmt}${suffix}`;
 
-    el.textContent = `${prefix}${current.toLocaleString('en-IN')}${suffix}`;
-
-    if (progress < 1) {
+    if (!isEnd) {
       _activeCounters.set(elementId, requestAnimationFrame(update));
     } else {
       _activeCounters.delete(elementId);

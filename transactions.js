@@ -949,7 +949,12 @@ function maybeGuardAndSave(payload,doSave){
   
   // If the duplicate was literally just created (within 5 seconds), it's a double-tap bug.
   // Silently drop it to prevent annoyance.
-  if (dup.timestamp && (Date.now() - dup.timestamp < 5000)) {
+  let isRecent = false;
+  if (dup._id && dup._id.startsWith('temp_')) {
+    const ts = parseInt(dup._id.split('_')[1]);
+    if (!isNaN(ts) && Date.now() - ts < 5000) isRecent = true;
+  }
+  if (isRecent) {
     console.warn('Silently dropping double-tap duplicate');
     return;
   }
@@ -957,9 +962,10 @@ function maybeGuardAndSave(payload,doSave){
   const isHi=currentLang==='hi';
   const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
   const when=isHi?(dd===0?'आज ही':dd===1?'कल':dd+' दिन पहले'):(dd===0?'earlier today':dd===1?'yesterday':dd+' days ago');
+  const safeLabel = (typeof escapeHTML === 'function') ? escapeHTML(dup.label) : String(dup.label).replace(/</g, '&lt;');
   showAppConfirm(
-    isHi?`⚠️ "${dup.label}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
-        :`⚠️ "${dup.label}" ₹${dup.amt} was already logged ${when}. Add it again?`,
+    isHi?`⚠️ "${safeLabel}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
+        :`⚠️ "${safeLabel}" ₹${dup.amt} was already logged ${when}. Add it again?`,
     run
   );
 }
