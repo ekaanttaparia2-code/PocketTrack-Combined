@@ -2675,7 +2675,12 @@ async function deleteAccountAndPurgeData(){
           var idbs = await window.indexedDB.databases();
           for (var idb of idbs) {
             if (idb.name && (idb.name.includes('firestore') || idb.name.includes('firebase'))) {
-              window.indexedDB.deleteDatabase(idb.name);
+              await new Promise((resolve) => {
+                const req = window.indexedDB.deleteDatabase(idb.name);
+                req.onsuccess = resolve;
+                req.onerror = resolve;
+                req.onblocked = resolve;
+              });
             }
           }
         }
