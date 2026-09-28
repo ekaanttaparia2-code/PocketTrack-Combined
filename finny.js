@@ -308,7 +308,7 @@
       return d === today;
     });
 
-    var todayExpenses = todayEntries.filter(function(e) { return e.type === 'expense'; });
+    var todayExpenses = todayEntries.filter(function(e) { return e.type === 'expense' && !e.transferGroupId; });
     var todayExpenseTotal = todayExpenses.reduce(function(s, e) {
       return s + (Number(e.amt || e.amount) || 0);
     }, 0);

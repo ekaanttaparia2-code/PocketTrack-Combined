@@ -235,15 +235,25 @@ function saveSharedPortfolios() {
   } catch (e) {}
 }
 
+let sharedSpacesUnsubscribe = null;
+
 if (window.firebase && firebase.auth()) {
   firebase.auth().onAuthStateChanged((user) => {
+    if (sharedSpacesUnsubscribe) {
+      sharedSpacesUnsubscribe();
+      sharedSpacesUnsubscribe = null;
+    }
+
     loadSharedPortfolios();
     renderPortfolioSwitcher();
     renderSharedPortfolioView();
     if (user && typeof db !== 'undefined') {
+      const uid = user.uid;
       try {
-        db.collection('users').doc(user.uid).collection('spaces')
+        sharedSpacesUnsubscribe = db.collection('users').doc(uid).collection('spaces')
           .onSnapshot((snap) => {
+            if (typeof currentUser === 'undefined' || !currentUser || currentUser.uid !== uid) return;
+            
             if (snap && !snap.empty) {
               const cloudSpaces = snap.docs.map(d => ({ ...d.data(), id: d.id }));
               let changed = false;

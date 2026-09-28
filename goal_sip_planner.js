@@ -236,6 +236,7 @@ window.renderActiveGoalCard = function() {
   
   let totalInc = 0, totalExp = 0;
   entries.forEach(e => {
+    if (e.transferGroupId) return;
     if (e.type === 'income') totalInc += (parseFloat(e.amt) || 0);
     else if (e.type === 'expense') totalExp += (parseFloat(e.amt) || 0);
   });

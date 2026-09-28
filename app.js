@@ -1068,7 +1068,7 @@ function renderBudgetEditor(){
     if (selectedWId !== 'all') {
       list = list.filter(e => ((typeof resolveEntryWalletId === 'function' ? resolveEntryWalletId(e) : (e.walletId || 'cash')) === selectedWId));
     }
-    const totalSpent = list.filter(e => e.type === 'expense').reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+    const totalSpent = list.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
     const totalBudget = isWeek ? window.getSavedWeeklyBudget(selectedWId) : window.getSavedMonthlyBudget(selectedWId);
     const budgetSpentPct = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
     const isOverBudget = totalSpent > totalBudget;
@@ -2680,9 +2680,8 @@ async function deleteAccountAndPurgeData(){
                 req.onsuccess = resolve;
                 req.onerror = (ev) => reject(new Error('IDB delete failed: ' + (ev.target?.error?.message || idb.name)));
                 req.onblocked = () => {
-                  // Blocked means another tab has the DB open; log but don't fail the whole flow
-                  console.warn('IDB delete blocked for', idb.name, '— may require all tabs to be closed.');
-                  resolve();
+                  console.error('IDB delete blocked for', idb.name, '— may require all tabs to be closed.');
+                  reject(new Error('Local database deletion blocked. Please close other PocketTrack tabs.'));
                 };
               });
             }

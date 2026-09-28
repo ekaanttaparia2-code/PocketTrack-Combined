@@ -620,11 +620,7 @@ window.deleteCustomWallet = function(walletId) {
       if (!newWalletId) return;
       dialogEl.remove();
 
-      // Migrate entries locally
-      const allEntriesNow = (typeof mainEntries === 'function') ? mainEntries() : [];
-      allEntriesNow.forEach(e => { if (e.walletId === walletId) e.walletId = newWalletId; });
-
-      // Migrate in Firestore
+      // 1. Cloud-First Migration & Deletion
       if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
         const colRef = db.collection('users').doc(currentUser.uid).collection('entries');
         let migrationSnap;
@@ -634,23 +630,31 @@ window.deleteCustomWallet = function(walletId) {
           if (typeof toast === 'function') toast('Migration failed: ' + err.message, 'error');
           return;
         }
-        if (migrationSnap && !migrationSnap.empty) {
-          let batch = db.batch(), ops = 0;
-          for (const d of migrationSnap.docs) {
-            batch.update(d.ref, { walletId: newWalletId });
-            if (++ops === 400) { await batch.commit(); batch = db.batch(); ops = 0; }
+
+        try {
+          if (migrationSnap && !migrationSnap.empty) {
+            let batch = db.batch(), ops = 0;
+            for (const d of migrationSnap.docs) {
+              batch.update(d.ref, { walletId: newWalletId });
+              if (++ops === 400) { await batch.commit(); batch = db.batch(); ops = 0; }
+            }
+            if (ops > 0) await batch.commit();
           }
-          if (ops > 0) await batch.commit();
+          await db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete();
+        } catch (err) {
+          if (typeof toast === 'function') toast('Deletion failed: ' + err.message, 'error');
+          return;
         }
       }
 
-      // Now actually delete the wallet
+      // 2. Local State Mutation (Only if Cloud succeeded or Offline)
+      const allEntriesNow = (typeof mainEntries === 'function') ? mainEntries() : [];
+      allEntriesNow.forEach(e => { if (e.walletId === walletId) e.walletId = newWalletId; });
+
       userWallets = userWallets.filter(w => w.id !== walletId);
       window.userWallets = userWallets;
       window.saveWallets();
-      if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
-        db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete().catch(() => {});
-      }
+
       if (window.activeWalletId === walletId) window.activeWalletId = 'all';
       if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
       window.renderWalletSwitcher();
