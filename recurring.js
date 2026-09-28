@@ -60,35 +60,49 @@ function addRecInterval(dateStr, freq){
 
 async function processRecurringDue(){
   if(!currentUser || typeof todayStr !== 'function') return;
-  const today=todayStr();
-  const due=recurringRules.filter(r=>r.active!==false && r.nextDate && r.nextDate<=today && !_recProcessed.has(r._id));
+  const today = todayStr();
+  const due = recurringRules.filter(r => r.active !== false && r.nextDate && r.nextDate <= today && !_recProcessed.has(r._id));
   if(!due.length) return;
+  
   for(const rule of due){
     _recProcessed.add(rule._id);
-    let next=rule.nextDate, posted=0;
-    while(next<=today && posted<24){
-      try{
-        await db.collection('users').doc(currentUser.uid).collection('entries').add({
-          type: rule.type==='income' ? 'income' : 'expense',
-          cat: rule.type==='income' ? 'income' : (rule.cat||'other'),
-          label: rule.label,
-          note: '🔁 Recurring',
-          amt: Math.round((Number(rule.amt)||0)*100)/100,
-          date: next,
-          createdAt: Date.now()
-        });
+    let next = rule.nextDate, posted = 0;
+    while(next <= today && posted < 24){
+      const deterministicId = 'rec_' + rule._id + '_' + next;
+      try {
+        const existing = await db.collection('users').doc(currentUser.uid)
+          .collection('entries').doc(deterministicId).get();
+        if (existing.exists) {
+          next = addRecInterval(next, rule.freq);
+          posted++;
+          continue;
+        }
+        await db.collection('users').doc(currentUser.uid)
+          .collection('entries').doc(deterministicId).set({
+            type: rule.type === 'income' ? 'income' : 'expense',
+            cat: rule.type === 'income' ? 'income' : (rule.cat || 'other'),
+            label: rule.label,
+            note: '🔁 Recurring',
+            amt: Math.round((Number(rule.amt) || 0) * 100) / 100,
+            date: next,
+            createdAt: Date.now(),
+            recurringRuleId: rule._id
+          });
         posted++;
-      }catch(e){
+      } catch(e) {
         console.warn('Recurring entry failed:', e.message);
-        if(posted===0){ _recProcessed.delete(rule._id); break; }
+        if(posted === 0){ _recProcessed.delete(rule._id); break; }
         break;
       }
-      next=addRecInterval(next, rule.freq);
+      next = addRecInterval(next, rule.freq);
     }
-    if(posted>0){
-      try{ await db.collection('users').doc(currentUser.uid).collection('recurring').doc(rule._id).update({nextDate:next}); }catch(e){}
-      toast((currentLang==='hi'?'🔁 आवर्ती दर्ज: ':'🔁 Logged recurring: ')+rule.label,'success');
-      if(typeof showLocalNotification==='function') showLocalNotification('PocketTrack',(currentLang==='hi'?'आवर्ती दर्ज: ':'Logged recurring: ')+rule.label);
+    if(posted > 0){
+      try {
+        await db.collection('users').doc(currentUser.uid)
+          .collection('recurring').doc(rule._id).update({nextDate: next});
+      } catch(e){}
+      toast((currentLang === 'hi' ? '🔁 आवर्ती दर्ज: ' : '🔁 Logged recurring: ') + rule.label, 'success');
+      if(typeof showLocalNotification === 'function') showLocalNotification('PocketTrack', (currentLang === 'hi' ? 'आवर्ती दर्ज: ' : 'Logged recurring: ') + rule.label);
     }
   }
 }

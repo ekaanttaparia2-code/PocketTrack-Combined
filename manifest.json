@@ -3,7 +3,7 @@
   "short_name": "PocketTrack",
   "description": "Track income & expenses, know your balance. Built for India.",
   "id": "pockettrack",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

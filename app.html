@@ -184,9 +184,6 @@
       <button class="pill sync-pill-btn" id="sync-pill-btn" onclick="triggerManualSync()" title="Cloud Sync Status · Tap to Sync">
         <span class="dot"></span><span id="sync-status">Synced</span>
       </button>
-      <button class="pill export-pill-btn" id="header-export-btn" onclick="exportPDF()" title="Export Statement as PDF">
-        <i class="ti ti-download" style="font-size:12px;"></i> <span class="header-pill-text" data-i18n="btn_export">Export</span>
-      </button>
     </div>
   </header>
 
@@ -880,7 +877,7 @@
         <div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:12px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.07)"><span style="font-size:15px">📱</span><span style="font-size:11.5px;font-weight:700;color:#4ade80">Amazon Pay</span></div>
         <div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:12px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.07)"><span style="font-size:15px">📱</span><span style="font-size:11.5px;font-weight:700;color:#4ade80">CRED</span></div>
       </div>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:10px"><span data-i18n="smart_logger_supported_desc">Works with any app that sends a payment notification. Just copy the notification text and paste it!</span></p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:10px"><span data-i18n="smart_logger_supported_desc">Paste supported UPI/bank payment notifications and PocketTrack will attempt to detect the details.</span></p>
     </div>
     <div class="card">
       <p class="sec-title"><i class="ti ti-history"></i><span data-i18n="smart_logger_recent"> Recent smart logs</span></p>
@@ -987,7 +984,7 @@
       </button>
 
       <div class="composer-amount-wrap" onclick="document.getElementById('composer-amount')?.focus()" title="Tap to enter amount">
-        <span>₹</span><input id="composer-amount" inputmode="decimal" type="text" pattern="[0-9]*[.]?[0-9]*" placeholder="0" autocomplete="off"/>
+        <span>₹</span><input id="composer-amount" type="number" inputmode="decimal" step="any" placeholder="0" autocomplete="off"/>
       </div>
 
       <div id="composer-expense-fields">

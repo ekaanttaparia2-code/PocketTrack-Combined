@@ -1,5 +1,19 @@
 /* PocketTrack application entry point. */
 
+// Global error handlers for graceful degradation
+window.onerror = function(msg, source, lineno, colno, error) {
+  console.warn('PocketTrack error:', msg, source, lineno);
+  if (typeof toast === 'function') {
+    toast('Something went wrong. Please reload if the app is unresponsive.', 'error');
+  }
+  return false; // Don't suppress the error in console
+};
+
+window.addEventListener('unhandledrejection', function(event) {
+  console.warn('Unhandled promise rejection:', event.reason);
+  // Don't spam toasts for every rejected promise, but log it
+});
+
 // --- Language / i18n ---
 const TRANSLATIONS = {
   tagline:{en:'Track income & expenses, know your balance',hi:'आय और खर्च को ट्रैक करें, अपना बैलेंस जानें'},
@@ -142,7 +156,7 @@ const TRANSLATIONS = {
   sec_upi:{en:'UPI connection',hi:'UPI कनेक्शन'},
   streak_sub:{en:'Log something every day to keep it going',hi:'इसे जारी रखने के लिए हर दिन कुछ लॉग करें'},
   sec_quick_add:{en:'Quick add',hi:'झटपट जोड़ें'},
-  upi_desc:{en:'Connect your favorite UPI app to auto-track payments. This feature is a work in progress.',hi:'भुगतान अपने आप ट्रैक करने के लिए अपना पसंदीदा UPI ऐप कनेक्ट करें। यह फीचर अभी बन रहा है।'},
+  upi_desc:{en:'Paste supported UPI/bank payment notifications and PocketTrack will attempt to detect the amount, merchant and type.',hi:'समर्थित UPI/बैंक भुगतान सूचनाएं पेस्ट करें और PocketTrack राशि, व्यापारी और प्रकार का पता लगाने का प्रयास करेगा।'},
   nav_upi:{en:'Smart Logger',hi:'स्मार्ट लॉगर'},
   stat_income:{en:'Income',hi:'आय'},
   stat_spent:{en:'Spent',hi:'खर्च'},
@@ -157,7 +171,7 @@ const TRANSLATIONS = {
   smart_logger_how:{en:'How it works',hi:'यह कैसे काम करता है'},
   smart_logger_paste:{en:'Paste UPI notification',hi:'UPI सूचना पेस्ट करें'},
   smart_logger_supported:{en:'Supported apps',hi:'समर्थित ऐप्स'},
-  smart_logger_supported_desc:{en:'Works with any app that sends a payment notification. Just copy the notification text and paste it!',hi:'किसी भी ऐप के साथ काम करता है जो भुगतान सूचना भेजता है। बस नोटिफिकेशन टेक्स्ट कॉपी करें और पेस्ट करें!'},
+  smart_logger_supported_desc:{en:'Paste supported UPI/bank payment notifications and PocketTrack will attempt to detect the amount, merchant and type.',hi:'समर्थित UPI/बैंक भुगतान सूचनाएं पेस्ट करें और PocketTrack राशि, व्यापारी और प्रकार का पता लगाने का प्रयास करेगा।'},
   smart_logger_recent:{en:'Recent smart logs',hi:'हाल के स्मार्ट लॉग्स'},
   smart_logger_no_logs:{en:'No smart logs yet. Paste a notification to get started!',hi:'अभी तक कोई स्मार्ट लॉग नहीं। शुरू करने के लिए कोई नोटिफिकेशन पेस्ट करें!'},
   btn_paste:{en:'Paste from clipboard',hi:'क्लिपबोर्ड से पेस्ट करें'},
@@ -472,7 +486,7 @@ function showAppAlert(message, title){
 function showAppConfirm(message, onConfirm, title){
   title = title || (currentLang==='hi' ? 'पुष्टि करें' : 'Please confirm');
   document.getElementById('app-modal-title').textContent = title;
-  document.getElementById('app-modal-message').textContent = message;
+  document.getElementById('app-modal-message').innerHTML = message;
   const yesLabel = currentLang==='hi' ? 'हां' : 'Yes';
   const cancelLabel = currentLang==='hi' ? 'रद्द करें' : 'Cancel';
   document.getElementById('app-modal-buttons').innerHTML = `
@@ -670,8 +684,9 @@ function startEditCustomOption(oldName){
 }
 
 function confirmDeleteCustomOption(name){
+  const safeName = (typeof escapeHTML === 'function') ? escapeHTML(name) : name;
   showAppConfirm(
-    currentLang==='hi' ? `"${name}" हटाएं?` : `Delete "${name}"?`,
+    currentLang==='hi' ? `"${safeName}" हटाएं?` : `Delete "${safeName}"?`,
     ()=>{
       if(manageOptionsMode==='income') removeCustomIncomeSource(name);
       else removeCustomExpenseCategory(name);
@@ -1709,6 +1724,10 @@ function resetEventEntryEditState(){
   editingEventEntryId=null;
   document.getElementById('ev-inc-submit-btn').textContent=TT('btn_add_income');
   document.getElementById('ev-exp-submit-btn').textContent=TT('btn_add_expense');
+  document.getElementById('ev-inc-amt').value = '';
+  document.getElementById('ev-inc-note').value = '';
+  document.getElementById('ev-exp-amt').value = '';
+  document.getElementById('ev-exp-note').value = '';
 }
 
 async function savePersonalEventIncome(){
@@ -1808,7 +1827,8 @@ function editCurrentEventFromDetail(){
 async function deleteCurrentEvent(){
   if(!currentEventId)return;
   const idToDelete = currentEventId;
-  showAppConfirm(`Delete "${currentEventName}"? This won't delete its logged entries, just the event card.`, async ()=>{
+  const safeName = (typeof escapeHTML === 'function') ? escapeHTML(currentEventName) : currentEventName;
+  showAppConfirm(isHi?`"${safeName}" को हटाएं? यह केवल कार्ड हटाएगा, एंट्रीज़ नहीं।`:`Delete "${safeName}"? This won't delete its logged entries, just the event card.`, async ()=>{
     try{
       await db.collection('users').doc(currentUser.uid).collection('events').doc(idToDelete).delete();
       toast(TT('event_deleted'),'success');
@@ -1893,8 +1913,9 @@ function closeManageParticipants(){
 }
 
 function confirmRemoveParticipant(name){
+  const safeName = (typeof escapeHTML === 'function') ? escapeHTML(name) : name;
   showAppConfirm(
-    currentLang==='hi' ? `"${name}" हटाएं?` : `Remove "${name}"?`,
+    currentLang==='hi' ? `"${safeName}" हटाएं?` : `Remove "${safeName}"?`,
     ()=>{
       removeParticipant(name);
       setTimeout(renderManageParticipantsList, 300);
@@ -2579,7 +2600,8 @@ async function deleteAccountAndPurgeData(){
       const userRef = db.collection('users').doc(uid);
 
       // 1. Delete all subcollections
-      const subcollections = ['entries', 'events', 'recurring', 'ledger', 'portfolios'];
+      const subcollections = ['entries', 'events', 'recurring', 'ledger', 'portfolios', 'wallets', 'spaces'];
+      let cleanupFailed = false;
       for (const colName of subcollections) {
         try {
           const snap = await userRef.collection(colName).get();
@@ -2595,42 +2617,69 @@ async function deleteAccountAndPurgeData(){
           }
           if (ops > 0) await batch.commit();
         } catch(e) {
-          console.warn('Subcollection delete notice (' + colName + '):', e.message);
+          cleanupFailed = true;
+          console.error('Failed to delete ' + colName, e);
         }
       }
+
+      // Delete nested Ledger transactions (ledger/{person}/transactions/{tx})
+      try {
+        const ledgerSnap = await userRef.collection('ledger').get();
+        for (const personDoc of ledgerSnap.docs) {
+          try {
+            const txSnap = await personDoc.ref.collection('transactions').get();
+            let batch2 = db.batch(), ops2 = 0;
+            for (const txDoc of txSnap.docs) {
+              batch2.delete(txDoc.ref);
+              ops2++;
+              if (ops2 === 400) { await batch2.commit(); batch2 = db.batch(); ops2 = 0; }
+            }
+            if (ops2 > 0) await batch2.commit();
+          } catch(e2) { cleanupFailed = true; }
+        }
+      } catch(e3) { cleanupFailed = true; }
 
       // 2. Delete main user document
       try {
         await userRef.delete();
-      } catch(e) {}
+      } catch(e) { cleanupFailed = true; }
 
-      // 3. Purge all localStorage keys related to user and guest
-      try {
-        const keysToRemove = [
-          'pockettrack_entries_cache_' + uid,
-          'pockettrack_wallets_' + uid,
-          'pockettrack_ledger_' + uid,
-          'pockettrack_recurring_' + uid,
-          'pockettrack_entries_cache',
-          'pockettrack_wallets',
-          'pockettrack_wallets_guest',
-          'pockettrack_ledger_guest',
-          'pockettrack_onboarded',
-          'pockettrack_onboarded_v2',
-          'pockettrack_app_mode_chosen',
-          'pockettrack_age_group'
-        ];
-        keysToRemove.forEach(k => localStorage.removeItem(k));
-      } catch(e) {}
+      if (cleanupFailed) {
+        throw new Error(isHi ? 'डेटा पूरी तरह से हटाया नहीं जा सका।' : 'Could not completely purge all cloud data.');
+      }
 
-      // 4. Delete the Firebase Auth User
+      // 3. Delete the Firebase Auth User
       const userToDelete = currentUser;
       try {
         await userToDelete.delete();
       } catch(authErr) {
-        console.warn('Auth user delete notice:', authErr.message);
-        await auth.signOut();
+        if (authErr.code === 'auth/requires-recent-login') {
+          throw new Error(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से लॉग इन करें।' : 'For security, please log out and log in again before deleting your account.');
+        }
+        throw authErr;
       }
+
+      // 4. Purge all localStorage keys related to user and guest
+      try {
+        var allKeys = Object.keys(localStorage);
+        allKeys.forEach(function(k) {
+          if (k.startsWith('pockettrack_') || k.startsWith('pt_')) {
+            localStorage.removeItem(k);
+          }
+        });
+      } catch(e) {}
+
+      // Clear Firebase local persistence / IndexedDB
+      try {
+        if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
+          var idbs = await window.indexedDB.databases();
+          for (var idb of idbs) {
+            if (idb.name && (idb.name.includes('firestore') || idb.name.includes('firebase'))) {
+              window.indexedDB.deleteDatabase(idb.name);
+            }
+          }
+        }
+      } catch(idbErr) {}
 
       if (typeof toast === 'function') {
         toast(isHi ? 'आपका खाता और डेटा हमेशा के लिए हटा दिया गया है।' : 'Your account and data have been permanently deleted.', 'success');
@@ -2639,7 +2688,7 @@ async function deleteAccountAndPurgeData(){
         window.location.reload();
       }, 1200);
     } catch(err) {
-      if (typeof toast === 'function') toast('Could not complete deletion: ' + err.message, 'error');
+      if (typeof toast === 'function') toast(err.message, 'error');
     }
   });
 }
@@ -2743,7 +2792,7 @@ function promptInstallApp(){
   }
   // iOS Safari has no prompt() — guide the user to "Add to Home Screen"
   showAppConfirm(
-    'To install PocketTrack as an app on iPhone/iPad:\n\n1) Tap the Share (⤴) button in Safari\n2) Scroll and tap "Add to Home Screen"\n3) Tap Add',
+    'To install PocketTrack as an app on iPhone/iPad:<br><br>1) Tap the Share (⤴) button in Safari<br>2) Scroll and tap "Add to Home Screen"<br>3) Tap Add',
     ()=>{}, 'Install PocketTrack'
   );
 }
@@ -2822,7 +2871,7 @@ window.triggerManualSync = async function() {
   
   try {
     if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
-      const snap = await db.collection('users').doc(currentUser.uid).collection('entries').limit(500).get();
+      const snap = await db.collection('users').doc(currentUser.uid).collection('entries').get();
       if (!snap.empty) {
         entries = snap.docs.map(d => ({ _id: d.id, ...d.data() })).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
         if (typeof window !== 'undefined') window.entries = entries;

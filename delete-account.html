@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PocketTrack - Delete Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css">
+  <style>
+    body {
+      background: #070414;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .container {
+      background: #181432;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+    }
+    h1 { margin-top: 0; color: #fff; }
+    p { line-height: 1.6; color: #94a3b8; }
+    .warning {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      color: #fca5a5;
+      margin: 20px 0;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #a78bfa;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Delete Your Account</h1>
+    <p>We're sorry to see you go! If you wish to delete your PocketTrack account and purge all associated data, you can do so directly from within the app.</p>
+    
+    <div class="warning">
+      <strong>⚠️ Warning:</strong> Account deletion is permanent. All your transactions, wallets, budgets, and cloud data will be immediately and permanently purged from our servers. This action cannot be undone.
+    </div>
+
+    <h3>How to delete your account:</h3>
+    <ol style="color: #cbd5e1; line-height: 1.8;">
+      <li>Open the PocketTrack app or web app.</li>
+      <li>Log into the account you wish to delete.</li>
+      <li>Open the <strong>Power Menu / Command Hub (⚡)</strong>.</li>
+      <li>Scroll to the bottom and click on <strong>Delete Account (Purge Data)</strong>.</li>
+      <li>Confirm the deletion prompt.</li>
+    </ol>
+
+    <p>Alternatively, click the button below to open the web app and sign in to perform the deletion.</p>
+
+    <a href="app.html" class="btn">Open App to Delete Account</a>
+    <a href="index.html" class="back">← Back to Home</a>
+  </div>
+</body>
+</html>

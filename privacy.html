@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Privacy Policy &amp; DPDP Act 2023 Compliance — PocketTrack</title>
-<meta name="description" content="Read PocketTrack's Privacy Policy. Compliant with India's Digital Personal Data Protection Act (DPDP Act 2023). Zero-knowledge storage, 1-tap data purge."/>
+<meta name="description" content="Read PocketTrack's Privacy Policy. 1-tap data purge and cloud synchronization."/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -53,8 +53,8 @@ function launchPocketTrackApp(e) {
   <main>
     <!-- Hero -->
     <section class="hero" style="padding-bottom:20px;">
-      <div class="pill-badge" style="background:rgba(52,211,153,0.15);color:var(--accent-green);border-color:rgba(52,211,153,0.35);">🔒 DPDP Act 2023 Compliant · Zero-Knowledge Privacy</div>
-      <h1 class="hero-title">We don't know what you bought.<br>And we never will.</h1>
+      <div class="pill-badge" style="background:rgba(52,211,153,0.15);color:var(--accent-green);border-color:rgba(52,211,153,0.35);">🔒 Built for Data Privacy & Security</div>
+      <h1 class="hero-title">Your financial data.<br>Isolated and secure.</h1>
       <p class="hero-desc">Your financial habits are deeply personal. We engineered PocketTrack with client-side isolation, zero ad brokers, database-level security rules, and full compliance with India's Digital Personal Data Protection Act (DPDP Act 2023).</p>
     </section>
 
@@ -96,18 +96,30 @@ function launchPocketTrackApp(e) {
       <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">1. Identity of the Data Fiduciary</h3>
       <p>The entity determining the purpose and means of processing personal data under this policy is:<br>
       <strong>PocketTrack Technologies</strong><br>
-      Contact: <a href="mailto:ekanttaparia2@gmail.com" style="color:#c4b5fd;">ekanttaparia2@gmail.com</a></p>
+      Contact: <a href="mailto:ekaanttaparia2@gmail.com" style="color:#c4b5fd;">ekaanttaparia2@gmail.com</a></p>
 
       <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">2. Personal Data We Collect &amp; Purpose Limitation</h3>
       <p>In accordance with the principle of Purpose Limitation, PocketTrack only collects data necessary to deliver personal expense tracking services:</p>
       <ul style="padding-left:22px;margin-bottom:14px;">
         <li><strong>Account Identifiers:</strong> Email address and unique Firebase user UID for authentication and multi-device synchronization.</li>
         <li><strong>Transaction Data:</strong> Amounts, dates, user-created notes, categories (e.g. food, rent, shopping), and wallet tags (Cash, Bank, Card) manually entered or parsed locally via speech/UPI helpers.</li>
-        <li><strong>What We NEVER Collect:</strong> We never request, access, or store your bank account passwords, netbanking credentials, debit/credit card numbers, CVVs, or OTPs. Voice speech recognition is processed locally within your browser using the HTML5 Web Speech API.</li>
+        <li><strong>What We NEVER Collect:</strong> We never request, access, or store your bank account passwords, netbanking credentials, debit/credit card numbers, CVVs, or OTPs. Voice recognition is provided by your browser's built-in speech recognition service. Processing location may vary by browser and device.</li>
       </ul>
 
       <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">3. Data Storage &amp; Cross-Border Transfers</h3>
       <p>Cloud synchronization is provided via Google Cloud Platform (Firebase Firestore). Data is stored in secure, enterprise-grade cloud datacenters with ISO 27001, SOC 2, and SOC 3 certifications. Data in transit is protected using TLS 1.3 encryption, and data at rest is encrypted with AES-256. Cross-border processing by Google infrastructure adheres to the cross-border transfer standards mandated under Section 16 of the DPDP Act 2023.</p>
+
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">Third-Party Services</h3>
+      <p>PocketTrack uses the following third-party services:</p>
+      <ul style="padding-left:22px;margin-bottom:14px;">
+        <li><strong>Firebase Authentication</strong> (Google) - for user sign-in and account management</li>
+        <li><strong>Cloud Firestore</strong> (Google) - for cloud data storage and sync</li>
+        <li><strong>Google Sign-In</strong> - for Google account authentication</li>
+        <li><strong>Google Fonts</strong> - for typography (loaded from Google servers)</li>
+        <li><strong>jsPDF</strong> (CDN) - for PDF report generation</li>
+        <li><strong>Tesseract.js</strong> (CDN) - for receipt OCR processing</li>
+      </ul>
+      <p>These services have their own privacy policies. We do not share your financial data with any third party for advertising or marketing purposes.</p>
 
       <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">4. Retention Period &amp; Erasure</h3>
       <p>Your transaction data is retained only for as long as your account remains active. You may delete individual entries at any time. When you trigger the <strong>"Delete Account &amp; Purge All Data"</strong> feature in the application, all database records, collections, and local storage keys associated with your account are immediately expunged from production systems.</p>
@@ -121,16 +133,16 @@ function launchPocketTrackApp(e) {
         <li><strong>Right to Nominate:</strong> Nominate another individual to exercise your data rights in the event of death or incapacity.</li>
       </ul>
 
-      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">6. User Protection &amp; Safety Across All Ages</h3>
-      <p>PocketTrack is an open, family-friendly personal expense tracker safe for users of all ages. We never collect sensitive personal information, banking credentials, biometrics, government identifiers, or location telemetry from any user. All expense logs and financial entries are sandboxed and encrypted under the user's isolated account. Minor users may freely explore budgeting features and develop early financial discipline, with parental or guardian awareness encouraged.</p>
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">6. User Protection &amp; Eligibility</h3>
+      <p>PocketTrack is designed for users aged 13 and above. We never collect sensitive personal information, banking credentials, biometrics, government identifiers, or location telemetry from any user. All expense logs and financial entries are sandboxed and encrypted under the user's isolated account.</p>
 
       <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;color:#c4b5fd;margin:24px 0 8px;">7. Designated Grievance Officer</h3>
       <p>In accordance with Section 12 of the DPDP Act, we have designated a Grievance Officer to resolve any privacy concerns:</p>
       <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px;margin-top:12px;">
         <strong style="color:#fff;display:block;">Grievance Officer — Data Privacy</strong>
         <span style="display:block;color:var(--text-muted);font-size:13.5px;margin-top:2px;">PocketTrack Technologies</span>
-        <span style="display:block;color:var(--primary-bright);font-size:13.5px;margin-top:4px;">📧 Email: <a href="mailto:ekanttaparia2@gmail.com" style="color:var(--primary-bright);text-decoration:underline;">ekanttaparia2@gmail.com</a></span>
-        <span style="display:block;color:var(--primary-bright);font-size:13.5px;margin-top:2px;">💬 General Support: <a href="mailto:ekanttaparia2@gmail.com" style="color:var(--primary-bright);text-decoration:underline;">ekanttaparia2@gmail.com</a></span>
+        <span style="display:block;color:var(--primary-bright);font-size:13.5px;margin-top:4px;">📧 Email: <a href="mailto:ekaanttaparia2@gmail.com" style="color:var(--primary-bright);text-decoration:underline;">ekaanttaparia2@gmail.com</a></span>
+        <span style="display:block;color:var(--primary-bright);font-size:13.5px;margin-top:2px;">💬 General Support: <a href="mailto:ekaanttaparia2@gmail.com" style="color:var(--primary-bright);text-decoration:underline;">ekaanttaparia2@gmail.com</a></span>
         <span style="display:block;color:var(--text-dim);font-size:12px;margin-top:6px;">⏱️ SLA: Acknowledgement within 24 hours · Final grievance resolution within 7 business days.</span>
       </div>
     </section>
@@ -161,8 +173,8 @@ function launchPocketTrackApp(e) {
         </div>
         <div class="comp-row">
           <div><b>Speech-to-Text Processing</b></div>
-          <div class="comp-bad">Upload voice recordings to servers</div>
-          <div class="comp-good">100% local browser Web Speech API</div>
+          <div class="comp-bad">Upload voice recordings to third-party servers</div>
+          <div class="comp-good">Standard browser Speech API (Processed natively)</div>
         </div>
         <div class="comp-row">
           <div><b>Offline Data Ownership</b></div>

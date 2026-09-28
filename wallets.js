@@ -116,11 +116,7 @@ function getWalletsStorageKey() {
 window.resolveEntryWalletId = function(tx) {
   if (!tx) return 'cash';
   if (tx.walletId) {
-    if (typeof userWallets !== 'undefined' && Array.isArray(userWallets)) {
-      const isCustom = userWallets.some(w => w.id === tx.walletId && w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card');
-      if (isCustom) return tx.walletId;
-    }
-    return 'cash';
+    return tx.walletId;
   }
 
   // Match only if explicit custom wallet name was typed in label/note
@@ -133,8 +129,6 @@ window.resolveEntryWalletId = function(tx) {
     }
   }
 
-  // Do NOT artificially divide regular entries into Bank and Cash!
-  // All standard entries default to 'cash' so user balance remains unified.
   return 'cash';
 };
 
@@ -198,17 +192,6 @@ window.loadWallets = function() {
       userWallets = JSON.parse(JSON.stringify(DEFAULT_WALLETS));
     }
 
-    // Clean up any legacy starting balance in 'bank' and unify into 'cash'
-    const hasCustomWallets = userWallets.some(w => w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card');
-    if (!hasCustomWallets) {
-      const bankW = userWallets.find(w => w.id === 'bank');
-      const cashW = userWallets.find(w => w.id === 'cash');
-      if (bankW && cashW && parseFloat(bankW.initialBalance)) {
-        cashW.initialBalance = (parseFloat(cashW.initialBalance) || 0) + (parseFloat(bankW.initialBalance) || 0);
-        bankW.initialBalance = 0;
-      }
-    }
-
     // Reset legacy fake demo balance (5000) for clean first-run experience if user has no entries
     const entriesList = (typeof mainEntries === 'function') ? mainEntries() : [];
     if (!entriesList.length) {
@@ -220,6 +203,28 @@ window.loadWallets = function() {
     }
 
     window.userWallets = userWallets;
+
+    // Cloud-first: if logged in, attempt to load wallets from Firestore
+    if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined' && !window.isCloudWalletsLoaded) {
+      window.isCloudWalletsLoaded = true;
+      db.collection('users').doc(currentUser.uid).collection('wallets').get().then(function(snap) {
+        if (!snap.empty) {
+          var cloudWallets = snap.docs.map(function(d) { return Object.assign({}, d.data(), { id: d.id }); });
+          var mergedIds = new Set();
+          var merged = [];
+          cloudWallets.forEach(function(cw) { mergedIds.add(cw.id); merged.push(cw); });
+          userWallets.forEach(function(lw) { if (!mergedIds.has(lw.id)) merged.push(lw); });
+          DEFAULT_WALLETS.forEach(function(dw) {
+            if (!mergedIds.has(dw.id) && !merged.some(function(m) { return m.id === dw.id; })) {
+              merged.push(JSON.parse(JSON.stringify(dw)));
+            }
+          });
+          userWallets = merged;
+          window.userWallets = userWallets;
+          if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+        }
+      }).catch(function() {});
+    }
   } catch (e) {
     userWallets = JSON.parse(JSON.stringify(DEFAULT_WALLETS));
     window.userWallets = userWallets;
@@ -233,8 +238,6 @@ window.saveWallets = function() {
   try {
     const dataStr = JSON.stringify(userWallets);
     localStorage.setItem(getWalletsStorageKey(), dataStr);
-    localStorage.setItem('pockettrack_wallets_guest', dataStr);
-    localStorage.setItem('pockettrack_wallets', dataStr);
 
     if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
       userWallets.forEach(w => {

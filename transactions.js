@@ -26,8 +26,8 @@ function updateHeaderStats(){
 
   // Sync hero balance precisely with wallet balances (including initial balances)
   let balance = 0;
-  if (typeof computeWalletBalances === 'function') {
-    const balances = computeWalletBalances();
+  if (typeof window !== 'undefined' && typeof window.computeWalletBalances === 'function') {
+    const balances = window.computeWalletBalances();
     const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : (typeof activeWalletId !== 'undefined' ? activeWalletId : 'all');
     if (activeW && activeW !== 'all' && balances[activeW] !== undefined) {
       balance = balances[activeW];
@@ -305,6 +305,8 @@ function goMoreHub(){
 
 function openCommandHubModal(){
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const existing = document.getElementById('command-hub-modal-backdrop');
+  if (existing) existing.remove();
   const modal = document.createElement('div');
   modal.id = 'command-hub-modal-backdrop';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
@@ -944,6 +946,14 @@ function maybeGuardAndSave(payload,doSave){
   const run=()=>Promise.resolve(doSave()).catch(e=>toast('Could not save: '+e.message,'error'));
   const dup=findDuplicateEntry(payload);
   if(!dup){run();return;}
+  
+  // If the duplicate was literally just created (within 5 seconds), it's a double-tap bug.
+  // Silently drop it to prevent annoyance.
+  if (dup.timestamp && (Date.now() - dup.timestamp < 5000)) {
+    console.warn('Silently dropping double-tap duplicate');
+    return;
+  }
+
   const isHi=currentLang==='hi';
   const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
   const when=isHi?(dd===0?'आज ही':dd===1?'कल':dd+' दिन पहले'):(dd===0?'earlier today':dd===1?'yesterday':dd+' days ago');

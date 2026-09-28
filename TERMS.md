@@ -7,17 +7,17 @@ By accessing, installing, or using PocketTrack, you agree to these terms:
 ### 1. Intended Use & Important Disclaimer
 PocketTrack is a personal finance tool intended for personal budgeting, expense tracking, and split calculations. **It does not provide certified financial, investment, legal, or tax advice.** All financial projections (e.g. FIRE Runway, 50/30/20, SIP calculations) are mathematical simulations based on user inputs. Consult a qualified professional for individual investment decisions.
 
-### 2. User Eligibility (All Ages Welcome)
-PocketTrack is an open, family-friendly personal budgeting and financial literacy tool designed for users of all ages—including students, young earners, families, and seniors. Minors are welcome to use the service to build healthy money habits, with parental or guardian guidance where appropriate.
+### 2. User Eligibility
+PocketTrack is designed for users aged 13 and above. By using PocketTrack, you confirm that you are at least 13 years of age. If you are between 13 and 18, you should have parental or guardian awareness of your use of this service.
 
 ### 3. User Accounts & Security
 You are solely responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.
 
 ### 4. Subscriptions, Pricing & Refund Policy
-- **Pro Monthly:** ₹99/month
-- **Pro Annual:** ₹799/year
-- **Pro Lifetime:** ₹1,999 one-time
-- **7-Day Refund Guarantee:** We provide a 100% no-questions-asked refund within 7 days of purchase. Contact `ekanttaparia2@gmail.com` with your registered email.
+- **Pro Monthly:** ₹50/month
+- **Pro Annual:** ₹300/year
+- **Pro Lifetime:** ₹1,500 one-time
+- **7-Day Refund Guarantee:** We provide a 100% no-questions-asked refund within 7 days of purchase. Contact `ekaanttaparia2@gmail.com` with your registered email.
 
 ### 5. Data Ownership & 1-Tap Permanent Purge (DPDP Act 2023)
 You retain 100% ownership of your data. Under the Digital Personal Data Protection Act, 2023, you have the right to summary access, data correction, grievance redressal, and permanent erasure. You can purge all cloud and local records at any time using the in-app "Delete Account & All Data" feature in Settings.

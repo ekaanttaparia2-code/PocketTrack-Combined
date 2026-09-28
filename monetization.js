@@ -119,11 +119,11 @@ function ptUnderConstructionCard(){
     </div>`;
 }
 
-// --- 3-tier pricing model (User Requested: ₹50/mo, ₹100/mo, Lifetime) ---
+// --- 3-tier pricing model (User Requested: ₹50/mo, ₹300/yr, Lifetime) ---
 const PT_PLANS = [
-  { id:'monthly_50',  label:{en:'Monthly Starter',hi:'मासिक स्टार्टर'}, price:50,  period:'/month',  periodHi:'/माह', perMonth:50,  tag:{en:'MINIMAL',hi:'सस्ता'},        highlight:false },
-  { id:'monthly_100', label:{en:'Pro Plus',hi:'प्रो प्लस'},           price:100, period:'/month',  periodHi:'/माह', perMonth:100, tag:{en:'POPULAR',hi:'पॉपुलर'},      highlight:true },
-  { id:'life',        label:{en:'Lifetime Unlock',hi:'लाइफटाइम'},      price:999, period:'one-time', periodHi:'एक बार', perMonth:0,   tag:{en:'Own it forever',hi:'हमेशा के लिए आपका'}, highlight:false }
+  { id:'monthly_50',  label:{en:'Pro Monthly',hi:'प्रो मासिक'}, price:50,  period:'/month',  periodHi:'/माह', perMonth:50,  tag:{en:'FLEXIBLE',hi:'लचीला'},        highlight:false },
+  { id:'annual_300',  label:{en:'Pro Annual',hi:'प्रो वार्षिक'},  price:300, period:'/year',   periodHi:'/वर्ष', perMonth:25, tag:{en:'POPULAR',hi:'पॉपुलर'},      highlight:true },
+  { id:'life',        label:{en:'Lifetime Unlock',hi:'लाइफटाइम'}, price:1500, period:'one-time', periodHi:'एक बार', perMonth:0, tag:{en:'Own it forever',hi:'हमेशा के लिए आपका'}, highlight:false }
 ];
 // Default / featured plan used as the anchor.
 const PT_PRICE = '₹50';
@@ -228,7 +228,12 @@ const PT_THEMES = [
 ];
 
 // ---- Pro state -------------------------------------------------------
-function proEnabled(){ return localStorage.getItem(PT_STORE.pro) === '1'; }
+function proEnabled(){ 
+  if (typeof window !== 'undefined' && window.isProUser !== undefined) {
+    return window.isProUser;
+  }
+  return localStorage.getItem(PT_STORE.pro) === '1'; 
+}
 
 function setPro(on){
   if (on) localStorage.setItem(PT_STORE.pro, '1');
@@ -563,29 +568,9 @@ async function payForPro(){
     toast(mon('uc_payments'), 'info');
     return;
   }
-  const btn = document.getElementById('pt-pay-now');
-  const label = document.getElementById('pt-pay-label');
-  if(!btn) return;
-  const plan = ptGetSelectedPlan();
-  btn.disabled = true;
-  label.textContent = mon('verifying');
-  document.querySelectorAll('.pay-tab').forEach(b=>b.style.pointerEvents='none');
-
-  // Simulate the Razorpay payment flow (order → then success).
-  await new Promise(r=>setTimeout(r, 1400));
-
-  setPro(true);
-  closeProCheckout();
-  if(typeof ptSyncGates === 'function') ptSyncGates();
-  const planMsg = plan.id==='life' ? ' ' + mon('lifetime_access') : (' ' + mlabel(plan.label) + ' ' + mon('plan_word'));
-  toast(mon('pro_unlocked') + planMsg + '! ' + mon('thanks_sub'), 'success');
-
-  // Apply any theme they were aiming for (they are Pro now).
-  const pend = localStorage.getItem(PT_STORE.theme + '_pend');
-  localStorage.removeItem(PT_STORE.theme + '_pend');
-  if(pend && themeById(pend)) applyThemeOf(pend);
-
-  if(typeof renderProTab === 'function') renderProTab();
+  // Payment integration pending - show coming soon message
+  toast('Payment integration coming soon! Pro will be available shortly.', 'info');
+  return;
 }
 
 function isThemePremium(id){

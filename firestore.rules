@@ -3,7 +3,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Each user can only read and write their own profile and all subcollections
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId && !('pro' in request.resource.data);
+      allow update: if request.auth != null && request.auth.uid == userId && (!('pro' in request.resource.data) || request.resource.data.pro == resource.data.pro);
+      allow delete: if request.auth != null && request.auth.uid == userId;
       
       match /{allSubcollections=**} {
         allow read, write: if request.auth != null && request.auth.uid == userId;

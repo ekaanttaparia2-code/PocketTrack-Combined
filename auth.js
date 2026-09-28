@@ -126,6 +126,14 @@ function signInWithGoogle(){
   provider.addScope('email');
   provider.addScope('profile');
   
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    auth.signInWithRedirect(provider).catch(err => {
+      showAuthError(err.message || 'Google Sign-in failed. Please try email login.');
+    });
+    return; // Page will redirect
+  }
+
   auth.signInWithPopup(provider).then(cred=>{
     hideAuthError();
   }).catch(err=>{
@@ -205,14 +213,20 @@ if (typeof auth !== 'undefined') {
     if(typeof updateAIWidgetVisibility === 'function') updateAIWidgetVisibility();
     loadBudget();
     if(typeof updateHeaderStats === 'function') updateHeaderStats();
+    window.isProUser = false;
     if(typeof db!=='undefined' && typeof PT_STORE!=='undefined'){
-      db.collection('users').doc(user.uid).get().then(snap=>{
+      // Set up real-time listener for user document to catch Pro status changes
+      db.collection('users').doc(user.uid).onSnapshot(snap => {
         const pro = !!(snap.exists && snap.data().pro === true);
+        window.isProUser = pro;
         if(pro) localStorage.setItem(PT_STORE.pro,'1');
         else if(snap.exists) localStorage.removeItem(PT_STORE.pro);
+        
         if(typeof renderProTab==='function') renderProTab();
         if(typeof ptSyncGates==='function') ptSyncGates();
-      }).catch(()=>{});
+      }, err => {
+        console.warn('Failed to listen to user doc:', err);
+      });
     }
     document.getElementById('verify-banner').style.display = user.emailVerified ? 'none' : 'block';
     
