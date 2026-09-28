@@ -57,7 +57,7 @@
 
     var curMonth = new Date().toISOString().slice(0, 7);
     var monthIncome = entries
-      .filter(function(e) { return e.type === 'income' && String(e.date || '').slice(0, 7) === curMonth; })
+      .filter(function(e) { return e.type === 'income' && !e.transferGroupId && String(e.date || '').slice(0, 7) === curMonth; })
       .reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
 
     if (monthIncome > 0) return monthIncome;

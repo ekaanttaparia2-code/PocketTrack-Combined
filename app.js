@@ -794,7 +794,7 @@ async function saveBudget(){
 function getPeriodExpenseByCat(){
   const list = budgetPeriod==='weekly' ? getThisWeekEntries() : getThisMonthEntries();
   const map = {};
-  list.filter(e=>e.type==='expense').forEach(e=>{ map[e.cat] = (map[e.cat]||0)+e.amt; });
+  list.filter(e=>e.type==='expense' && !e.transferGroupId).forEach(e=>{ map[e.cat] = (map[e.cat]||0)+e.amt; });
   return map;
 }
 
@@ -1598,8 +1598,8 @@ async function createNewEvent(){
 
 function eventStats(eventName, evId){
   const list = entries.filter(e => evId ? (e.evId ? e.evId===evId : (!e.evId && e.event===eventName)) : e.event===eventName);
-  const income = list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const spent = list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const income = list.filter(e=>e.type==='income' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
+  const spent = list.filter(e=>e.type==='expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
   return {income, spent, balance: income-spent, count: list.length, list};
 }
 

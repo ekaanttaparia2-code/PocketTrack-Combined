@@ -115,7 +115,7 @@ function showSmartIntentConfirmation(intentData, payload, onProceedNormal, onPro
           ${icon}
         </div>
         <h3 style="margin:0 0 6px;font-family:'Space Grotesk',sans-serif;font-size:18px;color:#fff">${title}</h3>
-        <p style="margin:0;font-size:13.5px;color:var(--text-dim,#d1d5db);line-height:1.45">${intentData.explanation}</p>
+        <p style="margin:0;font-size:13.5px;color:var(--text-dim,#d1d5db);line-height:1.45">${(typeof escapeHTML === 'function') ? escapeHTML(intentData.explanation) : intentData.explanation}</p>
       </div>
 
       <div class="btn-row" style="gap:10px;margin-top:18px;">
