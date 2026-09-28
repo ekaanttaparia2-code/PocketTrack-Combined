@@ -872,8 +872,10 @@ function refreshEventsViewsIfOpen(){
 
 
 
+let _lastLocalSaveTime = 0;
 async function saveEntry(entry){
   if(!currentUser){toast(TT('not_logged_in'),'error');return;}
+  _lastLocalSaveTime = Date.now();
   const tempId = 'temp_' + Date.now();
   const optimisticItem = { ...entry, _id: tempId, _createdLocallyAt: Date.now() };
   if (!Array.isArray(entries)) entries = [];
@@ -944,22 +946,14 @@ function findDuplicateEntry(payload){
 
 function maybeGuardAndSave(payload,doSave){
   const run=()=>Promise.resolve(doSave()).catch(e=>toast('Could not save: '+e.message,'error'));
-  const dup=findDuplicateEntry(payload);
-  if(!dup){run();return;}
   
-  // If the duplicate was literally just created (within 5 seconds), it's a double-tap bug.
-  // Silently drop it to prevent annoyance.
-  let isRecent = false;
-  if (dup._createdLocallyAt && Date.now() - dup._createdLocallyAt < 5000) {
-    isRecent = true;
-  } else if (dup._id && dup._id.startsWith('temp_')) {
-    const ts = parseInt(dup._id.split('_')[1]);
-    if (!isNaN(ts) && Date.now() - ts < 5000) isRecent = true;
-  }
-  if (isRecent) {
-    console.warn('Silently dropping double-tap duplicate');
+  if (Date.now() - _lastLocalSaveTime < 5000) {
+    console.warn('Silently dropping double-tap duplicate based on global timer');
     return;
   }
+
+  const dup=findDuplicateEntry(payload);
+  if(!dup){run();return;}
 
   const isHi=currentLang==='hi';
   const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
