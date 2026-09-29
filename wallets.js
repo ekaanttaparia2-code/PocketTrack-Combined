@@ -798,8 +798,8 @@ window.submitWalletTransfer = async function() {
     if (typeof toast === 'function') toast('Source and Destination wallets cannot be the same', 'error');
     return;
   }
-  if (!amt || isNaN(amt) || amt <= 0) {
-    if (typeof toast === 'function') toast('Please enter a valid transfer amount', 'error');
+  if (typeof isValidAmount === 'function' ? !isValidAmount(amt) : (!amt || isNaN(amt) || amt <= 0)) {
+    if (typeof toast === 'function') toast((typeof currentLang !== 'undefined' && currentLang === 'hi') ? 'कृपया एक मान्य राशि दर्ज करें' : 'Please enter a valid transfer amount', 'error');
     return;
   }
 
