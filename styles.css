@@ -2082,8 +2082,7 @@ body{
 }
 
 .composer-actions{
-  position:sticky;
-  bottom:0;
+  position:relative;
   padding-bottom:4px;
 }
 
@@ -3287,3 +3286,4 @@ body.auth-active .voice-fab {
 
 .empty, .empty-mini { text-align: center; color: var(--text-faint, #64748b); padding: 24px 10px; font-size: 14px; }
 .empty-mini { padding: 12px 10px; font-size: 13px; }
+
