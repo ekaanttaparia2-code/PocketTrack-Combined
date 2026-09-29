@@ -668,7 +668,7 @@ window.deleteCustomWallet = async function(walletId) {
 
       userWallets = userWallets.filter(w => w.id !== walletId);
       window.userWallets = userWallets;
-      window.saveWallets();
+      window.saveWallets().catch(e => console.warn(e));
 
       if (window.activeWalletId === walletId) window.activeWalletId = 'all';
       if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
@@ -694,7 +694,7 @@ window.deleteCustomWallet = async function(walletId) {
 
   userWallets = userWallets.filter(w => w.id !== walletId);
   window.userWallets = userWallets;
-  window.saveWallets();
+  window.saveWallets().catch(e => console.warn(e));
 
   if (window.activeWalletId === walletId) window.activeWalletId = 'all';
   if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
@@ -883,12 +883,12 @@ window.syncWalletsFromCloud = async function(user) {
         if (!existingIds.has(dw.id)) userWallets.push({ ...dw });
       });
       isCloudWalletsLoaded = true;
-      window.saveWallets();
+      window.saveWallets().catch(e => console.warn(e));
       window.renderWalletSwitcher();
       if (typeof updateHeaderStats === 'function') updateHeaderStats();
     } else {
       // First time on cloud: seed default wallets
-      window.saveWallets();
+      window.saveWallets().catch(e => console.warn(e));
     }
   } catch (e) {
     console.warn('Cloud wallets load error:', e.message);

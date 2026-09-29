@@ -314,12 +314,17 @@ async function addLedgerPerson(name, phone = '') {
       });
       newPerson._id = docRef.id;
       saveLocalLedgerCache();
+      toast(TT('ledger_added') + ' ' + name, 'success');
     } catch (e) {
       console.warn('Firestore write warning:', e.message);
+      ledgerPeople.shift(); // rollback
+      saveLocalLedgerCache();
+      renderLedger();
+      toast('Failed to save to cloud', 'error');
     }
+  } else {
+    toast(TT('ledger_added') + ' ' + name, 'success');
   }
-
-  toast(TT('ledger_added') + ' ' + name, 'success');
 }
 
 // In-App Modal for Adding a Transaction (Gave ₹ / Received ₹)

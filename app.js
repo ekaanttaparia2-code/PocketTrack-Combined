@@ -269,13 +269,7 @@ function updateSmartLogPlaceholder(){
 
 const SUPPORTED_LANGS = {
   en: 'English',
-  hi: 'हिंदी (Hindi)',
-  hinglish: 'हिंग्लिश (Hinglish)',
-  mr: 'मराठी (Marathi)',
-  ta: 'தமிழ் (Tamil)',
-  te: 'తెలుగు (Telugu)',
-  gu: 'ગુજરાતી (Gujarati)',
-  bn: 'বাংলা (Bengali)'
+  hi: 'हिंदी (Hindi)'
 };
 
 function updateLanguageTabUI(){
@@ -2631,6 +2625,10 @@ async function deleteAccountAndPurgeData(){
           } catch(e2) { cleanupFailed = true; }
         }
       } catch(e3) { cleanupFailed = true; }
+      
+      if (cleanupFailed) {
+        throw new Error('Failed to purge nested Ledger data. Aborting to prevent orphaned records.');
+      }
 
       // 2. Delete all standard subcollections
       const subcollections = ['entries', 'events', 'recurring', 'ledger', 'portfolios', 'wallets', 'spaces'];

@@ -950,16 +950,16 @@ function findDuplicateEntry(payload){
     const tNote=_dupNorm(payload.note);
     const target=tLabel.length>=3?tLabel:tNote;
     if(target.length<3)return null;
-    const today=todayStr();
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(today))return null;
-    const tNow=_dupUTC(today);
+    const pDate = payload.date || todayStr();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(pDate))return null;
+    const tNow=_dupUTC(pDate);
     let best=null,bestDelta=1e9;
     for(const e of entries){
       if((e.type||'expense')!==payload.type)continue;
       if(Math.round((Number(e.amt)||0)*100)/100!==amt)continue;
       if(!e.date||!/^\d{4}-\d{2}-\d{2}$/.test(e.date))continue;
-      const dd=Math.round((tNow-_dupUTC(e.date))/86400000);
-      if(dd<0||dd>3)continue;
+      const dd=Math.abs(Math.round((tNow-_dupUTC(e.date))/86400000));
+      if(dd>3)continue;
       const eLabel=_dupNorm(e.label);
       const hay=(eLabel+' '+_dupNorm(e.note)).trim();
       if(!(hay.includes(target)||(eLabel.length>=3&&target.includes(eLabel))))continue;
@@ -976,8 +976,8 @@ function maybeGuardAndSave(payload,doSave){
   if(!dup){run();return;}
 
   const isHi=currentLang==='hi';
-  const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
-  const when=isHi?(dd===0?'आज ही':dd===1?'कल':dd+' दिन पहले'):(dd===0?'earlier today':dd===1?'yesterday':dd+' days ago');
+  const dd=Math.abs(Math.round((_dupUTC(payload.date || todayStr())-_dupUTC(dup.date))/86400000));
+  const when=isHi?(dd===0?'उसी दिन':dd===1?'1 दिन पहले':dd+' दिन पहले'):(dd===0?'on the same day':dd===1?'1 day apart':dd+' days apart');
   
   // No need to HTML escape since showAppConfirm uses textContent, which is natively safe against XSS
   const safeLabel = dup.label || 'Entry';

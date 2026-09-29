@@ -537,7 +537,7 @@
           var targetWallet = window.userWallets.find(function(w) { return w.id === 'cash'; }) || window.userWallets[0];
           if (targetWallet) {
             targetWallet.initialBalance = startAmt;
-            if (typeof window.saveWallets === 'function') window.saveWallets();
+            if (typeof window.saveWallets === 'function') window.saveWallets().catch(e => console.warn(e));
             if (typeof window.renderWallets === 'function') window.renderWallets();
             if (typeof window.renderWalletSwitcher === 'function') window.renderWalletSwitcher();
           }
