@@ -2606,36 +2606,33 @@ async function deleteAccountAndPurgeData(){
 
   showAppConfirm(confirmMsg, async ()=>{
     try {
-      // PRE-FLIGHT CHECK: Force re-authentication if login is older than 5 minutes
-      if (currentUser && currentUser.metadata && currentUser.metadata.lastSignInTime) {
-        const lastSignIn = new Date(currentUser.metadata.lastSignInTime).getTime();
-        if (Date.now() - lastSignIn > 5 * 60 * 1000) { // 5 minutes strict limit
-          try {
-            if(typeof toast === 'function') toast(isHi ? 'सुरक्षित खाते हटाने की तैयारी...' : 'Preparing secure account deletion...', 'info');
-            const providers = currentUser.providerData || [];
-            const googleProvider = providers.find(p => p.providerId === 'google.com');
-            const passwordProvider = providers.find(p => p.providerId === 'password');
-            const phoneProvider = providers.find(p => p.providerId === 'phone');
+      // PRE-FLIGHT CHECK: Force re-authentication for EVERY deletion to guarantee Auth token freshness
+      if (currentUser) {
+        try {
+          if(typeof toast === 'function') toast(isHi ? 'सुरक्षित खाते हटाने की तैयारी...' : 'Preparing secure account deletion...', 'info');
+          const providers = currentUser.providerData || [];
+          const googleProvider = providers.find(p => p.providerId === 'google.com');
+          const passwordProvider = providers.find(p => p.providerId === 'password');
+          const phoneProvider = providers.find(p => p.providerId === 'phone');
 
-            if (googleProvider) {
-              const provider = new firebase.auth.GoogleAuthProvider();
-              await currentUser.reauthenticateWithPopup(provider);
-            } else if (passwordProvider) {
-              const pass = prompt(isHi ? 'खाता हटाने की पुष्टि के लिए अपना पासवर्ड दर्ज करें:' : 'Please enter your password to confirm account deletion:');
-              if (!pass) return; // User cancelled
-              const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass);
-              await currentUser.reauthenticateWithCredential(cred);
-            } else if (phoneProvider) {
-              if (typeof toast === 'function') toast(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से फोन से लॉग इन करें।' : 'For security, please log out and log in again with your phone number before deleting.', 'error');
-              return;
-            } else {
-              if (typeof toast === 'function') toast(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से लॉग इन करें।' : 'For security, please log out and log in again before deleting your account.', 'error');
-              return;
-            }
-          } catch(err) {
-            if (typeof toast === 'function') toast(isHi ? 'पुन: प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।' : 'Re-authentication failed. Please try again.', 'error');
+          if (googleProvider) {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            await currentUser.reauthenticateWithPopup(provider);
+          } else if (passwordProvider) {
+            const pass = prompt(isHi ? 'खाता हटाने की पुष्टि के लिए अपना पासवर्ड दर्ज करें:' : 'Please enter your password to confirm account deletion:');
+            if (!pass) return; // User cancelled
+            const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass);
+            await currentUser.reauthenticateWithCredential(cred);
+          } else if (phoneProvider) {
+            if (typeof toast === 'function') toast(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से फोन से लॉग इन करें।' : 'For security, please log out and log in again with your phone number before deleting.', 'error');
+            return;
+          } else {
+            if (typeof toast === 'function') toast(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से लॉग इन करें।' : 'For security, please log out and log in again before deleting your account.', 'error');
             return;
           }
+        } catch(err) {
+          if (typeof toast === 'function') toast(isHi ? 'पुन: प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।' : 'Re-authentication failed. Please try again.', 'error');
+          return;
         }
       }
 
