@@ -37,6 +37,10 @@ function updateHeaderStats(){
   } else {
     balance = income - spent;
   }
+  
+  balance = Math.round(balance * 100) / 100;
+  income = Math.round(income * 100) / 100;
+  spent = Math.round(spent * 100) / 100;
 
   if (typeof animateNumber === 'function') {
     animateNumber('hdr-income', income);
@@ -228,6 +232,13 @@ function setComposerMode(mode){
     const isSrcMatch = (composerMode === 'income' && btn.dataset.source === composerSelection);
     btn.classList.toggle('active', isCatMatch || isSrcMatch);
   });
+
+  // Auto-focus amount field on non-mobile devices to save a click
+  if (window.innerWidth > 768) {
+    setTimeout(() => {
+      document.getElementById('composer-amount')?.focus();
+    }, 100);
+  }
 }
 
 function selectComposerChip(btn,value){
@@ -968,8 +979,8 @@ function maybeGuardAndSave(payload,doSave){
   const dd=Math.max(0,Math.round((_dupUTC(todayStr())-_dupUTC(dup.date))/86400000));
   const when=isHi?(dd===0?'आज ही':dd===1?'कल':dd+' दिन पहले'):(dd===0?'earlier today':dd===1?'yesterday':dd+' days ago');
   
-  // Sanitize label by escaping HTML to prevent ugly reflection in the confirm dialog
-  const safeLabel = (typeof escapeHTML === 'function') ? escapeHTML(dup.label) : String(dup.label).replace(/<[^>]*>?/gm, '').trim();
+  // No need to HTML escape since showAppConfirm uses textContent, which is natively safe against XSS
+  const safeLabel = dup.label || 'Entry';
   
   showAppConfirm(
     isHi?`⚠️ "${safeLabel}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
@@ -981,10 +992,14 @@ function maybeGuardAndSave(payload,doSave){
 async function updateEntry(id, entry){
   const allList = (typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : entries;
   const idx = allList.findIndex(e => e._id === id);
+  let oldEntry = null;
   if (idx !== -1) {
+    oldEntry = { ...allList[idx] };
     allList[idx] = { ...allList[idx], ...entry, _id: id };
     entries = allList;
     if (typeof window !== 'undefined') window.entries = entries;
+    if (typeof updateHeaderStats === 'function') updateHeaderStats();
+    if (typeof renderEntries === 'function') renderEntries();
   }
   
   if (currentUser && typeof db !== 'undefined') {
@@ -994,17 +1009,21 @@ async function updateEntry(id, entry){
         localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
       } catch(e){}
     } catch(e) {
-      console.warn('Firestore update warning:', e.message);
+      console.warn('Firestore update error, rolling back locally:', e.message);
+      if (idx !== -1 && oldEntry) {
+        allList[idx] = oldEntry;
+        entries = allList;
+        if (typeof window !== 'undefined') window.entries = entries;
+        if (typeof updateHeaderStats === 'function') updateHeaderStats();
+        if (typeof renderEntries === 'function') renderEntries();
+      }
+      throw e;
     }
   } else {
     try {
       localStorage.setItem('pockettrack_entries_cache', JSON.stringify(entries));
     } catch(e) {}
   }
-  if (typeof updateHeaderStats === 'function') updateHeaderStats();
-  if (typeof renderEntries === 'function') renderEntries();
-  if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
-  if (typeof renderReport === 'function') renderReport();
 }
 
 async function removeEntry(id){
@@ -1180,15 +1199,54 @@ function renderEntries(){
   const el=document.getElementById('entries-list');
   if(!list.length){el.innerHTML=`<p class="empty">${TT('no_entries_range')}</p>`;return;}
 
+  let dateKeys = [];
+  const byDate = {};
+
+  // Group transfer legs
+  const processedList = [];
+  const transferGroups = {};
+
+  list.forEach(e => {
+    if (e.transferGroupId) {
+      if (!transferGroups[e.transferGroupId]) transferGroups[e.transferGroupId] = [];
+      transferGroups[e.transferGroupId].push(e);
+    } else {
+      processedList.push(e);
+    }
+  });
+
+  // Combine transfer legs into single display items
+  Object.keys(transferGroups).forEach(gid => {
+    const group = transferGroups[gid];
+    if (group.length === 2) {
+      const expenseLeg = group.find(x => x.type === 'expense');
+      const incomeLeg = group.find(x => x.type === 'income');
+      if (expenseLeg && incomeLeg) {
+        processedList.push({
+          ...expenseLeg,
+          isTransferMerged: true,
+          type: 'transfer',
+          label: (typeof currentLang !== 'undefined' && currentLang === 'hi') ? '🔁 ट्रांसफर' : '🔁 Transfer',
+          note: `${expenseLeg.label.replace('Transfer to ', '').replace('Transfer from ', '')} → ${incomeLeg.label.replace('Transfer to ', '').replace('Transfer from ', '')}`,
+          cat: 'transfer', // avoids income/expense color logic later if needed
+          wBadge: getWalletBadgeHtml(expenseLeg) + ' ➝ ' + getWalletBadgeHtml(incomeLeg)
+        });
+      }
+    } else {
+      processedList.push(...group);
+    }
+  });
+
   // Group entries by date to compute per-day balance
-  const byDate={};
-  list.forEach(e=>{
-    if(!byDate[e.date])byDate[e.date]={income:0,expense:0,items:[]};
-    if(e.type==='income')byDate[e.date].income+=e.amt;else byDate[e.date].expense+=e.amt;
+  processedList.forEach(e => {
+    if (!byDate[e.date]) byDate[e.date] = { income: 0, expense: 0, items: [] };
+    // Transfers don't affect net day balance!
+    if (e.type === 'income') byDate[e.date].income += e.amt;
+    else if (e.type === 'expense') byDate[e.date].expense += e.amt;
     byDate[e.date].items.push(e);
   });
 
-  let dateKeys=Object.keys(byDate);
+  dateKeys = Object.keys(byDate);
   if(sortMode==='date-desc')dateKeys.sort((a,b)=>b.localeCompare(a));
   else if(sortMode==='date-asc')dateKeys.sort((a,b)=>a.localeCompare(b));
   else if(sortMode==='amt-desc')dateKeys.sort((a,b)=>(byDate[b].income-byDate[b].expense)-(byDate[a].income-byDate[a].expense));
@@ -1203,7 +1261,10 @@ function renderEntries(){
       const catKey=(e.cat&&e.cat!=='income'?e.cat:'other');
       const dotColor=(typeof CAT_COLORS!=='undefined'&&CAT_COLORS[catKey])||'var(--text-faint)';
       const meta=escapeHTML(displayCatLabel(e))+(e.note?' · '+escapeHTML(e.note):'');
-      const wBadge=getWalletBadgeHtml(e);
+      const wBadge = e.isTransferMerged ? e.wBadge : getWalletBadgeHtml(e);
+      const isTransfer = e.type === 'transfer';
+      const amtClass = isTransfer ? 'text-dim' : (e.type==='income'?'income':'expense');
+      const sign = isTransfer ? '' : (e.type==='income'?'+':'-');
       return `
       <div class="entry-row entry-card">
         <span class="cat-dot" style="background:${dotColor};color:${dotColor}"></span>
@@ -1211,7 +1272,7 @@ function renderEntries(){
           <span class="entry-label">${escapeHTML(e.label)}${e.event?' <span class="event-tag">🎉 '+escapeHTML(e.event)+'</span>':''}${wBadge}</span>
           <span class="entry-meta">${meta}</span>
         </div>
-        <span class="entry-amt ${e.type==='income'?'income':'expense'}">${e.type==='income'?'+':'-'}₹${e.amt}</span>
+        <span class="entry-amt ${amtClass}">${sign}₹${e.amt}</span>
         <div class="row-actions">
           <button class="icon-btn" onclick="startEdit('${e._id}')" aria-label="edit">✏️</button>
           <button class="icon-btn" onclick="deleteEntry('${e._id}')" aria-label="delete">🗑️</button>

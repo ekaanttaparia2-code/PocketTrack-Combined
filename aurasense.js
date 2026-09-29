@@ -86,6 +86,10 @@ function initAuraSenseCanvas(canvasId = 'aurasense-orb-canvas') {
     auraCtx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
   }
 
+  if (window._auraSenseResizeListener) {
+    window.removeEventListener('resize', window._auraSenseResizeListener);
+  }
+  window._auraSenseResizeListener = resize;
   window.addEventListener('resize', resize);
   resize();
 

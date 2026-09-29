@@ -405,7 +405,14 @@ async function saveLedgerTx(personId, type, amount, note) {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     } catch(e) {
-      console.warn('Firestore tx write warning:', e.message);
+      console.warn('Firestore tx write error, rolling back:', e.message);
+      // Rollback
+      person.transactions.shift();
+      saveLocalLedgerCache();
+      renderLedger();
+      showPersonDetail(personId);
+      toast(isHi ? 'एरर: सेव नहीं हो सका' : 'Error: Could not save transaction', 'error');
+      return;
     }
   }
 
@@ -543,6 +550,7 @@ async function deleteLedgerPerson(personId) {
   
   if (typeof showAppConfirm === 'function') {
     showAppConfirm(msg, async () => {
+      const personToRestore = ledgerPeople.find(p => p._id === personId);
       ledgerPeople = ledgerPeople.filter(p => p._id !== personId);
       saveLocalLedgerCache();
       closeLedgerModal();
@@ -559,7 +567,12 @@ async function deleteLedgerPerson(personId) {
           if (ops > 0) await batch.commit();
           await db.collection('users').doc(currentUser.uid).collection('ledger').doc(personId).delete();
         } catch(e) {
-          console.warn('Firestore person delete warning:', e.message);
+          console.warn('Firestore person delete error, rolling back:', e.message);
+          if (personToRestore) ledgerPeople.push(personToRestore);
+          saveLocalLedgerCache();
+          renderLedger();
+          toast(isHi ? 'एरर: हटाया नहीं जा सका' : 'Error: Could not delete contact', 'error');
+          return;
         }
       }
       toast(isHi ? 'संपर्क हटाया गया' : 'Contact deleted', 'success');
@@ -571,6 +584,7 @@ async function deleteLedgerTx(personId, txId) {
   const person = ledgerPeople.find(p => p._id === personId);
   if (!person) return;
 
+  const txToRestore = (person.transactions || []).find(t => t._id === txId);
   person.transactions = (person.transactions || []).filter(t => t._id !== txId);
   saveLocalLedgerCache();
   renderLedger();
@@ -580,7 +594,17 @@ async function deleteLedgerTx(personId, txId) {
     try {
       await db.collection('users').doc(currentUser.uid).collection('ledger').doc(personId).collection('transactions').doc(txId).delete();
     } catch(e) {
-      console.warn('Firestore tx delete warning:', e.message);
+      console.warn('Firestore tx delete error, rolling back:', e.message);
+      if (txToRestore) {
+        person.transactions.push(txToRestore);
+        // re-sort slightly if needed, but pushing is fine for rollback mostly
+        person.transactions.sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
+      }
+      saveLocalLedgerCache();
+      renderLedger();
+      showPersonDetail(personId);
+      toast((typeof currentLang !== 'undefined' && currentLang === 'hi') ? 'एरर: हटाया नहीं जा सका' : 'Error: Could not delete entry', 'error');
+      return;
     }
   }
   toast('Entry deleted', 'success');

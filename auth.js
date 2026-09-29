@@ -248,7 +248,8 @@ if (typeof auth !== 'undefined') {
       setTimeout(() => {
         const onboardingEl = document.getElementById('onboarding-screen');
         const isOnboardingActive = onboardingEl && onboardingEl.style.display !== 'none';
-        if (!isOnboardingActive && typeof window.openAgeModeModal === 'function') {
+        const isComposerOpen = document.body.classList.contains('composer-open');
+        if (!isOnboardingActive && !isComposerOpen && typeof window.openAgeModeModal === 'function') {
           window.openAgeModeModal();
         }
       }, 400);

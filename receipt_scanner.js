@@ -760,9 +760,31 @@
     } catch (err) {
       console.error('Receipt OCR Error:', err);
       laser.style.display = 'none';
-      statusLabel.textContent = 'Recognition Error';
+      statusLabel.textContent = 'Recognition Failed';
       statusLabel.style.color = '#f87171';
-      if (typeof toast === 'function') toast('Could not read image clearly. Try a clearer photo.', 'error');
+      
+      const isNetwork = err.message && err.message.includes('internet connection');
+      if (typeof toast === 'function') {
+        toast(isNetwork ? 'Offline mode: Please enter receipt details manually.' : 'Could not auto-read receipt. Please enter manually.', isNetwork ? 'warning' : 'error');
+      }
+
+      // Show result card anyway so user is not stuck and can manually input
+      setTimeout(() => {
+        statusSection.style.display = 'none';
+        resultCard.style.display = 'block';
+        actionsScan.style.display = 'none';
+        actionsResult.style.display = 'flex';
+        
+        document.getElementById('receipt-extracted-merchant').value = 'Receipt Expense';
+        document.getElementById('receipt-extracted-amount').value = '';
+        document.getElementById('receipt-extracted-cat').value = 'food';
+        document.getElementById('receipt-extracted-date').value = new Date().toISOString().split('T')[0];
+        
+        const badge = document.getElementById('receipt-result-badge');
+        badge.textContent = '⚠️ Manual Entry';
+        badge.style.color = '#fbbf24';
+        badge.style.background = 'rgba(251,191,36,0.15)';
+      }, 500);
     }
   }
 

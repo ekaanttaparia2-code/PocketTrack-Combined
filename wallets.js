@@ -234,17 +234,21 @@ window.loadWallets = function() {
 /**
  * Saves wallets to localStorage and Firestore
  */
-window.saveWallets = function() {
+window.saveWallets = async function() {
   try {
     const dataStr = JSON.stringify(userWallets);
     localStorage.setItem(getWalletsStorageKey(), dataStr);
 
     if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
-      userWallets.forEach(w => {
-        db.collection('users').doc(currentUser.uid).collection('wallets').doc(w.id).set(w, { merge: true }).catch(()=>{});
-      });
+      const promises = userWallets.map(w => 
+        db.collection('users').doc(currentUser.uid).collection('wallets').doc(w.id).set(w, { merge: true })
+      );
+      await Promise.all(promises);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('saveWallets failed:', e.message);
+    throw e;
+  }
 };
 
 /**
@@ -286,6 +290,7 @@ window.renderWalletSwitcher = function() {
   const balances = window.computeWalletBalances();
   let totalNetWorth = 0;
   Object.values(balances).forEach(b => { totalNetWorth += b; });
+  totalNetWorth = Math.round(totalNetWorth * 100) / 100;
 
   // Keep switcher bar visible on Home and in Insights so user always sees wallet balances
   if (barEl) barEl.style.display = 'flex';
@@ -456,7 +461,7 @@ window.openNewWalletModal = function() {
   });
 };
 
-window.submitNewWallet = function() {
+window.submitNewWallet = async function() {
   const nameEl = document.getElementById('new-wallet-name');
   const typeEl = document.getElementById('new-wallet-type');
   const balEl = document.getElementById('new-wallet-bal');
@@ -478,10 +483,19 @@ window.submitNewWallet = function() {
 
   userWallets.push(newWallet);
   window.userWallets = userWallets;
-  window.saveWallets();
-  if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
-  window.switchActiveWallet(newWallet.id);
-  if (typeof toast === 'function') toast(`Created "${newWallet.name}"!`, 'success');
+  window.renderWalletSwitcher();
+
+  try {
+    await window.saveWallets();
+    if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
+    window.switchActiveWallet(newWallet.id);
+    if (typeof toast === 'function') toast(`Created "${newWallet.name}"!`, 'success');
+  } catch (e) {
+    userWallets.pop();
+    window.userWallets = userWallets;
+    window.renderWalletSwitcher();
+    if (typeof toast === 'function') toast('Failed to create wallet: ' + e.message, 'error');
+  }
 };
 
 /**

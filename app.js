@@ -427,6 +427,17 @@ function escapeHTML(str){
   return div.innerHTML;
 }
 window.escapeHTML = escapeHTML;
+
+function isRealIncome(e) {
+  return e.type === 'income' && !e.transferGroupId;
+}
+window.isRealIncome = isRealIncome;
+
+function isRealExpense(e) {
+  return e.type === 'expense' && !e.transferGroupId;
+}
+window.isRealExpense = isRealExpense;
+
 function isValidAmount(amt){
   return typeof amt==='number' && isFinite(amt) && amt>0 && amt<=MAX_AMT;
 }
@@ -1274,7 +1285,7 @@ function showLocalNotification(title, body){
 
 // --- Streak tracker: counts consecutive days (up to today) with at least one main-log entry ---
 function getCurrentStreak(){
-  const list=mainEntries();
+  const list=mainEntries().filter(e => !e.transferGroupId);
   if(!list.length) return 0;
   const daysWithEntries = new Set(list.map(e=>e.date));
   let streak=0;
@@ -1320,7 +1331,7 @@ const REWARD_MILESTONES = [
 
 // Longest run of consecutive logged days ever achieved (not just the live streak — this is what points are based on)
 function getLongestStreakEver(){
-  const days=[...new Set(mainEntries().map(e=>e.date))].sort();
+  const days=[...new Set(mainEntries().filter(e => !e.transferGroupId).map(e=>e.date))].sort();
   if(!days.length)return 0;
   let longest=1, run=1;
   for(let i=1;i<days.length;i++){
@@ -1898,7 +1909,7 @@ function openManageParticipants(){
       <div class="entry-row">
         <span style="flex:1;color:var(--text)">${escapeHTML(name)}</span>
         <div class="row-actions">
-          <button class="icon-btn" onclick="confirmRemoveParticipant('${escapeHTML(name).replace(/'/g,"\'")}')" aria-label="delete">🗑️</button>
+          <button class="icon-btn" data-name="${escapeHTML(name)}" onclick="confirmRemoveParticipant(this.dataset.name)" aria-label="delete">🗑️</button>
         </div>
       </div>
     `).join('');
@@ -1953,8 +1964,8 @@ function renderManageParticipantsList(){
     <div class="entry-row">
       <span style="flex:1;color:var(--text)">${escapeHTML(name)}</span>
       <div class="row-actions">
-        <button class="icon-btn" onclick="editParticipant('${escapeHTML(name).replace(/'/g,"\'")}')" aria-label="edit">✏️</button>
-        <button class="icon-btn" onclick="confirmRemoveParticipant('${escapeHTML(name).replace(/'/g,"\'")}')" aria-label="delete">🗑️</button>
+        <button class="icon-btn" data-name="${escapeHTML(name)}" onclick="editParticipant(this.dataset.name)" aria-label="edit">✏️</button>
+        <button class="icon-btn" data-name="${escapeHTML(name)}" onclick="confirmRemoveParticipant(this.dataset.name)" aria-label="delete">🗑️</button>
       </div>
     </div>
   `).join('');
@@ -2568,14 +2579,20 @@ function renderSmartLogHistory() {
 function clearAll(){
   if(!currentUser)return;
   showAppConfirm('Clear ALL entries? This cannot be undone.', async ()=>{
-    const snap = await db.collection('users').doc(currentUser.uid).collection('entries').get();
-    let batch=db.batch(), ops=0;
-    for(const d of snap.docs){
-      batch.delete(d.ref); ops++;
-      if(ops===400){ await batch.commit(); batch=db.batch(); ops=0; }
+    try {
+      if(typeof toast === 'function') toast('Clearing data...', 'info');
+      const snap = await db.collection('users').doc(currentUser.uid).collection('entries').get();
+      let batch=db.batch(), ops=0;
+      for(const d of snap.docs){
+        batch.delete(d.ref); ops++;
+        if(ops===400){ await batch.commit(); batch=db.batch(); ops=0; }
+      }
+      if(ops) await batch.commit();
+      toast(TT('all_cleared'),'success');
+    } catch(e) {
+      console.error('clearAll failed:', e);
+      toast('Failed to clear data: ' + e.message, 'error');
     }
-    if(ops) await batch.commit();
-    toast(TT('all_cleared'),'success');
   });
 }
 
@@ -2595,6 +2612,7 @@ async function deleteAccountAndPurgeData(){
       if(typeof toast === 'function') toast(isHi ? 'डेटा क्लाउड से हटाया जा रहा है...' : 'Purging all records from cloud...', 'info');
       const uid = currentUser.uid;
       const userRef = db.collection('users').doc(uid);
+      let cleanupFailed = false;
 
       // 1. Delete nested Ledger transactions (ledger/{person}/transactions/{tx}) first!
       // Otherwise, deleting the parent 'ledger' collection leaves these orphaned.

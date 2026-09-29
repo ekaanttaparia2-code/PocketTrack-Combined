@@ -180,16 +180,16 @@ window.openMoneyWrapped = function(monthOffset = 0) {
     const targetMonth = now.getMonth() + 1; // 1-12
     const targetYear = now.getFullYear();
     
-    // Filter to month entries
+    // Filter to month entries and ignore wallet transfers
     const monthEntries = entries.filter(e => {
-        if (!e.date) return false;
+        if (!e.date || e.transferGroupId) return false;
         const parts = e.date.split('-');
         if (parts.length !== 3) return false;
         const y = parseInt(parts[0], 10);
         const m = parseInt(parts[1], 10);
         return y === targetYear && m === targetMonth;
     });
-    
+
     if (monthEntries.length < 3) {
         const toastFn = getSafeFn('toast');
         if (toastFn) toastFn("Not enough data for Wrapped yet. Keep logging!", 'info');

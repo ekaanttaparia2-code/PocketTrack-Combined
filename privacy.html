@@ -117,7 +117,7 @@ function launchPocketTrackApp(e) {
         <li><strong>Google Sign-In</strong> - for Google account authentication</li>
         <li><strong>Google Fonts</strong> - for typography (loaded from Google servers)</li>
         <li><strong>jsPDF</strong> (CDN) - for PDF report generation</li>
-        <li><strong>Tesseract.js</strong> (CDN) - for receipt OCR processing</li>
+        <li><strong>Tesseract.js</strong> (CDN) - for receipt OCR processing. <em>(The vision engine is loaded via CDN, but 100% of image scanning and text extraction happens strictly on your local device. Your bill photos are NEVER uploaded to any server.)</em></li>
       </ul>
       <p>These services have their own privacy policies. We do not share your financial data with any third party for advertising or marketing purposes.</p>
 
@@ -198,7 +198,7 @@ function launchPocketTrackApp(e) {
 
       <div class="faq-item">
         <div class="faq-q"><span>Where are my backups stored?</span><span>+</span></div>
-        <div class="faq-a">Your cloud records are stored securely in Google Cloud Platform Firebase Firestore and mirrored locally on your device in IndexedDB for 100% offline access.</div>
+        <div class="faq-a">Your cloud records are stored securely in Google Cloud Platform Firebase Firestore and mirrored locally on your device in IndexedDB for offline-first access.</div>
       </div>
 
       <div class="faq-item">

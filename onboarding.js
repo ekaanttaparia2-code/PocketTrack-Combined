@@ -138,15 +138,15 @@
         '</h2>' +
         '<p style="font-size:13.5px;color:var(--text-dim,#94a3b8);line-height:1.5;max-width:340px;margin:0 auto 20px;">' +
           (isHi
-            ? 'आपका 100% प्राइवेट, ऑफलाइन और स्मार्ट वित्तीय साथी। आइए 2 मिनट में आपका पर्सनल बजट तैयार करें।'
-            : 'Your 100% private, offline-first financial companion. Let\'s set up your personalized budget plan in 2 minutes.') +
+            ? 'आपका सुरक्षित, ऑफलाइन-फर्स्ट और स्मार्ट वित्तीय साथी। आइए 2 मिनट में आपका पर्सनल बजट तैयार करें।'
+            : 'Your privacy-focused, offline-first financial companion. Let\'s set up your personalized budget plan in 2 minutes.') +
         '</p>' +
         '<div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;">' +
           '<button class="ob-lang-btn ' + (!isHi ? 'active' : '') + '" onclick="window.setObLang(\'en\')">🇬🇧 English</button>' +
           '<button class="ob-lang-btn ' + (isHi ? 'active' : '') + '" onclick="window.setObLang(\'hi\')">🇮🇳 हिन्दी</button>' +
         '</div>' +
         '<div class="ob-pill-row" style="margin-bottom:20px;">' +
-          '<span class="ob-pill green">● 100% Offline &amp; Private</span>' +
+          '<span class="ob-pill green">● Privacy-focused & Offline-first</span>' +
           '<span class="ob-pill purple">⚡ 50/30/20 Envelopes</span>' +
         '</div>';
     }
@@ -344,7 +344,7 @@
               '₹' + Math.round(acct.totalBalance).toLocaleString('en-IN') +
             '</div>' +
             '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#94a3b8;background:rgba(255,255,255,0.05);padding:4px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.08);">' +
-              '<span>✓</span> ' + (isHi ? '100% सुरक्षित और सिंक' : '100% Private & Synced') +
+              '<span>✓</span> ' + (isHi ? 'सुरक्षित और सिंक' : 'Privacy-focused & Synced') +
             '</div>' +
           '</div>' +
           '<div style="font-size:11.5px;color:#94a3b8;line-height:1.4;max-width:300px;margin:0 auto 10px;">' +

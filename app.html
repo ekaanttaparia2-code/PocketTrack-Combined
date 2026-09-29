@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>PocketTrack — Simple Expense Tracker</title>
 <meta name="description" content="Track your daily income and expenses, see spending reports, and export PDFs — synced securely to the cloud."/>
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com https://cdn.jsdelivr.net https://*.firebaseio.com https://*.firebaseapp.com; object-src 'none'; base-uri 'self';"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
@@ -178,10 +179,10 @@
       </div>
     </div>
     <div class="brand-actions">
-      <button class="mode-toggle-pill" id="header-mode-toggle" onclick="toggleAppMode()" title="Switch Simple (40+) / Power Mode">
+      <button class="mode-toggle-pill" id="header-mode-toggle" onclick="toggleAppMode()" title="Switch Simple (40+) / Power Mode" aria-label="Switch App Mode">
         <span id="mode-icon">⚡</span> <span id="mode-label" class="header-pill-text">Power</span>
       </button>
-      <button class="pill sync-pill-btn" id="sync-pill-btn" onclick="triggerManualSync()" title="Cloud Sync Status · Tap to Sync">
+      <button class="pill sync-pill-btn" id="sync-pill-btn" onclick="triggerManualSync()" title="Cloud Sync Status · Tap to Sync" aria-label="Cloud Sync">
         <span class="dot"></span><span id="sync-status">Synced</span>
       </button>
     </div>
@@ -219,7 +220,7 @@
         </button>
       </div>
       <!-- Small streak button opposite to Personal Wallet, above Manage option -->
-      <button class="streak-pill-btn" id="header-streak-pill" onclick="setTab('rewards')" title="Daily Streak · Tap to view Rewards">
+      <button class="streak-pill-btn" id="header-streak-pill" onclick="setTab('rewards')" title="Daily Streak · Tap to view Rewards" aria-label="View Rewards">
         <span>🔥</span> <span id="header-streak-text">1-Day Streak</span>
       </button>
     </div>
@@ -898,30 +899,6 @@
           <span>🇮🇳 हिंदी (Hindi)</span>
           <span class="lang-check">✓</span>
         </button>
-        <button class="lang-option-btn" id="lang-opt-hinglish" onclick="setLanguage('hinglish')">
-          <span>🇮🇳 हिंग्लिश (Hinglish)</span>
-          <span class="lang-check">✓</span>
-        </button>
-        <button class="lang-option-btn" id="lang-opt-mr" onclick="setLanguage('mr')">
-          <span>🇮🇳 मराठी (Marathi)</span>
-          <span class="lang-check">✓</span>
-        </button>
-        <button class="lang-option-btn" id="lang-opt-ta" onclick="setLanguage('ta')">
-          <span>🇮🇳 தமிழ் (Tamil)</span>
-          <span class="lang-check">✓</span>
-        </button>
-        <button class="lang-option-btn" id="lang-opt-te" onclick="setLanguage('te')">
-          <span>🇮🇳 తెలుగు (Telugu)</span>
-          <span class="lang-check">✓</span>
-        </button>
-        <button class="lang-option-btn" id="lang-opt-gu" onclick="setLanguage('gu')">
-          <span>🇮🇳 ગુજરાતી (Gujarati)</span>
-          <span class="lang-check">✓</span>
-        </button>
-        <button class="lang-option-btn" id="lang-opt-bn" onclick="setLanguage('bn')">
-          <span>🇮🇳 বাংলা (Bengali)</span>
-          <span class="lang-check">✓</span>
-        </button>
       </div>
     </div>
   </div>
@@ -952,7 +929,7 @@
   </div>
 
 
-  <div id="voice-fab" class="voice-fab" onclick="startVoiceRecognition()" title="Voice Expense Log">
+  <div id="voice-fab" class="voice-fab" onclick="startVoiceRecognition()" title="Voice Expense Log" aria-label="Log via voice" role="button" tabindex="0">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
       <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>

@@ -545,7 +545,7 @@ function renderSharedPortfolioView() {
         <div class="shared-settle-amt" style="color:${color};">${label}</div>
         <div style="font-size:10.5px;color:var(--text-dim);margin-top:2px;">Paid: ₹${(memberSpent[m] || 0).toLocaleString('en-IN')}</div>
         ${(m !== 'Me' && !isZero) ? `
-          <button class="ledger-link-btn" onclick="syncSpaceDebtToLedger('${escapeHTML(m)}', ${net}, '${escapeHTML(portfolio.name)}')">
+          <button class="ledger-link-btn" data-member="${escapeHTML(m)}" data-net="${net}" data-portfolio-name="${escapeHTML(portfolio.name)}" onclick="syncSpaceDebtToLedger(this.dataset.member, parseFloat(this.dataset.net), this.dataset.portfolioName)">
             📑 Post to Ledger
           </button>
         ` : ''}
