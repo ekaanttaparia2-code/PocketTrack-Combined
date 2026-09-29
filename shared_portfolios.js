@@ -228,11 +228,18 @@ function saveSharedPortfolios() {
       localStorage.setItem('pockettrack_shared_portfolios_' + currentUser.uid, dataStr);
       if (typeof db !== 'undefined') {
         sharedPortfolios.forEach(space => {
-          db.collection('users').doc(currentUser.uid).collection('spaces').doc(space.id).set(space, { merge: true }).catch(()=>{});
+          db.collection('users').doc(currentUser.uid).collection('spaces').doc(space.id)
+            .set(space, { merge: true })
+            .catch((err) => {
+              if (typeof toast === 'function') toast('Cloud sync failed for space: ' + err.message, 'error');
+              console.error('Space sync error:', err);
+            });
         });
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Local save error for spaces:', e);
+  }
 }
 
 let sharedSpacesUnsubscribe = null;
