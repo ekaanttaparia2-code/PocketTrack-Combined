@@ -421,7 +421,7 @@ function escapeHTML(str){
   return div.innerHTML;
 }
 window.escapeHTML = escapeHTML;
-function stripHTML(str) { if (typeof str !== 'string') return ''; return str.replace(/<[^>]*>?/gm, '').trim(); }
+function stripHTML(str) { if (typeof str !== 'string') return ''; return str.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/<[^>]*>?/gm, '').trim(); }
 window.stripHTML = stripHTML;
 
 function isRealIncome(e) {
