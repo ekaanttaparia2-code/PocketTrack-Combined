@@ -2076,7 +2076,7 @@ body{
   width:100%;
   max-width:620px;
   max-height:min(calc(100dvh - var(--pt-bottom-nav-h) - 18px), 780px) !important;
-  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  padding-bottom:calc(115px + env(safe-area-inset-bottom,0px));
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
 }

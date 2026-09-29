@@ -260,13 +260,14 @@ window.computeWalletBalances = function() {
 
   allTx.forEach(tx => {
     const amt = parseFloat(tx.amt) || 0;
-    const wId = window.resolveEntryWalletId(tx);
-    if (balances[wId] !== undefined) {
-      if (tx.type === 'income') {
-        balances[wId] += amt;
-      } else if (tx.type === 'expense') {
-        balances[wId] -= amt;
-      }
+    const wId = window.resolveEntryWalletId(tx) || 'cash';
+    if (balances[wId] === undefined) {
+      balances[wId] = 0;
+    }
+    if (tx.type === 'income') {
+      balances[wId] += amt;
+    } else if (tx.type === 'expense') {
+      balances[wId] -= amt;
     }
   });
 
@@ -566,7 +567,7 @@ window.openWalletManagerModal = function() {
 /**
  * Deletes a custom wallet and reassigns its transactions
  */
-window.deleteCustomWallet = function(walletId) {
+window.deleteCustomWallet = async function(walletId) {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   const targetWallet = userWallets.find(w => w.id === walletId);
   if (!targetWallet) return;
@@ -576,8 +577,8 @@ window.deleteCustomWallet = function(walletId) {
     return;
   }
 
-  // Check if any transactions reference this wallet
-  const allEntries = (typeof mainEntries === 'function') ? mainEntries() : [];
+  // Check if any transactions reference this wallet across all entries (unfiltered)
+  const allEntries = (typeof window.entries !== 'undefined') ? window.entries : ((typeof entries !== 'undefined') ? entries : []);
   const linkedEntries = allEntries.filter(e => e.walletId === walletId);
 
   if (linkedEntries.length > 0) {
@@ -668,12 +669,19 @@ window.deleteCustomWallet = function(walletId) {
   }
 
   // No linked transactions — safe to delete immediately
+  if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
+    try {
+      await db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete();
+    } catch(err) {
+      if (typeof toast === 'function') toast('Deletion failed: ' + err.message, 'error');
+      return; // Do not modify local state if cloud deletion fails
+    }
+  }
+
   userWallets = userWallets.filter(w => w.id !== walletId);
   window.userWallets = userWallets;
   window.saveWallets();
-  if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
-    try { db.collection('users').doc(currentUser.uid).collection('wallets').doc(walletId).delete().catch(() => {}); } catch(e) {}
-  }
+
   if (window.activeWalletId === walletId) window.activeWalletId = 'all';
   if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();
   window.renderWalletSwitcher();

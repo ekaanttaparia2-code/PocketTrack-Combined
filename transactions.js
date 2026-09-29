@@ -21,8 +21,8 @@ function getWalletBadgeHtml(entryOrId) {
 
 function updateHeaderStats(){
   const list = mainEntries();
-  const income=list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const spent=list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const income=list.filter(e=>e.type==='income' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
+  const spent=list.filter(e=>e.type==='expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
 
   // Sync hero balance precisely with wallet balances (including initial balances)
   let balance = 0;
@@ -104,7 +104,7 @@ function renderHomeSnapshot(){
   }).join('');
 
   if(insight){
-    const expenses=mainEntries().filter(e=>e.type==='expense');
+    const expenses=mainEntries().filter(e=>e.type==='expense' && !e.transferGroupId);
     const totals={};
     expenses.forEach(e=>{const key=displayCatLabel(e)||'Other';totals[key]=(totals[key]||0)+Number(e.amt||0);});
     const top=Object.entries(totals).sort((a,b)=>b[1]-a[1])[0];
@@ -282,7 +282,7 @@ async function submitTransactionComposer(){
     } else {
       const guardFn = (typeof maybeGuardAndSaveWithSmartEngine === 'function') ? maybeGuardAndSaveWithSmartEngine : maybeGuardAndSave;
       await guardFn(payload, async()=>{
-        saveEntry(payload);
+        await saveEntry(payload);
         if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
         if(composerMode==='expense'){
           if(typeof checkBudget==='function') checkBudget();
@@ -876,10 +876,8 @@ function refreshEventsViewsIfOpen(){
 
 
 
-let _lastLocalSaveTime = 0;
 async function saveEntry(entry){
   if(!currentUser){toast(TT('not_logged_in'),'error');return;}
-  _lastLocalSaveTime = Date.now();
   const tempId = 'temp_' + Date.now();
   const optimisticItem = { ...entry, _id: tempId, _createdLocallyAt: Date.now() };
   if (!Array.isArray(entries)) entries = [];
@@ -908,11 +906,23 @@ async function saveEntry(entry){
   if (typeof checkBudget === 'function') checkBudget();
   if (typeof renderStreak === 'function') renderStreak();
 
-  const docRef = await db.collection('users').doc(currentUser.uid).collection('entries').add(entry);
-  optimisticItem._id = docRef.id;
   try {
-    localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
-  } catch(e) {}
+    const docRef = await db.collection('users').doc(currentUser.uid).collection('entries').add(entry);
+    optimisticItem._id = docRef.id;
+    try {
+      localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+    } catch(e) {}
+  } catch(err) {
+    // Rollback optimistic state
+    entries = entries.filter(e => e._id !== tempId);
+    if (typeof window !== 'undefined') window.entries = entries;
+    try { localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries)); } catch(e) {}
+    if (typeof updateHeaderStats === 'function') updateHeaderStats();
+    if (typeof renderEntries === 'function') renderEntries();
+    if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+    if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+    throw err;
+  }
 }
 
 /* --- Smart duplicate guard: same amount + similar label within 3 days --- */
@@ -950,11 +960,6 @@ function findDuplicateEntry(payload){
 
 function maybeGuardAndSave(payload,doSave){
   const run=()=>Promise.resolve(doSave()).catch(e=>toast('Could not save: '+e.message,'error'));
-  
-  if (Date.now() - _lastLocalSaveTime < 5000) {
-    console.warn('Silently dropping double-tap duplicate based on global timer');
-    return;
-  }
 
   const dup=findDuplicateEntry(payload);
   if(!dup){run();return;}

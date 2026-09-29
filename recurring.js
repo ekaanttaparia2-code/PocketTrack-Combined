@@ -77,17 +77,18 @@ async function processRecurringDue(){
           posted++;
           continue;
         }
-        await db.collection('users').doc(currentUser.uid)
-          .collection('entries').doc(deterministicId).set({
-            type: rule.type === 'income' ? 'income' : 'expense',
-            cat: rule.type === 'income' ? 'income' : (rule.cat || 'other'),
-            label: rule.label,
-            note: '🔁 Recurring',
-            amt: Math.round((Number(rule.amt) || 0) * 100) / 100,
-            date: next,
-            createdAt: Date.now(),
-            recurringRuleId: rule._id
-          });
+          await db.collection('users').doc(currentUser.uid)
+            .collection('entries').doc(deterministicId).set({
+              type: rule.type === 'income' ? 'income' : 'expense',
+              cat: rule.type === 'income' ? 'income' : (rule.cat || 'other'),
+              label: rule.label,
+              note: '🔁 Recurring',
+              amt: Math.round((Number(rule.amt) || 0) * 100) / 100,
+              date: next,
+              walletId: rule.walletId || 'cash',
+              createdAt: Date.now(),
+              recurringRuleId: rule._id
+            });
         posted++;
       } catch(e) {
         console.warn('Recurring entry failed:', e.message);
@@ -300,6 +301,11 @@ function showAddRecurringModal(prefill){
   ['food','travel','friends','home','shopping','entertainment','health','education','work','other'].forEach(c=>{
     catOptions+=`<option value="${c}"${pf.cat===c?' selected':''}>${CAT_LABEL(c)}</option>`;
   });
+  let walletOptions = '';
+  const wList = (typeof userWallets !== 'undefined' && userWallets.length) ? userWallets : [{id:'cash',name:'Cash',icon:'💵'},{id:'bank',name:'Bank / UPI',icon:'📱'},{id:'card',name:'Credit Card',icon:'💳'}];
+  wList.forEach(w => {
+    walletOptions += `<option value="${w.id}"${(pf.walletId || 'cash') === w.id ? ' selected' : ''}>${w.icon || '💳'} ${w.name}</option>`;
+  });
   openRecurringModal(`
     <h3 style="margin:0 0 14px;font-family:'Space Grotesk',sans-serif;">${isHi?(_recEditingId?'✏️ नियम बदलें':'🔁 आवर्ती नियम जोड़ें'):(_recEditingId?'✏️ Edit Recurring Rule':'🔁 Add Recurring Rule')}</h3>
     <label style="font-size:11px;color:var(--text-dim)">${isHi?'क्या':'What'}</label>
@@ -315,6 +321,8 @@ function showAddRecurringModal(prefill){
       <label style="font-size:11px;color:var(--text-dim);margin-top:8px;display:block">${isHi?'श्रेणी':'Category'}</label>
       <select id="rec-cat" style="width:100%">${catOptions}</select>
     </div>
+    <label style="font-size:11px;color:var(--text-dim);margin-top:8px;display:block">${isHi?'वॉलेट':'Wallet'}</label>
+    <select id="rec-wallet" style="width:100%">${walletOptions}</select>
     <label style="font-size:11px;color:var(--text-dim);margin-top:8px;display:block">${isHi?'कितनी बार':'How often'}</label>
     <select id="rec-freq" style="width:100%">
       <option value="monthly"${pf.freq==='monthly'?' selected':''}>${isHi?'हर महीने':'Every month'}</option>
@@ -335,6 +343,7 @@ async function saveRecurringRule(){
   const amt=parseFloat(document.getElementById('rec-amt').value);
   const type=document.getElementById('rec-type').value;
   const freq=document.getElementById('rec-freq').value;
+  const walletId=document.getElementById('rec-wallet').value || 'cash';
   const startDate=document.getElementById('rec-date').value||todayStr();
   const cat=type==='income' ? 'income' : document.getElementById('rec-cat').value;
   if(!label){ toast(currentLang==='hi'?'नाम लिखें':'Enter a name','error'); return; }
@@ -344,14 +353,14 @@ async function saveRecurringRule(){
       const editId=_recEditingId;
       _recEditingId=null;
       await db.collection('users').doc(currentUser.uid).collection('recurring').doc(editId).update({
-        type, cat, label, amt: Math.round(amt*100)/100, freq, nextDate: startDate
+        type, cat, label, amt: Math.round(amt*100)/100, freq, walletId, nextDate: startDate
       });
       closeRecurringModal();
       toast(currentLang==='hi'?'✏️ नियम अपडेट हो गया':'✏️ Rule updated','success');
       return;
     }
     await db.collection('users').doc(currentUser.uid).collection('recurring').add({
-      type, cat, label, amt: Math.round(amt*100)/100, freq,
+      type, cat, label, amt: Math.round(amt*100)/100, freq, walletId,
       nextDate: startDate, active: true, createdAt: Date.now()
     });
     closeRecurringModal();

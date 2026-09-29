@@ -2596,9 +2596,26 @@ async function deleteAccountAndPurgeData(){
       const uid = currentUser.uid;
       const userRef = db.collection('users').doc(uid);
 
-      // 1. Delete all subcollections
+      // 1. Delete nested Ledger transactions (ledger/{person}/transactions/{tx}) first!
+      // Otherwise, deleting the parent 'ledger' collection leaves these orphaned.
+      try {
+        const ledgerSnap = await userRef.collection('ledger').get();
+        for (const personDoc of ledgerSnap.docs) {
+          try {
+            const txSnap = await personDoc.ref.collection('transactions').get();
+            let batch2 = db.batch(), ops2 = 0;
+            for (const txDoc of txSnap.docs) {
+              batch2.delete(txDoc.ref);
+              ops2++;
+              if (ops2 === 400) { await batch2.commit(); batch2 = db.batch(); ops2 = 0; }
+            }
+            if (ops2 > 0) await batch2.commit();
+          } catch(e2) { cleanupFailed = true; }
+        }
+      } catch(e3) { cleanupFailed = true; }
+
+      // 2. Delete all standard subcollections
       const subcollections = ['entries', 'events', 'recurring', 'ledger', 'portfolios', 'wallets', 'spaces'];
-      let cleanupFailed = false;
       for (const colName of subcollections) {
         try {
           const snap = await userRef.collection(colName).get();
@@ -2618,23 +2635,6 @@ async function deleteAccountAndPurgeData(){
           console.error('Failed to delete ' + colName, e);
         }
       }
-
-      // Delete nested Ledger transactions (ledger/{person}/transactions/{tx})
-      try {
-        const ledgerSnap = await userRef.collection('ledger').get();
-        for (const personDoc of ledgerSnap.docs) {
-          try {
-            const txSnap = await personDoc.ref.collection('transactions').get();
-            let batch2 = db.batch(), ops2 = 0;
-            for (const txDoc of txSnap.docs) {
-              batch2.delete(txDoc.ref);
-              ops2++;
-              if (ops2 === 400) { await batch2.commit(); batch2 = db.batch(); ops2 = 0; }
-            }
-            if (ops2 > 0) await batch2.commit();
-          } catch(e2) { cleanupFailed = true; }
-        }
-      } catch(e3) { cleanupFailed = true; }
 
       // 2. Delete main user document
       try {
@@ -3013,10 +3013,11 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const authEl = document.getElementById('auth-screen');
         const isAuthShowing = authEl && authEl.style.display !== 'none';
-        if (!isAuthShowing && typeof window.openAgeModeModal === 'function') {
+        const isComposerOpen = document.body.classList.contains('composer-open');
+        if (!isAuthShowing && !isComposerOpen && typeof window.openAgeModeModal === 'function') {
           window.openAgeModeModal();
         }
-      }, 400);
+      }, 1500);
     }
   }
 });
