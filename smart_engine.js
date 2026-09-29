@@ -181,7 +181,7 @@ async function maybeGuardAndSaveWithSmartEngine(payload, doSave, rawHint) {
           payload.event = intentData.event.name;
           payload.evId = intentData.event._id;
           runNormal();
-          toast(Connected to "``"!', 'success');
+          toast(`Connected to "${intentData.event.name}"!`, 'success');
         }
       );
       return;
@@ -210,56 +210,3 @@ async function maybeGuardAndSaveWithSmartEngine(payload, doSave, rawHint) {
     runNormal();
   });
 }
-        } catch(e) {
-          console.warn('Smart ledger connection fallback:', e);
-  runNormal();
-  });
-}
-      }
-    );
-    return;
-  }
-
-  // If Event / Space intent detected
-  if (intentData.intent === SMART_INTENTS.EVENT_SPACE && intentData.event) {
-    showSmartIntentConfirmation(
-      intentData,
-      payload,
-      runNormal,
-      async () => {
-        payload.event = intentData.event.name;
-        payload.evId = intentData.event._id;
-        runNormal();
-        toast(`Connected to "${intentData.event.name}"!`, 'success');
-      }
-    );
-    return;
-  }
-
-  // If Subscription intent detected
-  if (intentData.intent === SMART_INTENTS.RECURRING_SUBSCRIPTION) {
-    showSmartIntentConfirmation(
-      intentData,
-      payload,
-      runNormal,
-      async () => {
-        runNormal();
-        if (typeof openRecurringModal === 'function') {
-          setTimeout(() => openRecurringModal({
-            label: payload.label || intentData.subscriptionName,
-            amt: payload.amt,
-            cat: payload.cat || 'home',
-            freq: 'monthly'
-          }), 350);
-        }
-      }
-    );
-    return;
-  }
-
-  // Default: proceed with normal duplicate-guarded save
-  runNormal();
-  });
-}
-
-
