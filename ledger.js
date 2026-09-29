@@ -400,6 +400,7 @@ async function saveLedgerTx(personId, type, amount, note) {
   renderLedger();
   showPersonDetail(personId);
 
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   if (currentUser && !personId.startsWith('local_')) {
     try {
       await db.collection('users').doc(currentUser.uid).collection('ledger').doc(personId).collection('transactions').add({
@@ -420,8 +421,6 @@ async function saveLedgerTx(personId, type, amount, note) {
       return;
     }
   }
-
-  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   toast(isHi
     ? (type === 'gave' ? `₹${amount} दिए — दर्ज किया गया` : `₹${amount} मिले — दर्ज किया गया`)
     : 'Recorded ' + (type === 'gave' ? 'Gave' : 'Received') + ' ₹' + amount, 'success');
