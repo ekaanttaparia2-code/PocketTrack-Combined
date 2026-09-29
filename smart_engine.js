@@ -139,38 +139,82 @@ function showSmartIntentConfirmation(intentData, payload, onProceedNormal, onPro
 
 // --- Universal Smart Engine Guard (Integrated with Duplicate Guard) ---
 async function maybeGuardAndSaveWithSmartEngine(payload, doSave, rawHint) {
-  const runNormal = () => {
-    if (typeof maybeGuardAndSave === 'function') {
-      maybeGuardAndSave(payload, doSave);
-    } else {
-      Promise.resolve(doSave()).catch(e => toast('Could not save: ' + e.message, 'error'));
-    }
-  };
+  return new Promise((resolve, reject) => {
+    const runNormal = () => {
+      if (typeof maybeGuardAndSave === 'function') {
+        maybeGuardAndSave(payload, doSave).then(resolve).catch(reject);
+      } else {
+        Promise.resolve(doSave()).then(resolve).catch(e => { toast('Could not save: ' + e.message, 'error'); reject(e); });
+      }
+    };
 
-  const intentData = analyzeTransactionIntent(payload, rawHint);
+    const intentData = analyzeTransactionIntent(payload, rawHint);
 
-  // If People / Ledger intent detected
-  if (intentData.intent === SMART_INTENTS.LEDGER_PERSON && intentData.person) {
-    showSmartIntentConfirmation(
-      intentData,
-      payload,
-      runNormal,
-      async () => {
-        try {
-          if (typeof saveLedgerTx === 'function') {
-            await saveLedgerTx(
-              intentData.person._id,
-              intentData.ledgerType,
-              payload.amt,
-              payload.note || payload.label || 'Smart Ledger Entry'
-            );
-          } else {
+    if (intentData.intent === SMART_INTENTS.LEDGER_PERSON && intentData.person) {
+      showSmartIntentConfirmation(
+        intentData,
+        payload,
+        runNormal,
+        async () => {
+          try {
+            if (typeof saveLedgerTx === 'function') {
+              await saveLedgerTx(intentData.person._id, intentData.ledgerType, payload.amt, payload.note || payload.label || 'Smart Ledger Entry');
+              resolve();
+            } else {
+              runNormal();
+            }
+          } catch(e) {
+            console.warn('Smart ledger connection fallback:', e);
             runNormal();
           }
+        }
+      );
+      return;
+    }
+
+    if (intentData.intent === SMART_INTENTS.EVENT_SPACE && intentData.event) {
+      showSmartIntentConfirmation(
+        intentData,
+        payload,
+        runNormal,
+        async () => {
+          payload.event = intentData.event.name;
+          payload.evId = intentData.event._id;
+          runNormal();
+          toast(Connected to "``"!', 'success');
+        }
+      );
+      return;
+    }
+
+    if (intentData.intent === SMART_INTENTS.RECURRING_SUBSCRIPTION) {
+      showSmartIntentConfirmation(
+        intentData,
+        payload,
+        runNormal,
+        async () => {
+          runNormal();
+          if (typeof openRecurringModal === 'function') {
+            setTimeout(() => openRecurringModal({
+              label: payload.label || intentData.subscriptionName,
+              amt: payload.amt,
+              cat: payload.cat || 'home',
+              freq: 'monthly'
+            }), 350);
+          }
+        }
+      );
+      return;
+    }
+
+    runNormal();
+  });
+}
         } catch(e) {
           console.warn('Smart ledger connection fallback:', e);
-          runNormal();
-        }
+  runNormal();
+  });
+}
       }
     );
     return;
@@ -215,4 +259,7 @@ async function maybeGuardAndSaveWithSmartEngine(payload, doSave, rawHint) {
 
   // Default: proceed with normal duplicate-guarded save
   runNormal();
+  });
 }
+
+

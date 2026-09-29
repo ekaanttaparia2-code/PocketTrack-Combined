@@ -28,7 +28,7 @@ function calculateFinancialVelocity() {
     if (e.type === 'income') {
       totalBalance += amt;
       if (new Date(e.date) >= thirtyDaysAgo) recentIncome += amt;
-    } else if (e.type === 'expense') {
+    } else if (e.type === 'expense' && !e.transferGroupId) {
       totalBalance -= amt;
       if (new Date(e.date) >= thirtyDaysAgo) recentExpenses += amt;
     }
@@ -338,3 +338,4 @@ function closeTimeMachineModal() {
 document.addEventListener('DOMContentLoaded', () => {
   renderAuraSenseCard('home-aurasense-slot');
 });
+

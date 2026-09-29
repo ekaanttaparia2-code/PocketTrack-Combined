@@ -2076,7 +2076,7 @@ body{
   width:100%;
   max-width:620px;
   max-height:min(calc(100dvh - var(--pt-bottom-nav-h) - 18px), 780px) !important;
-  padding-bottom:calc(115px + env(safe-area-inset-bottom,0px));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
 }
@@ -3286,4 +3286,5 @@ body.auth-active .voice-fab {
 
 .empty, .empty-mini { text-align: center; color: var(--text-faint, #64748b); padding: 24px 10px; font-size: 14px; }
 .empty-mini { padding: 12px 10px; font-size: 13px; }
+
 

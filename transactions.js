@@ -193,7 +193,13 @@ function openQuickComposer(mode='expense', editEntry=null){
 
 function closeTransactionComposer(){
   const backdrop=document.getElementById('transaction-composer-backdrop');
-  if(backdrop)backdrop.style.display='none';
+  if(backdrop) { 
+    backdrop.style.opacity='0'; 
+    setTimeout(()=> { 
+      backdrop.style.display='none'; 
+      backdrop.style.opacity='1'; 
+    }, 400); // Wait 400ms to absorb mobile synthetic ghost clicks 
+  }
   document.body.classList.remove('composer-open');
   editingId=null;
 }
@@ -970,23 +976,30 @@ function findDuplicateEntry(payload){
 }
 
 function maybeGuardAndSave(payload,doSave){
-  const run=()=>Promise.resolve(doSave()).catch(e=>toast('Could not save: '+e.message,'error'));
+  return new Promise((resolve, reject) => {
+    const run=()=>Promise.resolve(doSave()).then(resolve).catch(e=>{
+      toast('Could not save: '+e.message,'error');
+      reject(e);
+    });
 
-  const dup=findDuplicateEntry(payload);
-  if(!dup){run();return;}
+    const dup=findDuplicateEntry(payload);
+    if(!dup){run();return;}
 
-  const isHi=currentLang==='hi';
-  const dd=Math.abs(Math.round((_dupUTC(payload.date || todayStr())-_dupUTC(dup.date))/86400000));
-  const when=isHi?(dd===0?'उसी दिन':dd===1?'1 दिन पहले':dd+' दिन पहले'):(dd===0?'on the same day':dd===1?'1 day apart':dd+' days apart');
-  
-  // No need to HTML escape since showAppConfirm uses textContent, which is natively safe against XSS
-  const safeLabel = dup.label || 'Entry';
-  
-  showAppConfirm(
-    isHi?`⚠️ "${safeLabel}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
-        :`⚠️ "${safeLabel}" ₹${dup.amt} was already logged ${when}. Add it again?`,
-    run
-  );
+    const isHi=currentLang==='hi';
+    const dd=Math.abs(Math.round((_dupUTC(payload.date || todayStr())-_dupUTC(dup.date))/86400000));
+    const when=isHi?(dd===0?'उसी दिन':dd===1?'1 दिन पहले':dd+' दिन पहले'):(dd===0?'on the same day':dd===1?'1 day apart':dd+' days apart');
+    
+    // No need to HTML escape since showAppConfirm uses textContent, which is natively safe against XSS
+    const safeLabel = dup.label || 'Entry';
+    
+    showAppConfirm(
+      isHi?`⚠️ "${safeLabel}" ₹${dup.amt} ${when} दर्ज हो चुका है। फिर से जोड़ें?`
+          :`⚠️ "${safeLabel}" ₹${dup.amt} was already logged ${when}. Add it again?`,
+      run,
+      null,
+      () => reject(new Error('Cancelled'))
+    );
+  });
 }
 
 async function updateEntry(id, entry){
@@ -1113,7 +1126,7 @@ async function addExpense(){
       } else {
         const guardFn = (typeof maybeGuardAndSaveWithSmartEngine === 'function') ? maybeGuardAndSaveWithSmartEngine : maybeGuardAndSave;
         await guardFn(payload, async()=>{
-          saveEntry(payload);
+          await saveEntry(payload);
           if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
           toast(TT('expense_added'),'success');
           checkBudget();
@@ -1134,6 +1147,11 @@ function startEdit(id){
   const allList = (typeof window !== 'undefined' && Array.isArray(window.entries) && window.entries.length) ? window.entries : entries;
   const entry = allList.find(e => e._id === id);
   if(!entry) return;
+  if(entry.transferGroupId || entry.transferPeerId) {
+    const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+    toast(isHi ? 'ट्रांसफर को संपादित नहीं किया जा सकता। इसे हटाकर दोबारा जोड़ें।' : 'Transfers cannot be edited. Please delete and recreate it.', 'info');
+    return;
+  }
   openQuickComposer(entry.type, entry);
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   toast(isHi ? 'एंट्री संपादन मोड ✏️' : 'Editing entry ✏️', 'info');
@@ -1144,6 +1162,15 @@ function cancelEdit(){
   closeTransactionComposer();
 }
 
+async function removeTransferPair(id1, id2) {
+  if (!currentUser) return;
+  const batch = db.batch();
+  const baseRef = db.collection('users').doc(currentUser.uid).collection('entries');
+  batch.delete(baseRef.doc(id1));
+  batch.delete(baseRef.doc(id2));
+  await batch.commit();
+}
+
 function deleteEntry(id){
   const allList = (typeof window !== 'undefined' && Array.isArray(window.entries) && window.entries.length) ? window.entries : entries;
   const target = allList.find(e => e._id === id);
@@ -1151,8 +1178,7 @@ function deleteEntry(id){
   return showAppConfirm(isHi ? 'क्या आप इस एंट्री को हटाना चाहते हैं?' : 'Delete this entry?', async ()=>{
     try {
       if (target && target.transferPeerId) {
-        await removeEntry(id);
-        await removeEntry(target.transferPeerId);
+        await removeTransferPair(id, target.transferPeerId);
         entries = entries.filter(e => e._id !== id && e._id !== target.transferPeerId);
         if (typeof window !== 'undefined') window.entries = entries;
       } else {
@@ -1260,7 +1286,11 @@ function renderEntries(){
     const rows=items.map(e=>{
       const catKey=(e.cat&&e.cat!=='income'?e.cat:'other');
       const dotColor=(typeof CAT_COLORS!=='undefined'&&CAT_COLORS[catKey])||'var(--text-faint)';
-      const meta=escapeHTML(displayCatLabel(e))+(e.note?' · '+escapeHTML(e.note):'');
+      const safeCat = typeof stripHTML === 'function' ? stripHTML(displayCatLabel(e)) : displayCatLabel(e);
+      const safeNote = e.note ? (typeof stripHTML === 'function' ? stripHTML(e.note) : e.note) : '';
+      const safeLabel = typeof stripHTML === 'function' ? stripHTML(e.label) : e.label;
+      const safeEvent = e.event ? (typeof stripHTML === 'function' ? stripHTML(e.event) : e.event) : '';
+      const meta = escapeHTML(safeCat) + (safeNote ? ' · ' + escapeHTML(safeNote) : '');
       const wBadge = e.isTransferMerged ? e.wBadge : getWalletBadgeHtml(e);
       const isTransfer = e.type === 'transfer';
       const amtClass = isTransfer ? 'text-dim' : (e.type==='income'?'income':'expense');
@@ -1269,7 +1299,7 @@ function renderEntries(){
       <div class="entry-row entry-card">
         <span class="cat-dot" style="background:${dotColor};color:${dotColor}"></span>
         <div class="entry-main">
-          <span class="entry-label">${escapeHTML(e.label)}${e.event?' <span class="event-tag">🎉 '+escapeHTML(e.event)+'</span>':''}${wBadge}</span>
+          <span class="entry-label">${escapeHTML(safeLabel)}${safeEvent?' <span class="event-tag">🎉 '+escapeHTML(safeEvent)+'</span>':''}${wBadge}</span>
           <span class="entry-meta">${meta}</span>
         </div>
         <span class="entry-amt ${amtClass}">${sign}₹${e.amt}</span>
@@ -1360,4 +1390,7 @@ window.startEdit = startEdit;
 window.cancelEdit = cancelEdit;
 window.updateEntry = updateEntry;
 window.deleteEntry = deleteEntry;
+
+
+
 

@@ -421,6 +421,8 @@ function escapeHTML(str){
   return div.innerHTML;
 }
 window.escapeHTML = escapeHTML;
+function stripHTML(str) { if (typeof str !== 'string') return ''; return str.replace(/<[^>]*>?/gm, '').trim(); }
+window.stripHTML = stripHTML;
 
 function isRealIncome(e) {
   return e.type === 'income' && !e.transferGroupId;
@@ -488,17 +490,18 @@ function showAppAlert(message, title){
   document.getElementById('app-modal-backdrop').style.display='flex';
 }
 
-function showAppConfirm(message, onConfirm, title){
+function showAppConfirm(message, onConfirm, title, onCancel){
   title = title || (currentLang==='hi' ? 'पुष्टि करें' : 'Please confirm');
   document.getElementById('app-modal-title').textContent = title;
   document.getElementById('app-modal-message').textContent = message;
   const yesLabel = currentLang==='hi' ? 'हां' : 'Yes';
   const cancelLabel = currentLang==='hi' ? 'रद्द करें' : 'Cancel';
   document.getElementById('app-modal-buttons').innerHTML = `
-    <button class="btn" style="flex:1" onclick="closeAppModal()">${cancelLabel}</button>
+    <button class="btn" style="flex:1" id="app-modal-cancel-btn">${cancelLabel}</button>
     <button class="btn danger" style="flex:1" id="app-modal-confirm-btn">${yesLabel}</button>
   `;
   document.getElementById('app-modal-confirm-btn').onclick = ()=>{ closeAppModal(); onConfirm(); };
+  document.getElementById('app-modal-cancel-btn').onclick = ()=>{ closeAppModal(); if (typeof onCancel === 'function') onCancel(); };
   document.getElementById('app-modal-backdrop').style.display='flex';
 }
 
@@ -516,7 +519,7 @@ function showAppPrompt(message, defaultValue, onConfirm, title){
   const okLabel = currentLang==='hi' ? 'ठीक है' : 'OK';
   const cancelLabel = currentLang==='hi' ? 'रद्द करें' : 'Cancel';
   document.getElementById('app-modal-buttons').innerHTML = `
-    <button class="btn" style="flex:1" onclick="closeAppModal()">${cancelLabel}</button>
+    <button class="btn" style="flex:1" id="app-modal-cancel-btn">${cancelLabel}</button>
     <button class="btn primary" style="flex:1" id="app-prompt-confirm-btn">${okLabel}</button>
   `;
   document.getElementById('app-prompt-confirm-btn').onclick = ()=>{
@@ -3037,4 +3040,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+
 

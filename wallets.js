@@ -591,11 +591,22 @@ window.deleteCustomWallet = async function(walletId) {
     return;
   }
 
-  // Check if any transactions reference this wallet across all entries (unfiltered)
-  const allEntries = (typeof window.entries !== 'undefined') ? window.entries : ((typeof entries !== 'undefined') ? entries : []);
-  const linkedEntries = allEntries.filter(e => e.walletId === walletId);
+  // Check if any transactions reference this wallet
+  let linkedCount = 0;
+  if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
+    try {
+      const snap = await db.collection('users').doc(currentUser.uid).collection('entries').where('walletId', '==', walletId).get();
+      linkedCount = snap.size;
+    } catch(err) {
+      if (typeof toast === 'function') toast('Could not verify wallet usage: ' + err.message, 'error');
+      return;
+    }
+  } else {
+    const allEntries = (typeof window.entries !== 'undefined') ? window.entries : ((typeof entries !== 'undefined') ? entries : []);
+    linkedCount = allEntries.filter(e => e.walletId === walletId).length;
+  }
 
-  if (linkedEntries.length > 0) {
+  if (linkedCount > 0) {
     // Show migration dialog — user must choose a target wallet before deletion
     const targetOptions = userWallets
       .filter(w => w.id !== walletId)
@@ -610,8 +621,8 @@ window.deleteCustomWallet = async function(walletId) {
         <h3 style="margin:0 0 8px;color:#fff;font-family:'Space Grotesk',sans-serif;">${isHi ? 'पहले लेनदेन माइग्रेट करें' : 'Migrate Transactions First'}</h3>
         <p style="color:#94a3b8;font-size:13.5px;margin:0 0 16px;">
           ${isHi
-            ? `<b style="color:#f87171">${linkedEntries.length} लेनदेन</b> "${escapeWalletHTML(targetWallet.name)}" में हैं। इन्हें किसी अन्य वॉलेट में ले जाएं, अन्यथा बैलेंस गायब हो जाएगा।`
-            : `<b style="color:#f87171">${linkedEntries.length} transaction${linkedEntries.length > 1 ? 's' : ''}</b> in "${escapeWalletHTML(targetWallet.name)}" must be moved to another wallet before deletion, or their balance contribution will be lost.`}
+            ? `<b style="color:#f87171">${linkedCount} लेनदेन</b> "${escapeWalletHTML(targetWallet.name)}" में हैं। इन्हें किसी अन्य वॉलेट में ले जाएं, अन्यथा बैलेंस गायब हो जाएगा।`
+            : `<b style="color:#f87171">${linkedCount} transaction${linkedCount > 1 ? 's' : ''}</b> in "${escapeWalletHTML(targetWallet.name)}" must be moved to another wallet before deletion, or their balance contribution will be lost.`}
         </p>
         <label style="color:#c4b5fd;font-size:13px;display:block;margin-bottom:6px;">${isHi ? 'इस वॉलेट में ले जाएं:' : 'Move transactions to:'}</label>
         <select id="wallet-migrate-target" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:14px;margin-bottom:16px;">
@@ -677,7 +688,7 @@ window.deleteCustomWallet = async function(walletId) {
       if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
       if (typeof renderEntries === 'function') renderEntries();
       if (typeof renderReport === 'function') renderReport();
-      if (typeof toast === 'function') toast(`Migrated ${linkedEntries.length} transactions and deleted "${targetWallet.name}"`, 'success');
+      if (typeof toast === 'function') toast(`Migrated ${linkedCount} transactions and deleted "${targetWallet.name}"`, 'success');
     };
     return;
   }

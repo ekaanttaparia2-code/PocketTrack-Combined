@@ -240,7 +240,7 @@ function computeFinancialDNA() {
         const amt = parseFloat(e.amt) || 0;
         if (e.type === 'income') {
             totalIncome += amt;
-        } else if (e.type === 'expense') {
+        } else if (e.type === 'expense' && !e.transferGroupId) {
             totalExpenses += amt;
             expenseCount++;
 
@@ -413,3 +413,4 @@ if (document.readyState === 'loading') {
 
 // Optional hook for main app to re-render
 window.updateFinancialDNA = renderFinancialDNACard;
+

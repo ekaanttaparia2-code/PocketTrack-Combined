@@ -125,7 +125,7 @@ function computeSafeToSpend() {
 
     if (y === currentYear && m === currentMonth) {
       if (e.type === 'income') monthIncome += amt;
-      else if (e.type === 'expense') {
+      else if (e.type === 'expense' && !e.transferGroupId) {
         monthSpent += amt;
         if (e.date === todayStrVal) todaySpent += amt;
       }
@@ -263,3 +263,4 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(window.renderDailyBurnMeter, 600);
 }
+

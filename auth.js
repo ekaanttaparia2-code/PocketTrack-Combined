@@ -52,6 +52,8 @@ function handleConsentChange(el){
 window.handleConsentChange = handleConsentChange;
 
 function authAction(mode){
+  if (window._isAuthActionRunning) return;
+  window._isAuthActionRunning = true;
   const email=document.getElementById('auth-email').value.trim();
   const pass=document.getElementById('auth-pass').value;
   hideAuthError();
@@ -78,6 +80,7 @@ function authAction(mode){
     showAuthError(err.message);
   }).finally(()=>{
     setAuthButtonsLoading(false);
+    window._isAuthActionRunning = false;
   });
 }
 
@@ -284,3 +287,6 @@ function resendVerification(){
     toast('Could not send: '+e.message, 'error');
   });
 }
+
+
+

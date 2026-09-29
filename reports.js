@@ -110,7 +110,7 @@ function getPeriodAccountingData(){
   const openingBalance = initialBalance + (prevIncome - prevSpent);
   const periodEntries = getReportEntries();
   const periodIncome = periodEntries.filter(e => e.type === 'income').reduce((s, e) => s + (Number(e.amt) || 0), 0);
-  const periodSpent = periodEntries.filter(e => e.type === 'expense').reduce((s, e) => s + (Number(e.amt) || 0), 0);
+  const periodSpent = periodEntries.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s, e) => s + (Number(e.amt) || 0), 0);
   const netFlow = periodIncome - periodSpent;
   const closingBalance = openingBalance + netFlow;
 
@@ -261,7 +261,7 @@ function renderReport(){
     }
     
     const cats = {};
-    list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+(Number(e.amt)||0);});
+    list.filter(e => e.type === 'expense' && !e.transferGroupId).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+(Number(e.amt)||0);});
     const maxCat = Math.max(...Object.values(cats), 1);
     renderCategoryPieChart(cats);
     
@@ -308,7 +308,7 @@ function copyReport(){
   const openBal = acct.openingBalance;
   const netFlow = acct.netFlow;
   const cats={};
-  list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+Number(e.amt||0);});
+  list.filter(e => e.type === 'expense' && !e.transferGroupId).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+Number(e.amt||0);});
   const isHi = currentLang==='hi';
   const periodTitle={week:isHi?'साप्ताहिक खर्च रिपोर्ट':'Weekly Expense Report',month:isHi?'मासिक खर्च रिपोर्ट':'Monthly Expense Report',all:isHi?'पूरी खर्च रिपोर्ट':'All-Time Expense Report',custom:isHi?'कस्टम अवधि रिपोर्ट':'Custom Range Expense Report'}[period]||(isHi?'खर्च रिपोर्ट':'Expense Report');
   
@@ -368,7 +368,7 @@ async function exportPDF(){
   const spent=acct.periodSpent;
   const bal=acct.closingBalance;
   const cats={};
-  list.filter(e=>e.type==='expense').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+Number(e.amt||0);});
+  list.filter(e => e.type === 'expense' && !e.transferGroupId).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+Number(e.amt||0);});
   const CAT_RGB = {food:[74,222,128],travel:[96,165,250],friends:[255,184,77],home:[255,126,179],shopping:[192,132,252],entertainment:[244,114,182],health:[251,113,133],education:[251,191,36],work:[34,211,238],other:[150,150,150]};
   const PURPLE=[124,78,224], PINK=[255,126,179], GREEN=[34,197,94], RED=[239,68,68], DARK=[30,25,50];
 
@@ -543,7 +543,7 @@ function hsT(k){ return (HS_TXT[k] && HS_TXT[k][currentLang]) || HS_TXT[k].en; }
 function computeHealthScore(){
   const list = getReportEntries();
   const income = list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const expense = list.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const expense = list.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
 
   // 1. Savings rate → up to 45 pts
   const rate = income>0 ? ((income-expense)/income)*100 : (expense>0 ? -100 : 0);
@@ -556,7 +556,7 @@ function computeHealthScore(){
   const budget = (typeof totalBudget==='function') ? totalBudget() : (bPeriod==='weekly' ? (typeof weeklyBudget!=='undefined'?weeklyBudget:0) : (typeof monthlyBudget!=='undefined'?monthlyBudget:0));
   if (typeof budget !== 'undefined' && budget > 0){
     const spent = (bPeriod==='weekly' ? (typeof getThisWeekEntries==='function'?getThisWeekEntries():[]) : (typeof getThisMonthEntries==='function'?getThisMonthEntries():[]))
-      .filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+      .filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
     const pct = Math.min(120, (spent/budget)*100);
     const adherence = Math.max(0, 100 - pct + (pct<=100?6:0));
     budgetScore = Math.round((adherence/100)*30);
@@ -652,7 +652,7 @@ const LK_TXT = {
 function lkT(k){ return (LK_TXT[k] && LK_TXT[k][currentLang]) || LK_TXT[k].en; }
 
 function detectLeaks(){
-  const exp = mainEntries().filter(e=>e.type==='expense');
+  const exp = mainEntries().filter(e => e.type === 'expense' && !e.transferGroupId);
   if(exp.length<6) return [];
   const groups = {};
   exp.forEach(e=>{
@@ -755,7 +755,7 @@ function renderFutureMoneySimulator() {
     }
   } else {
     const inc = list.filter(e=>e.type==='income').reduce((s,e)=>s+Number(e.amt||0),0);
-    const exp = list.filter(e=>e.type==='expense').reduce((s,e)=>s+Number(e.amt||0),0);
+    const exp = list.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s,e)=>s+Number(e.amt||0),0);
     balance = Math.max(0, inc - exp);
   }
   const estSavingsPerMo = balance > 0 ? Math.max(500, Math.round(balance * 0.15)) : 1000;
@@ -921,7 +921,7 @@ window.renderSmartInsights = function() {
   if (!host) return;
 
   const list = mainEntries();
-  const expList = list.filter(e => e.type === 'expense');
+  const expList = list.filter(e => e.type === 'expense' && !e.transferGroupId);
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
 
   if (!expList.length) {
@@ -1045,5 +1045,6 @@ window.promptEditTotalBudget = function() {
     window.openSetBudgetModal();
   }
 };
+
 
 

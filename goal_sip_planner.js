@@ -238,7 +238,7 @@ window.renderActiveGoalCard = function() {
   entries.forEach(e => {
     if (e.transferGroupId) return;
     if (e.type === 'income') totalInc += (parseFloat(e.amt) || 0);
-    else if (e.type === 'expense') totalExp += (parseFloat(e.amt) || 0);
+    else if (e.type === 'expense' && !e.transferGroupId) totalExp += (parseFloat(e.amt) || 0);
   });
   const currentSaved = Math.max(0, totalInc - totalExp);
   const progressPct = Math.min(100, Math.round((currentSaved / goal.target) * 100));
@@ -275,3 +275,4 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(window.renderActiveGoalCard, 750);
 }
+
