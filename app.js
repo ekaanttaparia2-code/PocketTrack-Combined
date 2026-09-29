@@ -2607,12 +2607,28 @@ async function deleteAccountAndPurgeData(){
   showAppConfirm(confirmMsg, async ()=>{
     try {
       if(typeof toast === 'function') toast(isHi ? 'डेटा क्लाउड से हटाया जा रहा है...' : 'Purging all records from cloud...', 'info');
-      // PRE-FLIGHT CHECK: Prevent partial deletion by verifying recent login
+      // PRE-FLIGHT CHECK: Force re-authentication if login is older than 5 minutes
       if (currentUser && currentUser.metadata && currentUser.metadata.lastSignInTime) {
         const lastSignIn = new Date(currentUser.metadata.lastSignInTime).getTime();
         if (Date.now() - lastSignIn > 5 * 60 * 1000) { // 5 minutes strict limit
-          if(typeof toast === 'function') toast(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से लॉग इन करें।' : 'For security, please log out and log in again before deleting your account.', 'error');
-          return;
+          try {
+            const providerId = currentUser.providerData[0]?.providerId;
+            if (providerId === 'google.com') {
+              const provider = new firebase.auth.GoogleAuthProvider();
+              await currentUser.reauthenticateWithPopup(provider);
+            } else if (providerId === 'password') {
+              const pass = prompt(isHi ? 'खाता हटाने की पुष्टि के लिए अपना पासवर्ड दर्ज करें:' : 'Please enter your password to confirm account deletion:');
+              if (!pass) return; // User cancelled
+              const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass);
+              await currentUser.reauthenticateWithCredential(cred);
+            } else {
+              if (typeof toast === 'function') toast(isHi ? 'सुरक्षा के लिए, कृपया लॉग आउट करें और फिर से लॉग इन करें।' : 'For security, please log out and log in again before deleting your account.', 'error');
+              return;
+            }
+          } catch(err) {
+            if (typeof toast === 'function') toast(isHi ? 'पुन: प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।' : 'Re-authentication failed. Please try again.', 'error');
+            return;
+          }
         }
       }
 
