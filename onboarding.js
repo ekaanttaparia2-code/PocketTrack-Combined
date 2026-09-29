@@ -567,9 +567,6 @@
       setTimeout(function() {
         screen.style.display = 'none';
         screen.innerHTML = ''; // Wipe DOM so hidden SVG defs never shadow live dashboard Finny
-        if (typeof window.openAgeModeModal === 'function') {
-          window.openAgeModeModal();
-        }
       }, 300);
     }
   };

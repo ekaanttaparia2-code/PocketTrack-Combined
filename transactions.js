@@ -21,8 +21,8 @@ function getWalletBadgeHtml(entryOrId) {
 
 function updateHeaderStats(){
   const list = mainEntries();
-  const income=list.filter(e=>e.type==='income' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
-  const spent=list.filter(e=>e.type==='expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
+  let income=list.filter(e=>e.type==='income' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
+  let spent=list.filter(e=>e.type==='expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
 
   // Sync hero balance precisely with wallet balances (including initial balances)
   let balance = 0;
