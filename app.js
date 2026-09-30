@@ -197,7 +197,7 @@ const TRANSLATIONS = {
   voice_entry_title:{en:'Voice Expense Entry',hi:'बोल कर एंट्री करें',hinglish:'Voice Expense Entry'},
 };
 window.TRANSLATIONS = TRANSLATIONS;
-let currentLang = localStorage.getItem('pocketTrackLang') || 'en';
+let currentLang = localStorage.getItem('pocketTrackLang') || localStorage.getItem('pockettrack_lang') || 'en';
 window.currentLang = currentLang;
 
 const PLACEHOLDER_TRANSLATIONS = {
@@ -282,7 +282,9 @@ function updateLanguageTabUI(){
 function setLanguage(lang){
   if(lang===currentLang)return;
   currentLang = lang;
+  window.currentLang = lang;
   localStorage.setItem('pocketTrackLang', currentLang);
+  localStorage.setItem('pockettrack_lang', currentLang);
   applyLanguage();
   const label = SUPPORTED_LANGS[lang] || lang;
   toast('Switched language to ' + label, 'success');
@@ -720,6 +722,7 @@ async function renameCustomIncomeSource(oldName, newName){
 
 async function renameCustomExpenseCategory(oldName, newName){
   if(!currentUser)return;
+  const original = [...customExpenseCategories];
   try{
     customExpenseCategories = customExpenseCategories.map(n=>n===oldName?newName:n);
     await db.collection('users').doc(currentUser.uid).update({
@@ -731,12 +734,16 @@ async function renameCustomExpenseCategory(oldName, newName){
     toast(currentLang==='hi'?'श्रेणी का नाम बदला गया':'Category renamed','success');
     renderCustomOptions();
     renderManageOptionsList();
-  }catch(e){toast('Could not rename: '+e.message,'error');}
+  }catch(e){
+    customExpenseCategories = original;
+    if (typeof toast === 'function') toast('Could not rename: '+e.message,'error');
+  }
 }
 
 
 async function removeCustomIncomeSource(name){
   if(!currentUser)return;
+  const original = [...customIncomeSources];
   customIncomeSources=customIncomeSources.filter(n=>n!==name);
   try{
     await db.collection('users').doc(currentUser.uid).set(
@@ -744,11 +751,15 @@ async function removeCustomIncomeSource(name){
     );
     toast(currentLang==='hi'?'स्रोत हटाया गया':'Source removed','success');
     renderCustomOptions();
-  }catch(e){toast('Could not remove: '+e.message,'error');}
+  }catch(e){
+    customIncomeSources = original;
+    if (typeof toast === 'function') toast('Could not remove: '+e.message,'error');
+  }
 }
 
 async function removeCustomExpenseCategory(name){
   if(!currentUser)return;
+  const original = [...customExpenseCategories];
   customExpenseCategories=customExpenseCategories.filter(n=>n!==name);
   try{
     await db.collection('users').doc(currentUser.uid).set(
@@ -756,7 +767,10 @@ async function removeCustomExpenseCategory(name){
     );
     toast(currentLang==='hi'?'श्रेणी हटाई गई':'Category removed','success');
     renderCustomOptions();
-  }catch(e){toast('Could not remove: '+e.message,'error');}
+  }catch(e){
+    customExpenseCategories = original;
+    if (typeof toast === 'function') toast('Could not remove: '+e.message,'error');
+  }
 }
 
 async function saveCustomIncomeSource(name){
@@ -767,7 +781,10 @@ async function saveCustomIncomeSource(name){
       {customIncomeSources: firebase.firestore.FieldValue.arrayUnion(name)}, {merge:true}
     );
     renderCustomOptions();
-  }catch(e){console.error('Could not save custom source:',e);}
+  }catch(e){
+    customIncomeSources.pop();
+    if (typeof toast === 'function') toast('Could not save custom source: '+e.message,'error');
+  }
 }
 
 async function saveCustomExpenseCategory(name){
@@ -778,7 +795,10 @@ async function saveCustomExpenseCategory(name){
       {customExpenseCategories: firebase.firestore.FieldValue.arrayUnion(name)}, {merge:true}
     );
     renderCustomOptions();
-  }catch(e){console.error('Could not save custom category:',e);}
+  }catch(e){
+    customExpenseCategories.pop();
+    if (typeof toast === 'function') toast('Could not save custom category: '+e.message,'error');
+  }
 }
 
 async function saveBudget(){
@@ -2686,13 +2706,15 @@ async function deleteAccountAndPurgeData(){
         }
       }
 
-      // 2. Delete main user document
-      try {
-        await userRef.delete();
-      } catch(e) { cleanupFailed = true; }
-
       if (cleanupFailed) {
         throw new Error(isHi ? 'डेटा पूरी तरह से हटाया नहीं जा सका।' : 'Could not completely purge all cloud data.');
+      }
+
+      // 3. Delete main user document
+      try {
+        await userRef.delete();
+      } catch(e) {
+        throw new Error(isHi ? 'मुख्य उपयोगकर्ता डेटा हटाया नहीं जा सका।' : 'Could not delete main user document.');
       }
 
       // 3. Delete the Firebase Auth User
@@ -3071,6 +3093,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
 
 
 

@@ -101,9 +101,11 @@ async function processRecurringDue(){
       try {
         await db.collection('users').doc(currentUser.uid)
           .collection('recurring').doc(rule._id).update({nextDate: next});
-      } catch(e){}
-      toast((currentLang === 'hi' ? '🔁 आवर्ती दर्ज: ' : '🔁 Logged recurring: ') + rule.label, 'success');
-      if(typeof showLocalNotification === 'function') showLocalNotification('PocketTrack', (currentLang === 'hi' ? 'आवर्ती दर्ज: ' : 'Logged recurring: ') + rule.label);
+        toast((currentLang === 'hi' ? '🔁 आवर्ती दर्ज: ' : '🔁 Logged recurring: ') + rule.label, 'success');
+        if(typeof showLocalNotification === 'function') showLocalNotification('PocketTrack', (currentLang === 'hi' ? 'आवर्ती दर्ज: ' : 'Logged recurring: ') + rule.label);
+      } catch(e) {
+        toast((currentLang === 'hi' ? '⚠️ एंट्री दर्ज हुई, लेकिन आवर्ती शेड्यूल अपडेट विफल: ' : '⚠️ Entry logged, but rule schedule update failed: ') + rule.label, 'error');
+      }
     }
   }
 }
