@@ -1085,6 +1085,15 @@
 <script src="wealth_simulator.js"></script>
 <script src="debt_payoff.js"></script>
 <script src="receipt_scanner.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function (error) {
+      console.warn('Service worker registration failed:', error);
+    });
+  });
+}
+</script>
 </body>
 </html>
 
