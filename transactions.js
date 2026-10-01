@@ -796,13 +796,19 @@ function listenToEntries(){
     }
   } catch(e){}
 
-  // 2. Real-time Firestore sync
+  // 2. Real-time Firestore sync (Limited to last 90 days for performance)
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 90);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+
   unsubscribeEntries = db.collection('users').doc(currentUser.uid).collection('entries')
+    .where('date', '>=', cutoffStr)
     .onSnapshot({includeMetadataChanges:true}, snap=>{
       entries = snap.docs.map(d=>({...d.data(), _id:d.id})).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
       if (typeof window !== 'undefined') window.entries = entries;
       try {
-        localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+        const cachedSlice = entries.slice(0, 200); // Cap cache size
+        localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(cachedSlice));
       } catch(e){}
       if(typeof pendingWriteState!=='undefined') pendingWriteState.entries = !!snap.metadata && snap.metadata.hasPendingWrites;
       if(typeof updateSyncIndicator==='function') updateSyncIndicator();
@@ -924,8 +930,15 @@ async function saveEntry(entry){
   if (typeof renderStreak === 'function') renderStreak();
 
   try {
-    const docRef = await db.collection('users').doc(currentUser.uid).collection('entries').add(entry);
-    optimisticItem._id = docRef.id;
+    const batch = db.batch();
+    const entryRef = db.collection('users').doc(currentUser.uid).collection('entries').doc();
+    batch.set(entryRef, entry);
+    batch.set(db.collection('users').doc(currentUser.uid), {
+      entryCount: firebase.firestore.FieldValue.increment(1)
+    }, {merge:true});
+    await batch.commit();
+    
+    optimisticItem._id = entryRef.id;
     try {
       localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
     } catch(e) {}
@@ -1041,7 +1054,12 @@ async function updateEntry(id, entry){
 
 async function removeEntry(id){
   if(!currentUser) return;
-  await db.collection('users').doc(currentUser.uid).collection('entries').doc(id).delete();
+  const batch = db.batch();
+  batch.delete(db.collection('users').doc(currentUser.uid).collection('entries').doc(id));
+  batch.set(db.collection('users').doc(currentUser.uid), {
+    entryCount: firebase.firestore.FieldValue.increment(-1)
+  }, {merge:true});
+  await batch.commit();
 }
 
 document.getElementById('inc-date').value=todayStr();
@@ -1168,6 +1186,9 @@ async function removeTransferPair(id1, id2) {
   const baseRef = db.collection('users').doc(currentUser.uid).collection('entries');
   batch.delete(baseRef.doc(id1));
   batch.delete(baseRef.doc(id2));
+  batch.set(db.collection('users').doc(currentUser.uid), {
+    entryCount: firebase.firestore.FieldValue.increment(-2)
+  }, {merge:true});
   await batch.commit();
 }
 

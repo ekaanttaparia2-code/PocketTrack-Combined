@@ -8,6 +8,18 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.uid == userId && (!('pro' in request.resource.data) || request.resource.data.pro == resource.data.pro);
       allow delete: if request.auth != null && request.auth.uid == userId;
       
+      match /entries/{entryId} {
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        allow create, update: if request.auth != null && request.auth.uid == userId
+          && (
+            request.auth.token.email_verified == true
+            || request.auth.token.firebase.sign_in_provider == 'google.com'
+            || request.auth.token.firebase.sign_in_provider == 'phone'
+            || get(/databases/$(database)/documents/users/$(userId)).data.get('entryCount', 0) < 10
+            || get(/databases/$(database)/documents/users/$(userId)).data.get('pro', false) == true
+          );
+      }
+      
       match /{allSubcollections=**} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }

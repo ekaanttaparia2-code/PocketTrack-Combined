@@ -850,6 +850,9 @@ window.submitWalletTransfer = async function() {
       const batch = db.batch();
       batch.set(debitDoc, debitPayload);
       batch.set(creditDoc, creditPayload);
+      batch.set(db.collection('users').doc(currentUser.uid), {
+        entryCount: firebase.firestore.FieldValue.increment(2)
+      }, {merge:true});
       await batch.commit();
 
       // Add to local array
