@@ -1,10 +1,10 @@
 {
-  "appId": "app.vercel.pockettrack_bay.twa",
+  "appId": "io.github.ekaanttaparia2_code.twa",
   "appName": "PocketTrack",
   "webDir": ".",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://pockettrack-bay.vercel.app",
+    "url": "https://ekaanttaparia2-code.github.io/PocketTrack-Combined/",
     "cleartext": false
   },
   "plugins": {
