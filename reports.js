@@ -552,6 +552,19 @@ function hsT(k){ return (HS_TXT[k] && HS_TXT[k][currentLang]) || HS_TXT[k].en; }
 
 function computeHealthScore(){
   const list = getReportEntries();
+  if (!list || list.length === 0) {
+    const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+    return {
+      isEmpty: true,
+      total: '--',
+      verdict: isHi ? 'अपने वित्तीय स्कोर की गणना के लिए कम से कम 3 खर्च दर्ज करें।' : 'Log at least 3 expenses to calculate your Financial Health Score.',
+      bars:[
+        { label: hsT('savings'), value: 0, pct: 0, color:'var(--green)' },
+        { label: hsT('budget'),  value: 0, pct: 0, color:'var(--amber)' },
+        { label: hsT('consis'),  value: 0, pct: 0, color:'var(--accent)' },
+      ],
+    };
+  }
   const income = list.filter(e => e.type === 'income' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
   const expense = list.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
 
@@ -611,15 +624,20 @@ function renderHealthScore(){
       <span class="health-bar-num" style="color:${b.color}">${b.value}${b.label===hsT('savings')?'%':''}</span>
     </div>`).join('');
 
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const ringDeg = s.isEmpty ? 0 : (s.total * 3.6);
+  const ringNum = s.isEmpty ? '--' : s.total;
+  const chipText = s.isEmpty ? (isHi ? 'प्रारंभिक' : 'Getting started') : hsT('hint');
+
   const inner = `
     <div class="health-head">
       <p class="sec-title" style="margin:0"><i class="ti ti-heartbeat"></i><span>${hsT('title')}</span></p>
-      <span class="chip" style="font-size:10px">${hsT('hint')}</span>
+      <span class="chip" style="font-size:10px">${chipText}</span>
     </div>
     <div class="health-main">
-      <div class="health-ring" style="--hs:${s.total*3.6}deg">
+      <div class="health-ring" style="--hs:${ringDeg}deg">
         <div class="health-ring-inner">
-          <span class="health-ring-num">${s.total}</span>
+          <span class="health-ring-num">${ringNum}</span>
           <span class="health-ring-label">${hsT('of100')}</span>
         </div>
       </div>
@@ -700,15 +718,14 @@ function renderLeakDetector(){
   const leaks = detectLeaks();
 
   let body;
-  if(leaks.length===0 && isPro){
-    body = `<p class="empty" style="margin:8px 0 4px">${lkT('empty')}</p>`;
+  if(leaks.length===0){
+    body = `<div style="text-align:center;padding:22px 14px;color:var(--text-faint);">
+      <div style="font-size:24px;margin-bottom:6px;">🔍</div>
+      <p style="font-size:13px;font-weight:600;margin:0 0 4px;color:var(--text);">${lkT('empty')}</p>
+      <p style="font-size:11.5px;margin:0;line-height:1.4;">${currentLang==='hi'?'नियमित खर्च दर्ज करते रहें, संभावित आवर्ती भुगतान यहां अपने आप दिखेंगे।':'Keep logging expenses — recurring subscription charges will automatically appear here.'}</p>
+    </div>`;
   }else{
-    const displayLeaks = (leaks.length > 0) ? leaks : [
-      { label: 'Netflix Premium', months: 3, last: new Date().toISOString(), yearly: 7788, median: 649 },
-      { label: 'Gym Membership', months: 4, last: new Date().toISOString(), yearly: 18000, median: 1500 },
-      { label: 'Cloud Storage', months: 6, last: new Date().toISOString(), yearly: 2520, median: 210 }
-    ];
-    body = `<div class="leak-list">` + displayLeaks.map(l=>`
+    body = `<div class="leak-list">` + leaks.map(l=>`
       <div class="leak-item">
         <div class="leak-main">
           <span class="leak-name">${escapeHTML(l.label)}</span>

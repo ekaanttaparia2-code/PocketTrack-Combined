@@ -256,12 +256,42 @@ function updateBottomBarVisibility(){
   const voiceFab = document.getElementById('voice-fab');
   const authScreen = document.getElementById('auth-screen');
   const isAuthVisible = authScreen && authScreen.style.display !== 'none';
-  const shouldShow = (currentUser !== null && !isAuthVisible);
+  const shouldShow = ((currentUser !== null || window.isGuestMode) && !isAuthVisible);
   if (bar) bar.style.display = shouldShow ? 'flex' : 'none';
   if (voiceFab) voiceFab.style.display = shouldShow ? 'flex' : 'none';
   if (document.body) document.body.classList.toggle('auth-active', !shouldShow);
 }
 window.updateBottomBarVisibility = updateBottomBarVisibility;
+
+function continueAsGuest(){
+  window.isGuestMode = true;
+  try { localStorage.setItem('pockettrack_guest_mode', 'true'); } catch(e){}
+  const authScreen = document.getElementById('auth-screen');
+  if(authScreen) authScreen.style.display = 'none';
+  updateBottomBarVisibility();
+  const syncEl = document.getElementById('sync-status');
+  if(syncEl) syncEl.textContent = (typeof currentLang!=='undefined' && currentLang==='hi') ? 'स्थानीय मोड' : 'Local';
+  if(typeof listenToEntries === 'function') listenToEntries();
+  if(typeof loadWallets === 'function') loadWallets();
+  if(typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+  if(typeof loadBudget === 'function') loadBudget();
+  if(typeof updateHeaderStats === 'function') updateHeaderStats();
+  if(typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+  if(typeof renderEntries === 'function') renderEntries();
+  if(typeof renderReport === 'function') renderReport();
+  if(typeof updateVoiceFabVisibility === 'function') updateVoiceFabVisibility();
+  if(typeof toast === 'function') {
+    toast((typeof currentLang!=='undefined' && currentLang==='hi') ? 'अतिथि मोड सक्रिय — डेटा आपके डिवाइस पर सुरक्षित है' : 'Guest mode active — data saved locally on your device', 'info');
+  }
+}
+window.continueAsGuest = continueAsGuest;
+
+function openAuthScreen(){
+  const authScreen = document.getElementById('auth-screen');
+  if(authScreen) authScreen.style.display = 'flex';
+  updateBottomBarVisibility();
+}
+window.openAuthScreen = openAuthScreen;
 
 const authInit = getAuth();
 if (authInit) {
@@ -280,6 +310,36 @@ if (authInit) {
   authInit.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
+    window.isGuestMode = false;
+    try {
+      const guestCache = localStorage.getItem('pockettrack_entries_cache_guest');
+      if (guestCache) {
+        const guestList = JSON.parse(guestCache);
+        if (Array.isArray(guestList) && guestList.length > 0 && typeof db !== 'undefined') {
+          const batch = db.batch();
+          const userRef = db.collection('users').doc(user.uid);
+          let count = 0;
+          guestList.forEach(item => {
+            const copy = { ...item };
+            delete copy._id;
+            delete copy._createdLocallyAt;
+            const newRef = userRef.collection('entries').doc();
+            batch.set(newRef, copy);
+            count++;
+          });
+          batch.set(userRef, {
+            entryCount: firebase.firestore.FieldValue.increment(count)
+          }, {merge:true});
+          batch.commit().then(() => {
+            localStorage.removeItem('pockettrack_entries_cache_guest');
+            localStorage.removeItem('pockettrack_guest_mode');
+            if (typeof toast === 'function') {
+              toast((typeof currentLang!=='undefined' && currentLang==='hi') ? 'अतिथि प्रविष्टियां आपके खाते में सिंक हो गईं!' : 'Guest entries synced to your account!', 'success');
+            }
+          }).catch(e => console.warn('Guest migration batch error:', e));
+        }
+      }
+    } catch(e) {}
     if (typeof loadWallets === 'function') loadWallets();
     if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
     document.getElementById('auth-screen').style.display='none';
@@ -339,23 +399,41 @@ if (authInit) {
     const prevUid = currentUser ? currentUser.uid : null;
     currentUser=null;
     window._isAuthActionRunning = false;
-    purgeUserLocalStorage(prevUid);
-    document.getElementById('auth-screen').style.display='flex';
-    if(typeof updateBottomBarVisibility==='function') updateBottomBarVisibility();
-    if(unsubscribeEntries) unsubscribeEntries();
-    if(unsubscribeEvents) unsubscribeEvents();
-    if(typeof updateVoiceFabVisibility === 'function') updateVoiceFabVisibility();
-    if(typeof updateAIWidgetVisibility === 'function') updateAIWidgetVisibility();
-    entries=[];
-    if(typeof window !== 'undefined') window.entries = entries;
-    if (typeof loadWallets === 'function') loadWallets();
-    if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
-    if (typeof updateHeaderStats === 'function') updateHeaderStats();
-    if(typeof resetLedgerLocal==='function') resetLedgerLocal();
-    if(typeof resetRecurringLocal==='function') resetRecurringLocal();
-    if(typeof pendingWriteState!=='undefined'){ pendingWriteState.entries=false; pendingWriteState.events=false; }
-    events=[];
-    weeklyBudget=0;
+    if (prevUid) purgeUserLocalStorage(prevUid);
+    
+    const isGuest = localStorage.getItem('pockettrack_guest_mode') === 'true';
+    if (isGuest) {
+      window.isGuestMode = true;
+      document.getElementById('auth-screen').style.display='none';
+      if(typeof updateBottomBarVisibility==='function') updateBottomBarVisibility();
+      const syncEl = document.getElementById('sync-status');
+      if(syncEl) syncEl.textContent = (typeof currentLang!=='undefined' && currentLang==='hi') ? 'स्थानीय मोड' : 'Local';
+      if(typeof listenToEntries === 'function') listenToEntries();
+      if(typeof loadWallets === 'function') loadWallets();
+      if(typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+      if(typeof updateVoiceFabVisibility === 'function') updateVoiceFabVisibility();
+      if(typeof updateAIWidgetVisibility === 'function') updateAIWidgetVisibility();
+      loadBudget();
+      if(typeof updateHeaderStats === 'function') updateHeaderStats();
+    } else {
+      window.isGuestMode = false;
+      document.getElementById('auth-screen').style.display='flex';
+      if(typeof updateBottomBarVisibility==='function') updateBottomBarVisibility();
+      if(unsubscribeEntries) unsubscribeEntries();
+      if(unsubscribeEvents) unsubscribeEvents();
+      if(typeof updateVoiceFabVisibility === 'function') updateVoiceFabVisibility();
+      if(typeof updateAIWidgetVisibility === 'function') updateAIWidgetVisibility();
+      entries=[];
+      if(typeof window !== 'undefined') window.entries = entries;
+      if (typeof loadWallets === 'function') loadWallets();
+      if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+      if (typeof updateHeaderStats === 'function') updateHeaderStats();
+      if(typeof resetLedgerLocal==='function') resetLedgerLocal();
+      if(typeof resetRecurringLocal==='function') resetRecurringLocal();
+      if(typeof pendingWriteState!=='undefined'){ pendingWriteState.entries=false; pendingWriteState.events=false; }
+      events=[];
+      weeklyBudget=0;
+    }
   }
   });
 }

@@ -487,9 +487,15 @@ function openCommandHubModal(){
       </div>
 
       <div style="display:flex;gap:10px;">
-        <button class="btn danger" onclick="closeCommandHubModal();logOut();" style="flex:1;padding:12px;font-size:13px;">
-          <i class="ti ti-logout"></i> ${isHi ? 'लॉग आउट' : 'Sign Out'}
-        </button>
+        ${(currentUser && currentUser.uid) ? `
+          <button class="btn danger" onclick="closeCommandHubModal();logOut();" style="flex:1;padding:12px;font-size:13px;">
+            <i class="ti ti-logout"></i> ${isHi ? 'लॉग आउट' : 'Sign Out'}
+          </button>
+        ` : `
+          <button class="btn primary" onclick="closeCommandHubModal();if(typeof openAuthScreen==='function')openAuthScreen();" style="flex:1;padding:12px;font-size:13px;">
+            <i class="ti ti-login"></i> ${isHi ? 'साइन इन / सिंक' : 'Sign In / Sync'}
+          </button>
+        `}
         <button class="btn" onclick="closeCommandHubModal();" style="flex:1;padding:12px;font-size:13px;">
           ${isHi ? 'बंद करें' : 'Close'}
         </button>
@@ -770,7 +776,40 @@ let isEntriesHydrating = true;
 if (typeof window !== 'undefined') window.isEntriesHydrating = true;
 
 function listenToEntries(){
-  if(!currentUser) return;
+  if(!currentUser) {
+    let hasHydratedGuest = false;
+    try {
+      const guestCache = localStorage.getItem('pockettrack_entries_cache_guest');
+      if (guestCache) {
+        const parsed = JSON.parse(guestCache);
+        if (Array.isArray(parsed) && parsed.length) {
+          entries = parsed;
+          if (typeof window !== 'undefined') window.entries = entries;
+          hasHydratedGuest = true;
+        }
+      }
+    } catch(e){}
+    isEntriesHydrating = false;
+    if (typeof window !== 'undefined') window.isEntriesHydrating = false;
+    renderEntries();
+    renderReport();
+    updateHeaderStats();
+    if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+    if (typeof renderWalletSwitcher === 'function') renderWalletSwitcher();
+    if (typeof window.FinnyMascot !== 'undefined' && window.FinnyMascot.render) {
+      try { window.FinnyMascot.render(); } catch(e) {}
+    }
+    if (typeof window.Envelopes !== 'undefined' && window.Envelopes.render) {
+      try { window.Envelopes.render(); } catch(e) {}
+    }
+    if (typeof window.renderDailyBurnMeter === 'function') {
+      try { window.renderDailyBurnMeter(); } catch(e) {}
+    }
+    if (typeof window.updateFinancialDNA === 'function') {
+      try { window.updateFinancialDNA(); } catch(e) {}
+    }
+    return;
+  }
   
   // Clear any existing entries from a previous session/user to prevent duplicate detection false positives on brand-new accounts
   entries = [];
@@ -956,14 +995,17 @@ function refreshEventsViewsIfOpen(){
 
 
 async function saveEntry(entry){
-  if(!currentUser){toast(TT('not_logged_in'),'error');return;}
-  const tempId = 'temp_' + Date.now();
+  const isGuest = (!currentUser || !currentUser.uid);
+  const tempId = isGuest
+    ? ('guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6))
+    : ('temp_' + Date.now());
   const optimisticItem = { ...entry, _id: tempId, _createdLocallyAt: Date.now() };
   if (!Array.isArray(entries)) entries = [];
   entries.unshift(optimisticItem);
   if (typeof window !== 'undefined') window.entries = entries;
+  const cacheKey = isGuest ? 'pockettrack_entries_cache_guest' : ('pockettrack_entries_cache_' + currentUser.uid);
   try {
-    localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+    localStorage.setItem(cacheKey, JSON.stringify(entries));
   } catch(e) {}
 
   if (typeof updateHeaderStats === 'function') updateHeaderStats();
@@ -985,6 +1027,10 @@ async function saveEntry(entry){
   if (typeof checkBudget === 'function') checkBudget();
   if (typeof renderStreak === 'function') renderStreak();
 
+  if (isGuest || typeof db === 'undefined') {
+    return optimisticItem;
+  }
+
   try {
     const batch = db.batch();
     const entryRef = db.collection('users').doc(currentUser.uid).collection('entries').doc();
@@ -998,6 +1044,7 @@ async function saveEntry(entry){
     try {
       localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
     } catch(e) {}
+    return optimisticItem;
   } catch(err) {
     // Rollback optimistic state
     entries = entries.filter(e => e._id !== tempId);
@@ -1103,7 +1150,7 @@ async function updateEntry(id, entry){
     }
   } else {
     try {
-      localStorage.setItem('pockettrack_entries_cache', JSON.stringify(entries));
+      localStorage.setItem('pockettrack_entries_cache_guest', JSON.stringify(entries));
     } catch(e) {}
   }
 }
@@ -1267,6 +1314,10 @@ function deleteEntry(id){
         try {
           localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
         } catch(e) {}
+      } else {
+        try {
+          localStorage.setItem('pockettrack_entries_cache_guest', JSON.stringify(entries));
+        } catch(e) {}
       }
       updateHeaderStats();
       renderEntries();
@@ -1329,7 +1380,22 @@ function renderEntries(){
       `;
       return;
     }
-    el.innerHTML=`<p class="empty">${TT('no_entries_range')}</p>`;
+    const hasFilter = from || to;
+    if (hasFilter) {
+      el.innerHTML=`<p class="empty">${TT('no_entries_range')}</p>`;
+    } else {
+      const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+      el.innerHTML = `
+        <div class="empty-state-card" style="text-align:center;padding:44px 16px;color:var(--text-faint);background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:20px;margin-top:12px;">
+          <div style="font-size:36px;margin-bottom:10px;">💸</div>
+          <h4 style="margin:0 0 6px;color:var(--text);font-size:16px;font-weight:600;">${isHi ? 'कोई लेनदेन नहीं मिला' : 'No transactions yet'}</h4>
+          <p style="margin:0 0 16px;font-size:13px;line-height:1.4;max-width:280px;margin-left:auto;margin-right:auto;">${isHi ? 'अपना पहला खर्च या आय जोड़ें और अपनी बैलेंस शीट बनते देखें।' : 'Log your first chai, grocery, or salary to start tracking your cash flow.'}</p>
+          <button class="btn primary" onclick="openQuickComposer('expense')" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;font-size:13px;border-radius:12px;">
+            <i class="ti ti-plus"></i> ${isHi ? 'पहला खर्च जोड़ें' : 'Add your first expense'}
+          </button>
+        </div>
+      `;
+    }
     return;
   }
 

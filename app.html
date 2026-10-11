@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>PocketTrack — Simple Expense Tracker</title>
-<meta name="description" content="Track your daily income and expenses, see spending reports, and export PDFs — synced securely to the cloud."/>
+<title>PocketTrack — Smart Expense &amp; Money Tracker</title>
+<meta name="description" content="Personal expense and budget tracker with 50/30/20 envelopes, multi-wallet ledger, and financial insights — private, local-first, with encrypted cloud sync."/>
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com https://cdn.jsdelivr.net https://*.firebaseio.com https://*.firebaseapp.com; object-src 'none'; base-uri 'self';"/>
 <link rel="manifest" href="/PocketTrack-Combined/manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
@@ -168,7 +168,13 @@
       <span data-i18n="btn_google">Continue with Google</span>
     </button>
 
-    <p class="auth-footer-note" data-i18n="auth_footer_note">Your data is stored securely in the cloud and synced across your devices.</p>
+    <div style="margin-top:12px;text-align:center;">
+      <button type="button" class="btn secondary" id="auth-guest-btn" onclick="continueAsGuest()" style="width:100%;font-size:13px;padding:11px 14px;border:1px dashed var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;cursor:pointer;">
+        <span>🔒</span> <span data-i18n="btn_continue_guest">Continue as Guest (Offline Mode) →</span>
+      </button>
+    </div>
+
+    <p class="auth-footer-note" data-i18n="auth_footer_note">Privacy-first. Guest mode saves all data locally on your device.</p>
   </div>
 </div>
 
@@ -227,54 +233,8 @@
       </button>
     </div>
 
-    <!-- Dual Floating Ticker Bar between Personal Wallet and All Wallets (Paytm style) -->
-    <div class="hub-ticker-wrapper" id="hub-floating-ticker">
-      <!-- Row 1: Right to Left motion -->
-      <div class="hub-ticker-row">
-        <div class="hub-ticker-track scroll-left">
-          <button type="button" class="hub-ticker-pill" onclick="triggerReceiptScanner()"><span>📷</span> Smart Receipt OCR</button>
-          <button type="button" class="hub-ticker-pill" onclick="openEnvelopesModal()"><span>✉️</span> 50/30/20 Envelopes</button>
-          <button type="button" class="hub-ticker-pill" onclick="openDailyBurnModal()"><span>⚡</span> Save-to-Spend Radar</button>
-          <button type="button" class="hub-ticker-pill" onclick="openFinancialDnaModal()"><span>🧬</span> Invisible Leaker DNA</button>
-          <button type="button" class="hub-ticker-pill" onclick="openGoalPlannerModal()"><span>🎯</span> Emergency Fund &amp; SIP</button>
-          <button type="button" class="hub-ticker-pill" onclick="openWalletManagerModal()"><span>💳</span> Multi-Wallets &amp; Accounts</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('ledger')"><span>📑</span> Ledger Accounts (P2P)</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('events')"><span>👥</span> Splitwise Spaces</button>
-          <!-- Duplicate for seamless infinite loop -->
-          <button type="button" class="hub-ticker-pill" onclick="triggerReceiptScanner()"><span>📷</span> Smart Receipt OCR</button>
-          <button type="button" class="hub-ticker-pill" onclick="openEnvelopesModal()"><span>✉️</span> 50/30/20 Envelopes</button>
-          <button type="button" class="hub-ticker-pill" onclick="openDailyBurnModal()"><span>⚡</span> Save-to-Spend Radar</button>
-          <button type="button" class="hub-ticker-pill" onclick="openFinancialDnaModal()"><span>🧬</span> Invisible Leaker DNA</button>
-          <button type="button" class="hub-ticker-pill" onclick="openGoalPlannerModal()"><span>🎯</span> Emergency Fund &amp; SIP</button>
-          <button type="button" class="hub-ticker-pill" onclick="openWalletManagerModal()"><span>💳</span> Multi-Wallets &amp; Accounts</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('ledger')"><span>📑</span> Ledger Accounts (P2P)</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('events')"><span>👥</span> Splitwise Spaces</button>
-        </div>
-      </div>
-
-      <!-- Row 2: Left to Right motion -->
-      <div class="hub-ticker-row">
-        <div class="hub-ticker-track scroll-right">
-          <button type="button" class="hub-ticker-pill" onclick="openFireRunwayModal()"><span>🔥</span> FIRE &amp; Runway Horizon</button>
-          <button type="button" class="hub-ticker-pill" onclick="openWealthSimulatorModal()"><span>📈</span> Wealth &amp; SIP Simulator</button>
-          <button type="button" class="hub-ticker-pill" onclick="openDebtPayoffModal()"><span>🎯</span> Debt Payoff Strategist</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('upi')"><span>⚡</span> Smart UPI Logger</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('pro')"><span>👑</span> Pro &amp; Luxury Themes</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('rewards')"><span>🏆</span> Rewards &amp; Badges</button>
-          <button type="button" class="hub-ticker-pill" onclick="toggleFinnyChat()"><span>🤖</span> Finny AI Advisor</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('language')"><span>🌐</span> Multi-Language</button>
-          <!-- Duplicate for seamless infinite loop -->
-          <button type="button" class="hub-ticker-pill" onclick="openFireRunwayModal()"><span>🔥</span> FIRE &amp; Runway Horizon</button>
-          <button type="button" class="hub-ticker-pill" onclick="openWealthSimulatorModal()"><span>📈</span> Wealth &amp; SIP Simulator</button>
-          <button type="button" class="hub-ticker-pill" onclick="openDebtPayoffModal()"><span>🎯</span> Debt Payoff Strategist</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('upi')"><span>⚡</span> Smart UPI Logger</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('pro')"><span>👑</span> Pro &amp; Luxury Themes</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('rewards')"><span>🏆</span> Rewards &amp; Badges</button>
-          <button type="button" class="hub-ticker-pill" onclick="toggleFinnyChat()"><span>🤖</span> Finny AI Advisor</button>
-          <button type="button" class="hub-ticker-pill" onclick="selectHubTool('language')"><span>🌐</span> Multi-Language</button>
-        </div>
-      </div>
-    </div>
+    <!-- Clean above-the-fold layout: Command Hub tools accessible via bottom Hub tab -->
+    <div id="hub-floating-ticker" style="display:none;" aria-hidden="true"></div>
 
     <!-- Wallet / Account Switcher Bar -->
     <div class="wallet-switcher-bar" id="wallet-switcher-bar">

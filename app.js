@@ -132,6 +132,7 @@ const TRANSLATIONS = {
   btn_signup:{en:'Sign up',hi:'साइन अप करें'},
   lbl_or:{en:'or',hi:'या'},
   btn_google:{en:'Continue with Google',hi:'Google से जारी रखें'},
+  btn_continue_guest:{en:'Continue as Guest (Offline Mode) →',hi:'अतिथि के रूप में जारी रखें (ऑफ़लाइन मोड) →'},
   btn_phone:{en:'Continue with phone',hi:'फोन से जारी रखें'},
   phone_title:{en:'Sign in with phone',hi:'फोन से साइन इन करें'},
   lbl_phone:{en:'Phone number',hi:'फोन नंबर'},
@@ -380,6 +381,14 @@ const CAT_COLORS = {food:'#4ade80',travel:'#60a5fa',friends:'#ffb84d',home:'#ff7
 window.CAT_COLORS = CAT_COLORS;
 var entries = (function() {
   try {
+    const isGuest = localStorage.getItem('pockettrack_guest_mode') === 'true';
+    if (isGuest) {
+      const guestCached = localStorage.getItem('pockettrack_entries_cache_guest');
+      if (guestCached) {
+        const parsed = JSON.parse(guestCached);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    }
     const cached = localStorage.getItem('pockettrack_entries_cache');
     if (cached) {
       const parsed = JSON.parse(cached);
