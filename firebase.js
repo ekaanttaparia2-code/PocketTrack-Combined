@@ -16,9 +16,13 @@ const firebaseConfig = (window.APP_CONFIG && window.APP_CONFIG.apiKey)
   ? window.APP_CONFIG
   : defaultFirebaseConfig;
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+if (!firebase.apps || !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+var auth = firebase.auth();
+var db = firebase.firestore();
+window.auth = auth;
+window.db = db;
 
 // True offline-first: cache all synced data to IndexedDB and let the SDK queue
 // writes made while offline, persisting the queue across app restarts (not just

@@ -1,4 +1,4 @@
-const CACHE = 'pockettrack-v20-smooth';
+const CACHE = 'pockettrack-v22-authready';
 const SHELL = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const SHELL = [
   './icon-512.png',
   './icon-maskable-192.png',
   './icon-maskable-512.png',
+  './config.js',
   './firebase.js',
   './offline.js',
   './animations.js',

@@ -1,5 +1,21 @@
 /* Authentication flows and signed-in state handling. */
 
+function getAuth(){
+  if (typeof window !== 'undefined' && window.auth) return window.auth;
+  if (typeof auth !== 'undefined' && auth) return auth;
+  if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
+    try {
+      const a = firebase.auth();
+      if (typeof window !== 'undefined') window.auth = a;
+      return a;
+    } catch(e) {
+      return null;
+    }
+  }
+  return null;
+}
+window.getAuth = getAuth;
+
 function setAuthButtonsLoading(isLoading){
   const loginBtn=document.getElementById('auth-login-btn');
   const signupBtn=document.getElementById('auth-signup-btn');
@@ -69,12 +85,17 @@ async function authAction(mode){
       return;
     }
   }
+  const authInstance = getAuth();
+  if(!authInstance){
+    showAuthError(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'प्रमाणीकरण सेवा उपलब्ध नहीं है।' : 'Authentication service is unavailable. Please reload.');
+    return;
+  }
   window._isAuthActionRunning = true;
   setAuthButtonsLoading(true);
   try {
     const action = mode==='login'
-      ? auth.signInWithEmailAndPassword(email,pass)
-      : auth.createUserWithEmailAndPassword(email,pass);
+      ? authInstance.signInWithEmailAndPassword(email,pass)
+      : authInstance.createUserWithEmailAndPassword(email,pass);
     const cred = await action;
     if(mode==='signup' && cred && cred.user && !cred.user.emailVerified){
       cred.user.sendEmailVerification().catch(e => console.warn('[Auth] Verification email delivery failed:', e && e.message ? e.message : e));
@@ -94,7 +115,12 @@ function handleForgotPassword(){
     showAuthError(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'पासवर्ड रीसेट लिंक पाने के लिए पहले अपना ईमेल डालें।' : 'Enter your email above first to get a reset link.');
     return;
   }
-  auth.sendPasswordResetEmail(email).then(()=>{
+  const authInstance = getAuth();
+  if(!authInstance){
+    showAuthError('Authentication service is unavailable.');
+    return;
+  }
+  authInstance.sendPasswordResetEmail(email).then(()=>{
     toast(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दिया गया है' : 'Password reset link sent to your email', 'success');
   }).catch(err=>{
     showAuthError(err.message);
@@ -116,7 +142,8 @@ function signInWithGoogle(){
     btn.innerHTML='<span class="mini-spinner"></span> ' + (typeof currentLang !== 'undefined' && currentLang === 'hi' ? 'कनेक्ट हो रहा है...' : 'Connecting...');
   }
   
-  if (typeof firebase === 'undefined' || typeof auth === 'undefined') {
+  const authInstance = getAuth();
+  if (!authInstance || typeof firebase === 'undefined' || !firebase.auth) {
     showAuthError(typeof currentLang !== 'undefined' && currentLang === 'hi' 
       ? 'Firebase उपलब्ध नहीं है। कृपया इंटरनेट कनेक्शन जांचें।' 
       : 'Firebase Authentication is unavailable. Please check your internet connection.');
@@ -134,13 +161,13 @@ function signInWithGoogle(){
   
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
-    auth.signInWithRedirect(provider).catch(err => {
+    authInstance.signInWithRedirect(provider).catch(err => {
       showAuthError(err.message || 'Google Sign-in failed. Please try email login.');
     });
     return; // Page will redirect
   }
 
-  auth.signInWithPopup(provider).then(cred=>{
+  authInstance.signInWithPopup(provider).then(cred=>{
     hideAuthError();
   }).catch(err=>{
     if(err.code==='auth/popup-closed-by-user' || err.code==='auth/cancelled-popup-request'){
@@ -152,7 +179,7 @@ function signInWithGoogle(){
       showAuthError(typeof currentLang !== 'undefined' && currentLang === 'hi'
         ? 'पॉपअप विंडो ब्लॉक हो गई। Google साइन-इन रीडायरेक्ट के ज़रिए खोला जा रहा है...'
         : 'Sign-in popup was blocked by your browser. Redirecting to Google...');
-      auth.signInWithRedirect(provider).catch(redirErr=>{
+      authInstance.signInWithRedirect(provider).catch(redirErr=>{
         showAuthError(redirErr.message || 'Google Sign-in failed. Please try email login.');
       });
       return;
@@ -219,7 +246,8 @@ function logOut(){
     if(typeof resetLedgerLocal==='function') resetLedgerLocal();
     if(typeof resetRecurringLocal==='function') resetRecurringLocal();
     purgeUserLocalStorage(uidToPurge);
-    auth.signOut();
+    const authObj = getAuth();
+    if(authObj) authObj.signOut();
   });
 }
 
@@ -235,9 +263,10 @@ function updateBottomBarVisibility(){
 }
 window.updateBottomBarVisibility = updateBottomBarVisibility;
 
-if (typeof auth !== 'undefined') {
-  if (typeof auth.getRedirectResult === 'function') {
-    auth.getRedirectResult().catch(err => {
+const authInit = getAuth();
+if (authInit) {
+  if (typeof authInit.getRedirectResult === 'function') {
+    authInit.getRedirectResult().catch(err => {
       if (err && err.code !== 'auth/popup-closed-by-user') {
         const errEl = document.getElementById('auth-error');
         if (errEl && err.message) {
@@ -248,7 +277,7 @@ if (typeof auth !== 'undefined') {
     });
   }
 
-  auth.onAuthStateChanged(user=>{
+  authInit.onAuthStateChanged(user=>{
   if(user){
     currentUser=user;
     if (typeof loadWallets === 'function') loadWallets();
