@@ -143,18 +143,22 @@ function signInWithGoogle(){
   auth.signInWithPopup(provider).then(cred=>{
     hideAuthError();
   }).catch(err=>{
-    console.warn('Google Sign-In notice:', err);
-    if(err.code==='auth/popup-blocked' || err.code==='auth/cancelled-popup-request' || err.code==='auth/popup-closed-by-user'){
+    if(err.code==='auth/popup-closed-by-user' || err.code==='auth/cancelled-popup-request'){
+      // User voluntarily closed or cancelled the popup
+      hideAuthError();
+      return;
+    }
+    if(err.code==='auth/popup-blocked'){
       showAuthError(typeof currentLang !== 'undefined' && currentLang === 'hi'
-        ? 'पॉपअप विंडो बंद हो गई। Google साइन-इन रीडायरेक्ट के ज़रिए खोला जा रहा है...'
-        : 'Sign-in popup was closed or blocked. Redirecting to Google...');
+        ? 'पॉपअप विंडो ब्लॉक हो गई। Google साइन-इन रीडायरेक्ट के ज़रिए खोला जा रहा है...'
+        : 'Sign-in popup was blocked by your browser. Redirecting to Google...');
       auth.signInWithRedirect(provider).catch(redirErr=>{
         showAuthError(redirErr.message || 'Google Sign-in failed. Please try email login.');
       });
       return;
     }
     if (err.code === 'auth/unauthorized-domain') {
-      showAuthError('This domain is not authorized in Firebase OAuth. Add it in Firebase Console -> Auth -> Settings.');
+      showAuthError('This domain is not authorized in Firebase OAuth. Please add it in Firebase Console -> Auth -> Settings -> Authorized Domains.');
     } else {
       showAuthError(err.message || 'Google Sign-in failed. Please try again.');
     }

@@ -2,12 +2,19 @@
    API credentials are injected at deploy-time via GitHub Actions (never stored in source).
    For local development: copy config.example.js → config.js and add your values. */
 
-// Guard: fail loudly if config was not injected rather than silently using a bad key
-if (!window.APP_CONFIG || !window.APP_CONFIG.apiKey) {
-  console.error('[PocketTrack] Firebase config missing. Copy config.example.js → config.js for local dev, or check GitHub Actions secrets for production.');
-}
+const defaultFirebaseConfig = {
+  apiKey:            "AIzaSyCxs1ltKht43N9JuwAIKymk0drlGsjxCvM",
+  authDomain:        "pockettrack-23776.firebaseapp.com",
+  projectId:         "pockettrack-23776",
+  storageBucket:     "pockettrack-23776.firebasestorage.app",
+  messagingSenderId: "376126656745",
+  appId:             "1:376126656745:web:58a906c7a272d058d6e078",
+  measurementId:     "G-89ZKVRGJ6R"
+};
 
-const firebaseConfig = window.APP_CONFIG || {};
+const firebaseConfig = (window.APP_CONFIG && window.APP_CONFIG.apiKey)
+  ? window.APP_CONFIG
+  : defaultFirebaseConfig;
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();

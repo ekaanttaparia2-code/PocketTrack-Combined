@@ -21,7 +21,6 @@ yarn-error.log*
 # Environment & Secrets
 .env
 .env.local
-config.js
 
 # Temporary / Scratch Files
 *.tmp
