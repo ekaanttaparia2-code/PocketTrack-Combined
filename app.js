@@ -1541,8 +1541,9 @@ function setTab(t){
       if(x===t){
         el.style.display='block';
         el.classList.remove('tab-enter');
-        void el.offsetWidth; // force reflow so the animation replays every time
-        el.classList.add('tab-enter');
+        requestAnimationFrame(()=>{
+          el.classList.add('tab-enter');
+        });
       } else {
         el.style.display='none';
       }

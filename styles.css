@@ -44,8 +44,8 @@
   --heading:'Space Grotesk',sans-serif;
   --body:'Inter',sans-serif;
   /* --- Motion --- */
-  --ease:cubic-bezier(0.25,0.46,0.45,0.94);
-  --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  --ease:cubic-bezier(0.2,0,0,1);
+  --ease-spring:cubic-bezier(0.2,0.8,0.2,1);
   --ease-out:cubic-bezier(0.16,1,0.3,1);
   --dur:.22s;
   /* --- Surfaces: solid data panels vs glass chrome --- */
@@ -101,15 +101,15 @@ body::before{
 .blob1{width:420px;height:420px;background:linear-gradient(135deg,#8b5cf6,#22d3ee);top:-130px;left:-110px;animation:blobFloat 9s ease-in-out infinite alternate;}
 .blob2{width:340px;height:340px;background:linear-gradient(135deg,#ff7eb3,#8b5cf6);bottom:-90px;right:-90px;animation:blobFloat 11s ease-in-out infinite alternate-reverse;}
 .blob3{width:260px;height:260px;background:linear-gradient(135deg,#22d3ee,#8b5cf6);top:46%;left:52%;opacity:0.28;animation:blobFloat 13s ease-in-out infinite alternate;}
-@keyframes blobFloat{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.05)}100%{transform:translate(-20px,30px) scale(0.95)}}
-.tab-enter{animation:tabEnter 0.25s cubic-bezier(0.16,1,0.3,1) both;will-change:opacity,transform;}
+@keyframes blobFloat{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(15px,-10px,0) scale(1.02)}100%{transform:translate3d(-10px,15px,0) scale(0.98)}}
+.tab-enter{animation:tabEnter 0.2s cubic-bezier(0.16,1,0.3,1) both;will-change:opacity;}
 .pie-slice{cursor:pointer;transition:transform 0.15s ease}
 @keyframes hintPulse{
   0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,0.6)}
   50%{box-shadow:0 0 0 6px rgba(255,107,107,0)}
 }
 @keyframes tabEnter{
-  0%{opacity:0;transform:translateY(8px)}
+  0%{opacity:0;transform:translateY(3px)}
   100%{opacity:1;transform:translateY(0)}
 }
 
@@ -304,8 +304,8 @@ input[type=date]{color-scheme:dark}
 .btn.danger{color:var(--red);border-color:rgba(248,113,113,0.35)}
 .btn.danger:hover{background:var(--red-soft);border-color:var(--red)}
 .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.icon-btn:active{transform:scale(0.85);transition:transform 0.08s}
-.quick-chip:active{transform:scale(0.94);transition:transform 0.08s}
+.icon-btn:active{transform:scale(0.92);transition:transform 0.08s}
+.quick-chip:active{transform:scale(0.96);transition:transform 0.08s}
 .side-menu-item:active{transform:scale(0.97);transition:transform 0.08s}
 .upi-app-btn:active{transform:scale(0.95);transition:transform 0.08s}
 .lang-option-btn:active{transform:scale(0.97);transition:transform 0.08s}
@@ -529,14 +529,14 @@ footer{text-align:center;color:var(--text-faint);font-size:11.5px;margin-top:2re
 /* Stat pill hover glow */
 .stat-pill:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(155,107,255,0.3)}
 /* Entry row smooth hover */
-.entry-row{transition:background 0.2s ease,padding-left 0.2s ease}
-.entry-row:hover{background:rgba(255,255,255,0.04);padding-left:4px}
+.entry-row{transition:background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease}
+.entry-row:hover{background:rgba(255,255,255,0.045);transform:translateY(-1px)}
 /* Pie chart 3D tilt */
 .pie-container-3d{transform:perspective(800px) rotateX(15deg);transition:transform 0.3s ease}
 .pie-container-3d:hover{transform:perspective(800px) rotateX(5deg) scale(1.02)}
 /* Smooth page transitions */
-.tab-content{animation:fadeSlideUp 0.28s cubic-bezier(0.16,1,0.3,1) both;will-change:opacity,transform;}
-@keyframes fadeSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.tab-content{animation:fadeSlideUp 0.2s cubic-bezier(0.16,1,0.3,1) both;will-change:opacity;}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 /* Header glow on scroll effect */
 .shell{transition:padding-top 0.3s ease}
 
@@ -557,7 +557,7 @@ footer{text-align:center;color:var(--text-faint);font-size:11.5px;margin-top:2re
 @keyframes slideInUp{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 /* Settlement card hover */
 .settlement-card{transition:transform 0.2s ease,box-shadow 0.2s ease}
-.settlement-card:hover{transform:translateX(4px);box-shadow:0 4px 16px rgba(0,0,0,0.2)}
+.settlement-card:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.22)}
 /* Reward badge shimmer */
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 /* Smooth hamburger menu animation */
@@ -2384,15 +2384,15 @@ textarea{
 }
 
 .btn, .hero-action, .composer-chip, .bottom-tab {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease !important;
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s ease, background 0.18s ease !important;
 }
 
 .btn:active, .hero-action:active, .composer-chip:active {
-  transform: scale(0.94) !important;
+  transform: scale(0.97) !important;
 }
 
 .bottom-tab:active {
-  transform: scale(0.90) !important;
+  transform: scale(0.96) !important;
 }
 
 @keyframes balanceGlow {
