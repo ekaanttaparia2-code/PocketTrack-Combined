@@ -48,14 +48,44 @@ function recFreqLabel(f){
   return (currentLang==='hi'?hi:en)[f]||f;
 }
 
-function addRecInterval(dateStr, freq){
-  const p=dateStr.split('-').map(Number);
-  const dt=new Date(p[0],p[1]-1,p[2]);
-  if(freq==='daily') dt.setDate(dt.getDate()+1);
-  else if(freq==='weekly') dt.setDate(dt.getDate()+7);
-  else if(freq==='monthly'){ const day=dt.getDate(); dt.setMonth(dt.getMonth()+1); if(dt.getDate()!==day) dt.setDate(0); }
-  else if(freq==='yearly'){ const day=dt.getDate(), mo=dt.getMonth(); dt.setFullYear(dt.getFullYear()+1); if(dt.getMonth()!==mo||dt.getDate()!==day) dt.setDate(0); }
-  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+function addRecInterval(dateStr, freq, targetDay){
+  const p = dateStr.split('-').map(Number);
+  const year = p[0];
+  const month = p[1];
+  const day = p[2];
+  const tDay = (targetDay !== undefined && targetDay !== null && !isNaN(Number(targetDay)))
+    ? Number(targetDay)
+    : day;
+
+  if(freq === 'daily'){
+    const dt = new Date(year, month - 1, day);
+    dt.setDate(dt.getDate() + 1);
+    return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+  }
+  if(freq === 'weekly'){
+    const dt = new Date(year, month - 1, day);
+    dt.setDate(dt.getDate() + 7);
+    return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+  }
+  if(freq === 'monthly'){
+    let nextYear = year;
+    let nextMonth = month + 1;
+    if(nextMonth > 12){
+      nextMonth = 1;
+      nextYear++;
+    }
+    const daysInMonth = new Date(nextYear, nextMonth, 0).getDate();
+    const clampedDay = Math.min(tDay, daysInMonth);
+    return nextYear + '-' + String(nextMonth).padStart(2, '0') + '-' + String(clampedDay).padStart(2, '0');
+  }
+  if(freq === 'yearly'){
+    const nextYear = year + 1;
+    const targetMonth = month;
+    const daysInMonth = new Date(nextYear, targetMonth, 0).getDate();
+    const clampedDay = Math.min(tDay, daysInMonth);
+    return nextYear + '-' + String(targetMonth).padStart(2, '0') + '-' + String(clampedDay).padStart(2, '0');
+  }
+  return dateStr;
 }
 
 async function processRecurringDue(){
@@ -66,45 +96,73 @@ async function processRecurringDue(){
   
   for(const rule of due){
     _recProcessed.add(rule._id);
-    let next = rule.nextDate, posted = 0;
-    while(next <= today && posted < 24){
+    const targetDay = Number(rule.targetDay) || parseInt((rule.nextDate || '').split('-')[2], 10) || 1;
+    let next = rule.nextDate, createdCount = 0, skippedCount = 0;
+    while(next <= today && (createdCount + skippedCount) < 24){
       const deterministicId = 'rec_' + rule._id + '_' + next;
       try {
         const existing = await db.collection('users').doc(currentUser.uid)
           .collection('entries').doc(deterministicId).get();
         if (existing.exists) {
-          next = addRecInterval(next, rule.freq);
-          posted++;
+          next = addRecInterval(next, rule.freq, targetDay);
+          skippedCount++;
           continue;
         }
-          await db.collection('users').doc(currentUser.uid)
-            .collection('entries').doc(deterministicId).set({
-              type: rule.type === 'income' ? 'income' : 'expense',
-              cat: rule.type === 'income' ? 'income' : (rule.cat || 'other'),
-              label: rule.label,
-              note: '🔁 Recurring',
-              amt: Math.round((Number(rule.amt) || 0) * 100) / 100,
-              date: next,
-              walletId: rule.walletId || 'cash',
-              createdAt: Date.now(),
-              recurringRuleId: rule._id
-            });
-        posted++;
+        const newEntry = {
+          _id: deterministicId,
+          type: rule.type === 'income' ? 'income' : 'expense',
+          cat: rule.type === 'income' ? 'income' : (rule.cat || 'other'),
+          label: rule.label,
+          note: '🔁 Recurring',
+          amt: Math.round((Number(rule.amt) || 0) * 100) / 100,
+          date: next,
+          walletId: rule.walletId || 'cash',
+          createdAt: Date.now(),
+          recurringRuleId: rule._id
+        };
+        await db.collection('users').doc(currentUser.uid)
+          .collection('entries').doc(deterministicId).set(newEntry);
+        const entryList = (typeof entries !== 'undefined' && Array.isArray(entries)) ? entries : ((typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : null);
+        if (entryList && !entryList.some(e => e._id === deterministicId)) {
+          entryList.unshift(newEntry);
+          if (typeof window !== 'undefined') window.entries = entryList;
+        }
+        createdCount++;
       } catch(e) {
         console.warn('Recurring entry failed:', e.message);
-        if(posted === 0){ _recProcessed.delete(rule._id); break; }
+        if(createdCount === 0 && skippedCount === 0){ _recProcessed.delete(rule._id); break; }
         break;
       }
-      next = addRecInterval(next, rule.freq);
+      next = addRecInterval(next, rule.freq, targetDay);
     }
-    if(posted > 0){
+    if(createdCount > 0 || skippedCount > 0){
+      if(createdCount > 0){
+        const entryList = (typeof entries !== 'undefined' && Array.isArray(entries)) ? entries : ((typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : null);
+        if (typeof currentUser !== 'undefined' && currentUser && entryList) {
+          try {
+            localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entryList));
+          } catch(e) {}
+        }
+        if (typeof updateHeaderStats === 'function') updateHeaderStats();
+        if (typeof renderEntries === 'function') renderEntries();
+        if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+      }
       try {
+        const updatePayload = { nextDate: next };
+        if (!rule.targetDay && targetDay) {
+          updatePayload.targetDay = targetDay;
+        }
         await db.collection('users').doc(currentUser.uid)
-          .collection('recurring').doc(rule._id).update({nextDate: next});
-        toast((currentLang === 'hi' ? '🔁 आवर्ती दर्ज: ' : '🔁 Logged recurring: ') + rule.label, 'success');
-        if(typeof showLocalNotification === 'function') showLocalNotification('PocketTrack', (currentLang === 'hi' ? 'आवर्ती दर्ज: ' : 'Logged recurring: ') + rule.label);
+          .collection('recurring').doc(rule._id).update(updatePayload);
+        rule.nextDate = next;
+        if (createdCount > 0) {
+          toast((currentLang === 'hi' ? '🔁 आवर्ती दर्ज: ' : '🔁 Logged recurring: ') + rule.label, 'success');
+          if(typeof showLocalNotification === 'function') showLocalNotification('PocketTrack', (currentLang === 'hi' ? 'आवर्ती दर्ज: ' : 'Logged recurring: ') + rule.label);
+        }
       } catch(e) {
-        toast((currentLang === 'hi' ? '⚠️ एंट्री दर्ज हुई, लेकिन आवर्ती शेड्यूल अपडेट विफल: ' : '⚠️ Entry logged, but rule schedule update failed: ') + rule.label, 'error');
+        if (createdCount > 0) {
+          toast((currentLang === 'hi' ? '⚠️ एंट्री दर्ज हुई, लेकिन आवर्ती शेड्यूल अपडेट विफल: ' : '⚠️ Entry logged, but rule schedule update failed: ') + rule.label, 'error');
+        }
       }
     }
   }
@@ -292,7 +350,7 @@ function editRecurring(id){
   const r=recurringRules.find(x=>x._id===id);
   if(!r) return;
   _recEditingId=id;
-  showAddRecurringModal({label:r.label,amt:r.amt,type:r.type,cat:r.cat,freq:r.freq,nextDate:r.nextDate});
+  showAddRecurringModal({label:r.label,amt:r.amt,type:r.type,cat:r.cat,freq:r.freq,nextDate:r.nextDate,targetDay:r.targetDay,walletId:r.walletId});
 }
 
 function showAddRecurringModal(prefill){
@@ -350,12 +408,17 @@ async function saveRecurringRule(){
   const cat=type==='income' ? 'income' : document.getElementById('rec-cat').value;
   if(!label){ toast(currentLang==='hi'?'नाम लिखें':'Enter a name','error'); return; }
   if(!isFinite(amt)||amt<=0||(typeof isValidAmount==='function'&&!isValidAmount(amt))){ toast(currentLang==='hi'?'सही राशि डालें':'Enter a valid amount','error'); return; }
+  let targetDay = parseInt(startDate.split('-')[2], 10);
   try{
     if(_recEditingId){
       const editId=_recEditingId;
       _recEditingId=null;
+      const origRule = recurringRules.find(x => x._id === editId);
+      if (origRule && origRule.targetDay && origRule.nextDate === startDate) {
+        targetDay = origRule.targetDay;
+      }
       await db.collection('users').doc(currentUser.uid).collection('recurring').doc(editId).update({
-        type, cat, label, amt: Math.round(amt*100)/100, freq, walletId, nextDate: startDate
+        type, cat, label, amt: Math.round(amt*100)/100, freq, walletId, nextDate: startDate, targetDay
       });
       closeRecurringModal();
       toast(currentLang==='hi'?'✏️ नियम अपडेट हो गया':'✏️ Rule updated','success');
@@ -363,7 +426,7 @@ async function saveRecurringRule(){
     }
     await db.collection('users').doc(currentUser.uid).collection('recurring').add({
       type, cat, label, amt: Math.round(amt*100)/100, freq, walletId,
-      nextDate: startDate, active: true, createdAt: Date.now()
+      nextDate: startDate, targetDay, active: true, createdAt: Date.now()
     });
     closeRecurringModal();
     toast(currentLang==='hi'?'🔁 आवर्ती नियम जोड़ा गया':'🔁 Recurring rule added','success');

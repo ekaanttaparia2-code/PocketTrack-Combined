@@ -90,8 +90,13 @@ function renderHomeSnapshot(){
   if(!wrap)return;
   const list=mainEntries().slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,5);
   if(!list.length){
-    wrap.innerHTML='<div class="empty-mini"><i class="ti ti-sparkles"></i><span>'+(currentLang==='hi'?'अपनी पहली आय या खर्च से शुरुआत करें।':'Start with your first income or expense.')+'</span></div>';
-    if(insight)insight.textContent=currentLang==='hi'?'कुछ एंट्रीज़ के बाद PocketTrack यहां उपयोगी पैटर्न दिखाना शुरू करेगा।':'Once you have a few entries, PocketTrack will start surfacing useful patterns here.';
+    if (typeof isEntriesHydrating !== 'undefined' && isEntriesHydrating) {
+      wrap.innerHTML='<div class="skeleton-mini" style="padding:16px;text-align:center;color:var(--text-dim);font-size:13px;"><span style="display:inline-block;animation:pulse 1.5s infinite ease-in-out;">⏳ '+(typeof currentLang !== 'undefined' && currentLang==='hi'?'लेनदेन लोड हो रहे हैं...':'Hydrating transactions...')+'</span></div>';
+      if(insight)insight.textContent=(typeof currentLang !== 'undefined' && currentLang==='hi')?'डेटा सिंक हो रहा है...':'Syncing latest data...';
+      return;
+    }
+    wrap.innerHTML='<div class="empty-mini"><i class="ti ti-sparkles"></i><span>'+((typeof currentLang !== 'undefined' && currentLang==='hi')?'अपनी पहली आय या खर्च से शुरुआत करें।':'Start with your first income or expense.')+'</span></div>';
+    if(insight)insight.textContent=(typeof currentLang !== 'undefined' && currentLang==='hi')?'कुछ एंट्रीज़ के बाद PocketTrack यहां उपयोगी पैटर्न दिखाना शुरू करेगा।':'Once you have a few entries, PocketTrack will start surfacing useful patterns here.';
     return;
   }
   wrap.innerHTML=list.map(e=>{
@@ -761,6 +766,9 @@ window.openFinancialDnaModal = function() {
 };
 
 
+let isEntriesHydrating = true;
+if (typeof window !== 'undefined') window.isEntriesHydrating = true;
+
 function listenToEntries(){
   if(!currentUser) return;
   
@@ -769,6 +777,7 @@ function listenToEntries(){
   if (typeof window !== 'undefined') window.entries = entries;
 
   // 1. Instantly hydrate from local cache strictly scoped to current user
+  let hasHydratedFromCache = false;
   try {
     const userCache = localStorage.getItem('pockettrack_entries_cache_' + currentUser.uid);
     if (userCache) {
@@ -776,6 +785,9 @@ function listenToEntries(){
       if (Array.isArray(parsed) && parsed.length && (!entries || !entries.length)) {
         entries = parsed;
         if (typeof window !== 'undefined') window.entries = entries;
+        hasHydratedFromCache = true;
+        isEntriesHydrating = false;
+        if (typeof window !== 'undefined') window.isEntriesHydrating = false;
         renderEntries();
         renderReport();
         updateHeaderStats();
@@ -796,15 +808,26 @@ function listenToEntries(){
     }
   } catch(e){}
 
-  // 2. Real-time Firestore sync (Limited to last 90 days for performance)
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 90);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
+  if (!hasHydratedFromCache) {
+    isEntriesHydrating = true;
+    if (typeof window !== 'undefined') window.isEntriesHydrating = true;
+    renderEntries();
+    if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
+  }
 
+  // 2. Real-time Firestore sync (Bounded to 200 most recent entries for startup performance)
   unsubscribeEntries = db.collection('users').doc(currentUser.uid).collection('entries')
-    .where('date', '>=', cutoffStr)
+    .orderBy('date', 'desc')
+    .limit(200)
     .onSnapshot({includeMetadataChanges:true}, snap=>{
-      entries = snap.docs.map(d=>({...d.data(), _id:d.id})).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+      isEntriesHydrating = false;
+      if (typeof window !== 'undefined') window.isEntriesHydrating = false;
+      const snapDocs = snap.docs.map(d=>({...d.data(), _id:d.id}));
+      const snapMap = new Map(snapDocs.map(d => [d._id, d]));
+      const currentList = (typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : (Array.isArray(entries) ? entries : []);
+      const oldestSnapDate = snapDocs.length > 0 ? snapDocs[snapDocs.length - 1].date : null;
+      const olderEntries = currentList.filter(e => !snapMap.has(e._id) && oldestSnapDate && e.date <= oldestSnapDate);
+      entries = snapDocs.concat(olderEntries).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
       if (typeof window !== 'undefined') window.entries = entries;
       try {
         const cachedSlice = entries.slice(0, 200); // Cap cache size
@@ -836,11 +859,44 @@ function listenToEntries(){
       renderQuickAdd();
       if(typeof checkEntryLimit !== 'undefined') checkEntryLimit();
     }, err=>{
+      isEntriesHydrating = false;
+      if (typeof window !== 'undefined') window.isEntriesHydrating = false;
+      renderEntries();
       console.error(err);
       const sEl = document.getElementById('sync-status');
       if (sEl) sEl.textContent = (typeof currentLang!=='undefined' && currentLang==='hi') ? 'सिंक त्रुटि — कनेक्शन जांचें' : 'Sync error — check connection';
     });
 }
+
+// Bounded pagination helper to load older historical batches beyond the initial 200
+async function loadOlderEntries(batchSize = 100) {
+  if (typeof currentUser === 'undefined' || !currentUser || typeof db === 'undefined' || !db) return [];
+  const currentEntries = (typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : (Array.isArray(entries) ? entries : []);
+  const oldestDate = currentEntries.length ? currentEntries[currentEntries.length - 1].date : null;
+
+  let q = db.collection('users').doc(currentUser.uid).collection('entries').orderBy('date', 'desc');
+  if (oldestDate) {
+    q = (typeof q.startAfter === 'function') ? q.startAfter(oldestDate) : q.where('date', '<', oldestDate);
+  }
+  const snap = await q.limit(batchSize).get();
+  if (!snap || !snap.docs || snap.empty) return [];
+  const older = snap.docs.map(d => ({ ...(typeof d.data === 'function' ? d.data() : d), _id: d.id }));
+
+  const existingIds = new Set(currentEntries.map(e => e._id || e.id));
+  const newItems = older.filter(e => !existingIds.has(e._id || e.id));
+  if (newItems.length > 0) {
+    entries = currentEntries.concat(newItems).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    if (typeof window !== 'undefined') window.entries = entries;
+    if (typeof renderEntries === 'function') {
+      try { renderEntries(); } catch(e) {}
+    }
+    if (typeof updateHeaderStats === 'function') {
+      try { updateHeaderStats(); } catch(e) {}
+    }
+  }
+  return newItems;
+}
+window.loadOlderEntries = loadOlderEntries;
 
 // --- Quick-add: surfaces your 4 most-repeated exact entries as one-tap chips ---
 function renderQuickAdd(){
@@ -1207,6 +1263,11 @@ function deleteEntry(id){
         entries = entries.filter(e => e._id !== id);
         if (typeof window !== 'undefined') window.entries = entries;
       }
+      if (typeof currentUser !== 'undefined' && currentUser) {
+        try {
+          localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+        } catch(e) {}
+      }
       updateHeaderStats();
       renderEntries();
       if (typeof renderHomeSnapshot === 'function') renderHomeSnapshot();
@@ -1242,9 +1303,35 @@ function renderEntries(){
   const sortMode=document.getElementById('entry-sort')?document.getElementById('entry-sort').value:'date-desc';
   let list=mainEntries().map(e=>({...e}));
   if(from)list=list.filter(e=>e.date>=from);
-  if(to)list=list.filter(e=>e.date<=to);
   const el=document.getElementById('entries-list');
-  if(!list.length){el.innerHTML=`<p class="empty">${TT('no_entries_range')}</p>`;return;}
+  if(!el) return;
+  if(!list.length){
+    if (typeof isEntriesHydrating !== 'undefined' && isEntriesHydrating) {
+      el.innerHTML = `
+        <div class="skeleton-loader-list" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;">
+          <div class="skeleton-card" style="padding:16px;background:rgba(255,255,255,0.04);border-radius:16px;display:flex;align-items:center;gap:12px;animation:pulse 1.5s infinite ease-in-out;">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);"></div>
+            <div style="flex:1;">
+              <div style="height:12px;width:40%;background:rgba(255,255,255,0.08);border-radius:6px;margin-bottom:6px;"></div>
+              <div style="height:10px;width:25%;background:rgba(255,255,255,0.05);border-radius:4px;"></div>
+            </div>
+            <div style="height:14px;width:20%;background:rgba(255,255,255,0.08);border-radius:6px;"></div>
+          </div>
+          <div class="skeleton-card" style="padding:16px;background:rgba(255,255,255,0.04);border-radius:16px;display:flex;align-items:center;gap:12px;animation:pulse 1.5s infinite ease-in-out;">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);"></div>
+            <div style="flex:1;">
+              <div style="height:12px;width:50%;background:rgba(255,255,255,0.08);border-radius:6px;margin-bottom:6px;"></div>
+              <div style="height:10px;width:30%;background:rgba(255,255,255,0.05);border-radius:4px;"></div>
+            </div>
+            <div style="height:14px;width:20%;background:rgba(255,255,255,0.08);border-radius:6px;"></div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    el.innerHTML=`<p class="empty">${TT('no_entries_range')}</p>`;
+    return;
+  }
 
   let dateKeys = [];
   const byDate = {};

@@ -304,7 +304,7 @@ function renderOverlay() {
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const d = wrappedData;
     const mName = monthNames[d.month - 1];
-    const topCatName = d.topCategory ? capitalize(d.topCategory.customCat || d.topCategory.cat) : 'N/A';
+    const topCatName = d.topCategory ? escapeHTML(capitalize(d.topCategory.customCat || d.topCategory.cat)) : 'N/A';
     
     let html = `
         <button class="wrapped-close" onclick="closeWrapped()">✕</button>
@@ -353,7 +353,7 @@ function renderOverlay() {
     d.catArray.forEach(c => {
         const pct = Math.round((c.amt / d.totalExpAmt) * 100);
         const color = colorsMap[c.cat] || colorsMap.other;
-        const name = capitalize(c.customCat || c.cat);
+        const name = escapeHTML(capitalize(c.customCat || c.cat));
         html += `
             <div class="legend-item">
                 <div><span class="legend-dot" style="background-color: ${color};"></span>${name}</div>

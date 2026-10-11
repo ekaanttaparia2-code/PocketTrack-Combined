@@ -163,6 +163,26 @@ window.openGoalPlannerModal = function() {
         <input type="range" id="goal-monthly-slider" min="500" max="25000" step="500" value="${goal.monthly}" style="width:100%;" oninput="updateGoalCalculation()"/>
       </div>
 
+      <div class="goal-slider-group">
+        <div class="goal-slider-label">
+          <span>Dedicated Wallet (Optional)</span>
+        </div>
+        <select id="goal-wallet-select" style="width:100%;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:13px;outline:none;">
+          <option value="">-- Dedicated Contributions & Goal Tags --</option>
+          ${(() => {
+            const wList = (typeof window !== 'undefined' && window.userWallets && Array.isArray(window.userWallets)) ? window.userWallets : ((typeof userWallets !== 'undefined' && Array.isArray(userWallets)) ? userWallets : []);
+            return wList.map(w => `<option value="${w.id}" ${goal.walletId === w.id ? 'selected' : ''}>${w.icon || '👛'} ${escapeHTML(w.name)}</option>`).join('');
+          })()}
+        </select>
+      </div>
+
+      <div class="goal-slider-group">
+        <div class="goal-slider-label">
+          <span>Allocated Initial Savings (₹)</span>
+        </div>
+        <input type="number" id="goal-allocated-input" value="${Number(goal.allocatedAmount) || 0}" min="0" placeholder="0" style="width:100%;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:14px;box-sizing:border-box;outline:none;">
+      </div>
+
       <div class="goal-stat-row">
         <div class="goal-stat-box">
           <div style="font-size:11.5px;color:var(--text-dim,#94a3b8);">Time to Goal</div>
@@ -199,9 +219,10 @@ window.updateGoalCalculation = function() {
 
   const numerator = Math.log(1 + (target * r) / (monthly * (1 + r)));
   const denominator = Math.log(1 + r);
-  const months = Math.ceil(numerator / denominator);
+  const months = Math.max(1, Math.ceil(numerator / denominator));
   const totalInvested = monthly * months;
-  const wealthGained = Math.max(0, target - totalInvested);
+  const fv = (monthly * ((Math.pow(1 + r, months) - 1) / r)) * (1 + r);
+  const wealthGained = Math.max(0, fv - totalInvested);
 
   const monthsEl = document.getElementById('goal-months-val');
   const growthEl = document.getElementById('goal-growth-val');
@@ -220,8 +241,10 @@ window.submitSaveGoal = function() {
   const name = document.getElementById('goal-input-name')?.value.trim() || 'Savings Goal';
   const target = parseFloat(document.getElementById('goal-target-slider')?.value) || 50000;
   const monthly = parseFloat(document.getElementById('goal-monthly-slider')?.value) || 2000;
+  const walletId = document.getElementById('goal-wallet-select')?.value || '';
+  const allocatedAmount = Math.max(0, parseFloat(document.getElementById('goal-allocated-input')?.value) || 0);
 
-  saveActiveGoal({ name, target, monthly, rate: 12 });
+  saveActiveGoal({ name, target, monthly, rate: 12, walletId, allocatedAmount });
   window.closeGoalPlannerModal();
   renderActiveGoalCard();
   if (typeof toast === 'function') toast(`Saved "${name}" goal to Home!`, 'success');
@@ -234,13 +257,38 @@ window.renderActiveGoalCard = function() {
   const goal = getSavedGoal();
   const entries = (typeof mainEntries === 'function') ? mainEntries() : [];
   
-  let totalInc = 0, totalExp = 0;
+  let currentSaved = 0;
+  if (goal.walletId && typeof computeWalletBalances === 'function') {
+    const balances = computeWalletBalances();
+    if (balances && balances[goal.walletId] !== undefined) {
+      currentSaved = Math.max(0, balances[goal.walletId]);
+    }
+  }
+
+  const goalKeyword = (goal.name || '').trim().toLowerCase();
+  let dedicatedEntriesTotal = 0;
   entries.forEach(e => {
     if (e.transferGroupId) return;
-    if (e.type === 'income') totalInc += (parseFloat(e.amt) || 0);
-    else if (e.type === 'expense' && !e.transferGroupId) totalExp += (parseFloat(e.amt) || 0);
+    const isCatMatch = (e.cat === 'savings' || e.cat === 'investments');
+    const note = (e.note || '').toLowerCase();
+    const label = (e.label || '').toLowerCase();
+    const isNameMatch = goalKeyword && (note.includes(goalKeyword) || label.includes(goalKeyword));
+
+    if (isNameMatch) {
+      dedicatedEntriesTotal += (parseFloat(e.amt) || 0);
+    } else if (isCatMatch && !goal.walletId && (goalKeyword.includes('invest') || goalKeyword.includes('saving') || goalKeyword.includes('fund') || goalKeyword.includes('emergency'))) {
+      if (e.type === 'expense') dedicatedEntriesTotal += (parseFloat(e.amt) || 0);
+    }
   });
-  const currentSaved = Math.max(0, totalInc - totalExp);
+
+  if (goal.allocatedAmount) {
+    currentSaved += (parseFloat(goal.allocatedAmount) || 0);
+  }
+  if (dedicatedEntriesTotal > 0 && !goal.walletId) {
+    currentSaved += dedicatedEntriesTotal;
+  }
+
+  currentSaved = Math.max(0, Math.round(currentSaved * 100) / 100);
   const progressPct = Math.min(100, Math.round((currentSaved / goal.target) * 100));
 
   slot.innerHTML = `

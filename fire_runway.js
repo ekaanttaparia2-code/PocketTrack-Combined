@@ -18,18 +18,56 @@
     else if (Array.isArray(window.entries)) entries = window.entries;
     if (!Array.isArray(entries)) entries = [];
 
-    // Calculate total liquid balance
+    function isInvestmentOrSavings(cat) {
+      if (!cat) return false;
+      var c = String(cat).toLowerCase().trim();
+      return /^(savings|investment|investments|mutual fund|sip|stocks|equity|gold|silver|ppf|nps|fd|rd)$/i.test(c);
+    }
+
+    // Calculate total liquid balance (excluding investment transfers from living burn)
     var incomeTotal = entries.filter(function(e) { return e.type === 'income' && !e.transferGroupId; }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
-    var expenseTotal = entries.filter(function(e) { return e.type === 'expense' && !e.transferGroupId; }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
-    var liquidAssets = Math.max(0, incomeTotal - expenseTotal);
+    var livingExpensesTotal = entries.filter(function(e) {
+      return e.type === 'expense' && !e.transferGroupId && !isInvestmentOrSavings(e.cat || e.category);
+    }).reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
+    var liquidAssets = Math.max(0, incomeTotal - livingExpensesTotal);
 
-    // Calculate monthly burn (current month or 30-day average)
-    var curMonth = new Date().toISOString().slice(0, 7);
-    var curMonthExpenses = entries
-      .filter(function(e) { return e.type === 'expense' && String(e.date || '').slice(0, 7) === curMonth && !e.transferGroupId; })
-      .reduce(function(s, e) { return s + (Number(e.amt || e.amount) || 0); }, 0);
+    // Calculate monthly burn using historical monthly average or rolling 30-day window
+    var now = new Date();
+    var curMonth = now.toISOString().slice(0, 7);
+    var thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    var todayStr = now.toISOString().slice(0, 10);
 
-    var monthlyBurn = curMonthExpenses > 0 ? curMonthExpenses : 25000;
+    var monthMap = {};
+    var rolling30Expenses = 0;
+
+    entries.forEach(function(e) {
+      if (e.type !== 'expense' || e.transferGroupId || !e.date) return;
+      if (isInvestmentOrSavings(e.cat || e.category)) return;
+      var d = String(e.date).slice(0, 10);
+      var amt = Number(e.amt || e.amount) || 0;
+      if (amt <= 0) return;
+
+      var ym = d.slice(0, 7);
+      monthMap[ym] = (monthMap[ym] || 0) + amt;
+
+      if (d >= thirtyDaysAgo && d <= todayStr) {
+        rolling30Expenses += amt;
+      }
+    });
+
+    var pastMonths = Object.keys(monthMap).filter(function(m) { return m < curMonth; });
+    var monthlyBurn = 25000;
+
+    if (pastMonths.length > 0) {
+      // Historical average of completed prior months
+      var pastTotal = pastMonths.reduce(function(s, m) { return s + monthMap[m]; }, 0);
+      monthlyBurn = Math.round(pastTotal / pastMonths.length);
+    } else if (rolling30Expenses > 0) {
+      // First month user: use 30-day rolling window with default floor for unrepresentative low spending
+      monthlyBurn = Math.max(Math.round(rolling30Expenses), 25000);
+    }
+    if (monthlyBurn <= 0) monthlyBurn = 25000;
+
     var runwayMonths = monthlyBurn > 0 ? Math.round((liquidAssets / monthlyBurn) * 10) / 10 : 999;
 
     var status = 'critical';
@@ -143,7 +181,7 @@
           '</div>' +
           '<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;text-align:center;">' +
             '<div style="background:rgba(255,255,255,0.04);border-radius:14px;padding:10px 6px;">' +
-              '<span style="display:block;font-size:11px;color:var(--text-dim);font-weight:600;">Lean FI (18x)</span>' +
+              '<span style="display:block;font-size:11px;color:var(--text-dim);font-weight:600;">Lean FI (18.75x)</span>' +
               '<strong style="display:block;font-size:14px;color:#38bdf8;margin-top:4px;">₹' + Math.round(data.leanFi / 100000) + 'L</strong>' +
               '<span style="font-size:9.5px;color:var(--text-dim);">' + (isHi ? 'बुनियादी ज़रूरतें' : 'Essentials only') + '</span>' +
             '</div>' +
@@ -153,7 +191,7 @@
               '<span style="font-size:9.5px;color:#fbbf24;">' + (isHi ? 'पूर्ण आज़ादी' : 'True Freedom') + '</span>' +
             '</div>' +
             '<div style="background:rgba(255,255,255,0.04);border-radius:14px;padding:10px 6px;">' +
-              '<span style="display:block;font-size:11px;color:var(--text-dim);font-weight:600;">Fat FI (35x)</span>' +
+              '<span style="display:block;font-size:11px;color:var(--text-dim);font-weight:600;">Fat FI (37.5x)</span>' +
               '<strong style="display:block;font-size:14px;color:#ec4899;margin-top:4px;">₹' + Math.round(data.fatFi / 100000) + 'L</strong>' +
               '<span style="font-size:9.5px;color:var(--text-dim);">' + (isHi ? 'आलीशान जीवन' : 'Luxury Life') + '</span>' +
             '</div>' +

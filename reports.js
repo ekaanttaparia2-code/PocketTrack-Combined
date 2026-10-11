@@ -62,7 +62,7 @@ window.getReportEntries = getReportEntries;
 
 function getPeriodAccountingData(){
   const p = (typeof window !== 'undefined' && window.period) ? window.period : (typeof period !== 'undefined' ? period : 'week');
-  const base = (typeof mainEntries === 'function') ? mainEntries() : [];
+  const base = (typeof allRawMainEntries === 'function') ? allRawMainEntries() : ((typeof mainEntries === 'function') ? mainEntries() : (typeof window !== 'undefined' && Array.isArray(window.entries) ? window.entries : []));
   const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : (typeof activeWalletId !== 'undefined' ? activeWalletId : 'all');
 
   // 1. Initial wallet starting balance
@@ -85,24 +85,34 @@ function getPeriodAccountingData(){
     const day = now.getDay();
     const diff = now.getDate() - (day === 0 ? 6 : day - 1);
     const mon = new Date(now); mon.setDate(diff);
-    startDate = (typeof dateToStr === 'function') ? dateToStr(mon) : mon.toISOString().slice(0, 10);
+    startDate = (typeof dateToStr === 'function') ? dateToStr(mon) : ((window.PT && typeof window.PT.dateToStr === 'function') ? window.PT.dateToStr(mon) : mon.toISOString().slice(0, 10));
   } else if (p === 'month') {
     const y = now.getFullYear(), m = now.getMonth();
-    startDate = (typeof dateToStr === 'function') ? dateToStr(new Date(y, m, 1)) : new Date(y, m, 1).toISOString().slice(0, 10);
+    startDate = (typeof dateToStr === 'function') ? dateToStr(new Date(y, m, 1)) : ((window.PT && typeof window.PT.dateToStr === 'function') ? window.PT.dateToStr(new Date(y, m, 1)) : new Date(y, m, 1).toISOString().slice(0, 10));
   } else if (p === 'custom') {
     startDate = document.getElementById('rep-from')?.value || null;
   }
 
-  // 3. Transactions prior to startDate (excluding transfers)
+  // 3. Transactions prior to startDate (including transfers for specific wallet, excluding transfers for all wallets)
   let prevIncome = 0;
   let prevSpent = 0;
   if (startDate) {
     base.forEach(e => {
-      if (e.transferGroupId) return; // skip transfer legs
-      if (e.date && e.date < startDate) {
-        const amt = Number(e.amt) || 0;
-        if (e.type === 'income') prevIncome += amt;
-        else if (e.type === 'expense') prevSpent += amt;
+      const eWallet = (typeof resolveEntryWalletId === 'function') ? resolveEntryWalletId(e) : (e.walletId || 'cash');
+      if (activeW && activeW !== 'all') {
+        if (eWallet !== activeW) return;
+        if (e.date && e.date < startDate) {
+          const amt = Number(e.amt) || 0;
+          if (e.type === 'income') prevIncome += amt;
+          else if (e.type === 'expense') prevSpent += amt;
+        }
+      } else {
+        if (e.transferGroupId) return; // skip internal transfers for all wallets combined
+        if (e.date && e.date < startDate) {
+          const amt = Number(e.amt) || 0;
+          if (e.type === 'income') prevIncome += amt;
+          else if (e.type === 'expense') prevSpent += amt;
+        }
       }
     });
   }
@@ -269,7 +279,7 @@ function renderReport(){
     if (catBreakdownEl) {
       catBreakdownEl.innerHTML = Object.entries(cats).length ? Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,a])=>`
         <div class="cat-bar">
-          <span style="font-size:13px;min-width:110px;color:var(--text-dim)">${(typeof CAT_LABELS!=='undefined'&&CAT_LABELS[c])||c}</span>
+          <span style="font-size:13px;min-width:110px;color:var(--text-dim)">${escapeHTML((typeof CAT_LABELS!=='undefined'&&CAT_LABELS[c])||c)}</span>
           <div class="bar-track"><div class="bar-fill" style="width:${Math.round(a/maxCat*100)}%;background:${(typeof CAT_COLORS!=='undefined'&&CAT_COLORS[c])||'#9b95c2'}"></div></div>
           <span style="font-size:13px;font-weight:600;min-width:50px;text-align:right">₹${Number(a).toLocaleString('en-IN')}</span>
         </div>`).join('') : `<p class="empty">${typeof TT==='function'?TT('no_expenses'):'No expenses'}</p>`;
@@ -542,7 +552,7 @@ function hsT(k){ return (HS_TXT[k] && HS_TXT[k][currentLang]) || HS_TXT[k].en; }
 
 function computeHealthScore(){
   const list = getReportEntries();
-  const income = list.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const income = list.filter(e => e.type === 'income' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
   const expense = list.filter(e => e.type === 'expense' && !e.transferGroupId).reduce((s,e)=>s+e.amt,0);
 
   // 1. Savings rate → up to 45 pts

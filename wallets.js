@@ -98,9 +98,13 @@ const DEFAULT_WALLETS = [
   { id: 'card', name: 'Card', type: 'card', icon: '💳', initialBalance: 0, color: '#f43f5e', isDefault: true }
 ];
 
-let userWallets = [];
+window.PT = window.PT || {};
+
+let userWallets = (typeof window.userWallets !== 'undefined' && Array.isArray(window.userWallets)) ? window.userWallets : [];
 window.userWallets = userWallets;
-window.activeWalletId = 'all'; // 'all' or specific wallet id
+window.PT.userWallets = userWallets;
+window.activeWalletId = (typeof window.activeWalletId !== 'undefined') ? window.activeWalletId : 'all'; // 'all' or specific wallet id
+window.PT.activeWalletId = window.activeWalletId;
 let isCloudWalletsLoaded = false;
 
 function getWalletsStorageKey() {
@@ -120,17 +124,19 @@ window.resolveEntryWalletId = function(tx) {
   }
 
   // Match only if explicit custom wallet name was typed in label/note
-  if (typeof userWallets !== 'undefined' && Array.isArray(userWallets)) {
+  const wList = (typeof window.userWallets !== 'undefined' && Array.isArray(window.userWallets)) ? window.userWallets : (typeof userWallets !== 'undefined' && Array.isArray(userWallets) ? userWallets : []);
+  if (wList.length > 0) {
     const text = ((tx.label || '') + ' ' + (tx.note || '')).toLowerCase();
-    for (const w of userWallets) {
+    for (const w of wList) {
       if (w.id !== 'cash' && w.id !== 'bank' && w.id !== 'card') {
-        if (text.includes(w.name.toLowerCase())) return w.id;
+        if (w.name && text.includes(w.name.toLowerCase())) return w.id;
       }
     }
   }
 
   return 'cash';
 };
+window.PT.resolveEntryWalletId = window.resolveEntryWalletId;
 
 /**
  * Universal Wallet Badge Generator (Polymorphic: accepts entry object or walletId string)

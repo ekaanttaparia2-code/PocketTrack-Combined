@@ -114,9 +114,13 @@ function computeSafeToSpend() {
   let monthSpent = 0;
   let todaySpent = 0;
   const todayStrVal = (typeof todayStr === 'function') ? todayStr() : new Date().toISOString().split('T')[0];
+  const activeW = (typeof window !== 'undefined' && window.activeWalletId) ? window.activeWalletId : 'all';
 
   entries.forEach(e => {
     if (!e.date || e.transferGroupId) return;
+    const eWallet = (typeof resolveEntryWalletId === 'function') ? resolveEntryWalletId(e) : (e.walletId || 'cash');
+    if (activeW && activeW !== 'all' && eWallet !== activeW) return;
+
     const parts = e.date.split('-');
     if (parts.length !== 3) return;
     const y = parseInt(parts[0], 10);
@@ -152,7 +156,7 @@ function computeSafeToSpend() {
   // 2. Effective budget pool (if set)
   let budgetPool = monthIncome;
   if (typeof weeklyBudget !== 'undefined' && weeklyBudget > 0) {
-    budgetPool = Math.max(budgetPool, weeklyBudget * 4.2);
+    budgetPool = Math.max(budgetPool, weeklyBudget * (totalDays / 7));
   }
   const storedIncome = parseFloat(localStorage.getItem('pockettrack_monthly_income')) || 0;
   if (storedIncome > 0) {
@@ -187,7 +191,9 @@ function computeSafeToSpend() {
   // Calculate daily allowance spread across remaining days of the month
   const dailyAllowance = Math.min(spendablePool, Math.max(0, Math.floor(spendablePool / remainingDays)));
   const todayRemaining = dailyAllowance - todaySpent;
-  const burnPercent = dailyAllowance > 0 ? Math.min(100, Math.round((todaySpent / dailyAllowance) * 100)) : 100;
+  const burnPercent = dailyAllowance > 0
+    ? Math.round((todaySpent / dailyAllowance) * 100)
+    : (todaySpent > 0 ? 100 : 0);
 
   return {
     remainingDays,

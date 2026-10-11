@@ -159,14 +159,11 @@ async function maybeGuardAndSaveWithSmartEngine(payload, doSave, rawHint) {
           try {
             if (typeof saveLedgerTx === 'function') {
               await saveLedgerTx(intentData.person._id, intentData.ledgerType, payload.amt, payload.note || payload.label || 'Smart Ledger Entry');
-              resolve();
-            } else {
-              runNormal();
             }
           } catch(e) {
             console.warn('Smart ledger connection fallback:', e);
-            runNormal();
           }
+          runNormal();
         }
       );
       return;

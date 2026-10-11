@@ -93,12 +93,22 @@ function closeModal() {
   if (typeof closeAppModal === 'function') closeAppModal();
 }
 
+let isLedgerHydrating = true;
+if (typeof window !== 'undefined') window.isLedgerHydrating = true;
+
 function listenToLedger() {
   if (!currentUser) return;
   if (ledgerUnsubscribe) { try { ledgerUnsubscribe(); } catch(e){} }
   ledgerTxUnsubs.forEach(u => { try { u(); } catch(e){} });
   ledgerTxUnsubs = [];
   loadLocalLedgerCache();
+  if (ledgerPeople && ledgerPeople.length > 0) {
+    isLedgerHydrating = false;
+    if (typeof window !== 'undefined') window.isLedgerHydrating = false;
+  } else {
+    isLedgerHydrating = true;
+    if (typeof window !== 'undefined') window.isLedgerHydrating = true;
+  }
   renderLedger();
 
   try {
@@ -110,6 +120,8 @@ function listenToLedger() {
         const docs = snap.docs;
         if (!docs.length) {
           ledgerPeople = [];
+          isLedgerHydrating = false;
+          if (typeof window !== 'undefined') window.isLedgerHydrating = false;
           saveLocalLedgerCache();
           renderLedger();
           return;
@@ -139,6 +151,17 @@ function listenToLedger() {
               loadedCount++;
               if (loadedCount >= newPeopleList.length) {
                 ledgerPeople = newPeopleList;
+                isLedgerHydrating = false;
+                if (typeof window !== 'undefined') window.isLedgerHydrating = false;
+                saveLocalLedgerCache();
+                renderLedger();
+              }
+            }, err => {
+              loadedCount++;
+              if (loadedCount >= newPeopleList.length) {
+                ledgerPeople = newPeopleList;
+                isLedgerHydrating = false;
+                if (typeof window !== 'undefined') window.isLedgerHydrating = false;
                 saveLocalLedgerCache();
                 renderLedger();
               }
@@ -146,9 +169,15 @@ function listenToLedger() {
           ledgerTxUnsubs.push(u);
         });
       }, err => {
+        isLedgerHydrating = false;
+        if (typeof window !== 'undefined') window.isLedgerHydrating = false;
+        renderLedger();
         console.warn('Ledger realtime offline fallback:', err.message);
       });
   } catch(e) {
+    isLedgerHydrating = false;
+    if (typeof window !== 'undefined') window.isLedgerHydrating = false;
+    renderLedger();
     console.warn('Ledger error:', e);
   }
 }
@@ -163,9 +192,11 @@ function renderLedger() {
   const peopleWithBalances = (ledgerPeople || []).map(person => {
     let balance = 0;
     (person.transactions || []).forEach(tx => {
-      if (tx.type === 'gave') balance += tx.amount;
-      else if (tx.type === 'received') balance -= tx.amount;
+      if (tx.type === 'gave') balance += (Number(tx.amount) || 0);
+      else if (tx.type === 'received') balance -= (Number(tx.amount) || 0);
     });
+    balance = Math.round(balance * 100) / 100;
+    if (Math.abs(balance) <= 0.01) balance = 0;
     if (balance > 0) totalYouWillReceive += balance;
     else if (balance < 0) totalYouOwe += Math.abs(balance);
     return { ...person, balance };
@@ -173,10 +204,37 @@ function renderLedger() {
 
   const recEl = document.getElementById('ledger-total-receive');
   const oweEl = document.getElementById('ledger-total-owe');
-  if (recEl) recEl.textContent = '₹' + totalYouWillReceive.toLocaleString('en-IN');
-  if (oweEl) oweEl.textContent = '₹' + totalYouOwe.toLocaleString('en-IN');
+  if (recEl) recEl.textContent = '₹' + (Math.round(totalYouWillReceive * 100) / 100).toLocaleString('en-IN');
+  if (oweEl) oweEl.textContent = '₹' + (Math.round(totalYouOwe * 100) / 100).toLocaleString('en-IN');
 
   if (!peopleWithBalances.length) {
+    if (typeof isLedgerHydrating !== 'undefined' && isLedgerHydrating) {
+      container.innerHTML = `
+        <div class="skeleton-ledger-list" style="display:grid; grid-template-columns:1fr; gap:10px;">
+          <div class="card" style="padding:16px; border-radius:20px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; animation:pulse 1.5s infinite ease-in-out;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,0.08);"></div>
+              <div>
+                <div style="height:14px; width:110px; background:rgba(255,255,255,0.08); border-radius:6px; margin-bottom:6px;"></div>
+                <div style="height:10px; width:70px; background:rgba(255,255,255,0.05); border-radius:4px;"></div>
+              </div>
+            </div>
+            <div style="height:24px; width:75px; background:rgba(255,255,255,0.08); border-radius:12px;"></div>
+          </div>
+          <div class="card" style="padding:16px; border-radius:20px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; animation:pulse 1.5s infinite ease-in-out;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,0.08);"></div>
+              <div>
+                <div style="height:14px; width:130px; background:rgba(255,255,255,0.08); border-radius:6px; margin-bottom:6px;"></div>
+                <div style="height:10px; width:85px; background:rgba(255,255,255,0.05); border-radius:4px;"></div>
+              </div>
+            </div>
+            <div style="height:24px; width:75px; background:rgba(255,255,255,0.08); border-radius:12px;"></div>
+          </div>
+        </div>
+      `;
+      return;
+    }
     container.innerHTML = `
       <div class="card" style="text-align:center; padding:38px 20px; border-radius:24px;">
         <div style="font-size:44px; margin-bottom:12px;">📑</div>
@@ -202,11 +260,11 @@ function renderLedger() {
         let balText = TT('ledger_settled');
         let balBadge = 'background:rgba(255,255,255,0.06); color:var(--text-dim,#9ca3af); border:1px solid var(--border);';
 
-        if (bal > 0) {
+        if (bal > 0.01) {
           balColor = 'var(--green,#4ade80)';
           balText = `${TT('ledger_owes_you')} ₹${bal.toLocaleString('en-IN')}`;
           balBadge = 'background:rgba(74,222,128,0.15); color:var(--green,#4ade80); border:1px solid rgba(74,222,128,0.3);';
-        } else if (bal < 0) {
+        } else if (bal < -0.01) {
           balColor = 'var(--red,#f87171)';
           balText = `${TT('ledger_you_owe')} ₹${Math.abs(bal).toLocaleString('en-IN')}`;
           balBadge = 'background:rgba(248,113,113,0.15); color:var(--red,#f87171); border:1px solid rgba(248,113,113,0.3);';
@@ -428,10 +486,11 @@ async function saveLedgerTx(personId, type, amount, note) {
 
 // 1-Tap Settle Debt Function
 window.settlePersonDebt = function(personId, currentBalance) {
-  if (currentBalance === 0) return;
+  const bal = Math.round((Number(currentBalance) || 0) * 100) / 100;
+  if (Math.abs(bal) <= 0.01) return;
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
-  const type = currentBalance > 0 ? 'received' : 'gave';
-  const amount = Math.abs(currentBalance);
+  const type = bal > 0 ? 'received' : 'gave';
+  const amount = Math.abs(bal);
   
   if (typeof showAppConfirm === 'function') {
     showAppConfirm(isHi ? `क्या आप ₹${amount} का हिसाब पूरा चुकता (Settle) करना चाहते हैं?` : `Mark ₹${amount} debt as completely settled?`, () => {
@@ -452,18 +511,20 @@ function showPersonDetail(personId) {
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   let personBalance = 0;
   (person.transactions || []).forEach(tx => {
-    if (tx.type === 'gave') personBalance += tx.amount;
-    else if (tx.type === 'received') personBalance -= tx.amount;
+    if (tx.type === 'gave') personBalance += (Number(tx.amount) || 0);
+    else if (tx.type === 'received') personBalance -= (Number(tx.amount) || 0);
   });
+  personBalance = Math.round(personBalance * 100) / 100;
+  if (Math.abs(personBalance) <= 0.01) personBalance = 0;
 
   const avatarLetter = (person.name || 'P').charAt(0).toUpperCase();
   let balStatusText = '';
   let balBadgeStyle = '';
 
-  if (personBalance > 0) {
+  if (personBalance > 0.01) {
     balStatusText = isHi ? `आपको ₹${personBalance} मिलेगा` : `Owes you ₹${personBalance}`;
     balBadgeStyle = 'background:rgba(74,222,128,0.15); color:var(--green,#4ade80); border:1px solid rgba(74,222,128,0.3);';
-  } else if (personBalance < 0) {
+  } else if (personBalance < -0.01) {
     balStatusText = isHi ? `आपको ₹${Math.abs(personBalance)} देना है` : `You owe ₹${Math.abs(personBalance)}`;
     balBadgeStyle = 'background:rgba(248,113,113,0.15); color:var(--red,#f87171); border:1px solid rgba(248,113,113,0.3);';
   } else {
@@ -523,9 +584,9 @@ function showPersonDetail(personId) {
       <button class="btn danger" style="flex:1; padding:12px; font-weight:700;" onclick="showAddTxModal('${personId}', 'received')"><i class="ti ti-arrow-down-left"></i> ${TT('ledger_receive')}</button>
     </div>
 
-    ${personBalance !== 0 ? `
+    ${Math.abs(personBalance) > 0.01 ? `
     <div style="display:flex; gap:8px; margin-bottom:14px;">
-      ${personBalance > 0 ? `
+      ${personBalance > 0.01 ? `
       <button class="btn" style="flex:1.2; padding:11px; background:#25D366; color:#fff; border:none; font-weight:700; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;" onclick="sendPersonWhatsAppReminder('${personId}', ${personBalance})">
         💬 WhatsApp Reminder
       </button>` : ''}
@@ -632,13 +693,29 @@ window.sendPersonWhatsAppReminder = function(personId, amount) {
   if (!person) return;
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
   const userUpi = (typeof getUserUpiId === 'function' ? getUserUpiId() : '') || 'pockettrack@upi';
-  const upiPayLink = `upi://pay?pa=${encodeURIComponent(userUpi)}&pn=PocketTrack&am=${amount}&cu=INR`;
+  const roundedAmount = Math.round((Number(amount) || 0) * 100) / 100;
+  const upiPayLink = `upi://pay?pa=${encodeURIComponent(userUpi)}&pn=PocketTrack&am=${roundedAmount}&cu=INR`;
   
   const msg = isHi 
-    ? `नमस्ते ${person.name}! 🙏 PocketTrack रिमाइंडर: आपका बकाया ₹${amount.toLocaleString('en-IN')} है।\n⚡ UPI से सीधे भुगतान करें: ${upiPayLink}\n\nधन्यवाद!`
-    : `👋 Hey ${person.name}!\nQuick PocketTrack reminder: You have a pending balance of ₹${amount.toLocaleString('en-IN')}.\n⚡ Pay instantly via UPI: ${upiPayLink}\n\nThanks!`;
+    ? `नमस्ते ${person.name}! 🙏 PocketTrack रिमाइंडर: आपका बकाया ₹${roundedAmount.toLocaleString('en-IN')} है।\n⚡ UPI से सीधे भुगतान करें: ${upiPayLink}\n\nधन्यवाद!`
+    : `👋 Hey ${person.name}!\nQuick PocketTrack reminder: You have a pending balance of ₹${roundedAmount.toLocaleString('en-IN')}.\n⚡ Pay instantly via UPI: ${upiPayLink}\n\nThanks!`;
   
-  const phoneTarget = person.phone ? person.phone.replace(/[^0-9]/g, '') : '';
+  let phoneTarget = '';
+  if (person.phone) {
+    let raw = String(person.phone).trim();
+    if (raw.startsWith('+91')) {
+      raw = raw.slice(3);
+    } else if (raw.startsWith('+')) {
+      raw = raw.slice(1);
+    }
+    let digits = raw.replace(/[^0-9]/g, '');
+    if (digits.length === 11 && digits.startsWith('0')) {
+      digits = digits.slice(1);
+    } else if (digits.length > 10 && digits.startsWith('91')) {
+      digits = digits.slice(2);
+    }
+    phoneTarget = digits;
+  }
   const waUrl = phoneTarget ? `https://wa.me/91${phoneTarget}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
 };

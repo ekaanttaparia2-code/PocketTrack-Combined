@@ -24,8 +24,8 @@
   - Paste any payment notification from GPay, PhonePe, Paytm, or CRED. Automatically extracts merchant, amount, and category.
 - 🔁 **Automated Recurring Expenses (`recurring.js`)**:
   - Auto-posts recurring rent, bills, and subscriptions (Daily, Weekly, Monthly, Yearly).
-- 🤖 **Financial Health Score & AI Coach (`aicoach.js`)**:
-  - 0–100 Financial Health Score with subscription leak detection and dynamic goal calculators (*e.g., iPhone in 2 months*).
+- 🤖 **Financial Health Score & Mascot Engine (`reports.js` / `finny.js` / `aurasense.js`)**:
+  - 0–100 Financial Health Score with subscription leak detection, Finny procedural mascot, and dynamic goal calculators (*e.g., iPhone in 2 months*).
 - ☁️ **100% Offline-First Cloud Sync (`offline.js` / `sw.js`)**:
   - Full IndexedDB caching and offline write queue. Works on airplane mode and auto-syncs when online.
 - 🎨 **Pro Themes & Monetization (`monetization.js`)**:
@@ -50,7 +50,8 @@ pocket-tracker/
 ├── recurring.js         # Recurring rules & auto-posting
 ├── reports.js           # Insights, charts & PDF statement export
 ├── monetization.js      # Pro subscriptions & custom themes
-├── aicoach.js           # Health score & floating AI assistant
+├── finny.js             # Procedural SVG financial mascot with mood & pose engines
+├── aurasense.js         # Financial velocity orb & Time Machine projection
 ├── offline.js           # Offline connection & sync status monitor
 ├── auth.js              # Firebase authentication & verification
 ├── firebase.js          # Firebase config & service initialization

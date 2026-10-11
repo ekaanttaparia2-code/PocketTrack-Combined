@@ -7,31 +7,38 @@
 
 const pendingWriteState = { entries:false, events:false };
 
+function isHindi(){
+  return (typeof currentLang !== 'undefined' && currentLang === 'hi') ||
+         (typeof window !== 'undefined' && window.currentLang === 'hi') ||
+         (typeof localStorage !== 'undefined' && localStorage.getItem('pockettrack_lang') === 'hi');
+}
+
 function computeSyncLabel(){
   if(!navigator.onLine){
-    return currentLang==='hi' ? '📴 ऑफ़लाइन' : '📴 Offline';
+    return isHindi() ? '📴 ऑफ़लाइन' : '📴 Offline';
   }
   const anyPending = pendingWriteState.entries || pendingWriteState.events;
   if(anyPending){
-    return currentLang==='hi' ? '⏳ सिंक हो रहा है…' : '⏳ Syncing…';
+    return isHindi() ? '⏳ सिंक हो रहा है…' : '⏳ Syncing…';
   }
-  return currentLang==='hi' ? '✅ सिंक' : '✅ Synced';
+  return isHindi() ? '✅ सिंक' : '✅ Synced';
 }
 
 function computeSyncDetail(){
   if(!navigator.onLine){
-    return currentLang==='hi' ? 'ऑफ़लाइन हैं — बदलाव सेव हैं, वापस आते ही सिंक होंगे' : 'Offline — changes are safe and will sync when you reconnect';
+    return isHindi() ? 'ऑफ़लाइन हैं — बदलाव सेव हैं, वापस आते ही सिंक होंगे' : 'Offline — changes are safe and will sync when you reconnect';
   }
   const anyPending = pendingWriteState.entries || pendingWriteState.events;
   if(anyPending){
-    return currentLang==='hi' ? 'आपके बदलाव क्लाउड पर सेव हो रहे हैं' : 'Your latest changes are being saved to the cloud';
+    return isHindi() ? 'आपके बदलाव क्लाउड पर सेव हो रहे हैं' : 'Your latest changes are being saved to the cloud';
   }
-  return currentLang==='hi' ? 'सब कुछ क्लाउड से सिंक है' : 'Everything is synced to the cloud';
+  return isHindi() ? 'सब कुछ क्लाउड से सिंक है' : 'Everything is synced to the cloud';
 }
 
 function updateSyncIndicator(){
   const el = document.getElementById('sync-status');
-  if(!el || !currentUser) return;
+  const user = (typeof currentUser !== 'undefined') ? currentUser : ((typeof window !== 'undefined') ? window.currentUser : null);
+  if(!el || !user) return;
   el.textContent = computeSyncLabel();
   el.title = computeSyncDetail();
   const pill = el.closest('.pill');

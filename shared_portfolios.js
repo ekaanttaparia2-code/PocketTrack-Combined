@@ -384,7 +384,7 @@ window.openNewPortfolioModal = function() {
         <label style="font-size:11.5px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;">📑 Tap to add from your Ledger Contacts:</label>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
           ${ledgerContacts.map(c => `
-            <button type="button" onclick="addContactToSpaceMembers('${escapeHTML(c.name)}')" style="background:rgba(139,92,246,0.16);border:1px solid rgba(139,92,246,0.4);color:#fff;border-radius:99px;padding:4px 10px;font-size:11.5px;cursor:pointer;font-weight:600;">
+            <button type="button" data-name="${escapeHTML(c.name)}" onclick="addContactToSpaceMembers(this.dataset.name)" style="background:rgba(139,92,246,0.16);border:1px solid rgba(139,92,246,0.4);color:#fff;border-radius:99px;padding:4px 10px;font-size:11.5px;cursor:pointer;font-weight:600;">
               + ${escapeHTML(c.name)}
             </button>
           `).join('')}

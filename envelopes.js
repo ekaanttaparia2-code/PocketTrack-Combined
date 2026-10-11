@@ -11,14 +11,14 @@
 
   var CATEGORY_MAP = {
     needs: [
-      'groceries', 'grocery', 'rent', 'utilities', 'bills', 'bill',
+      'food', 'groceries', 'grocery', 'rent', 'utilities', 'bills', 'bill',
       'electricity', 'gas', 'water', 'wifi', 'broadband', 'medical',
       'medicine', 'health', 'hospital', 'fuel', 'petrol', 'diesel',
       'transport', 'commute', 'auto', 'metro', 'bus', 'cab', 'school',
       'education', 'fees', 'emi', 'loan', 'insurance', 'kirana', 'ration'
     ],
     wants: [
-      'food', 'dining', 'restaurant', 'cafe', 'coffee', 'chai', 'tea',
+      'dining', 'restaurant', 'cafe', 'coffee', 'chai', 'tea',
       'shopping', 'clothes', 'clothing', 'apparel', 'entertainment',
       'movies', 'cinema', 'netflix', 'prime', 'hotstar', 'spotify',
       'gaming', 'games', 'travel', 'vacation', 'trip', 'swiggy', 'zomato',
@@ -36,14 +36,27 @@
     return (window.currentLang === 'hi' || localStorage.getItem('pockettrack_lang') === 'hi') ? 'hi' : 'en';
   }
 
+  function getUserIncomeStorageKey() {
+    var uid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : (window.currentUser ? window.currentUser.uid : '');
+    return uid ? 'pockettrack_monthly_income_' + uid : 'pockettrack_monthly_income';
+  }
+
+  function getUserFinnyStorageKey() {
+    var uid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : (window.currentUser ? window.currentUser.uid : '');
+    return uid ? 'pockettrack_finny_profile_' + uid : 'pockettrack_finny_profile';
+  }
+
   function getMonthlyIncome() {
-    var stored = localStorage.getItem('pockettrack_monthly_income');
+    var incKey = getUserIncomeStorageKey();
+    var stored = localStorage.getItem(incKey) || (incKey !== 'pockettrack_monthly_income' ? localStorage.getItem('pockettrack_monthly_income') : null);
     if (stored && !isNaN(Number(stored)) && Number(stored) > 0) {
       return Number(stored);
     }
     // Try profile
     try {
-      var prof = JSON.parse(localStorage.getItem('pockettrack_finny_profile') || '{}');
+      var finnyKey = getUserFinnyStorageKey();
+      var rawProf = localStorage.getItem(finnyKey) || (finnyKey !== 'pockettrack_finny_profile' ? localStorage.getItem('pockettrack_finny_profile') : null);
+      var prof = JSON.parse(rawProf || '{}');
       if (prof.monthlyIncome && prof.monthlyIncome > 0) {
         return Number(prof.monthlyIncome);
       }
@@ -64,19 +77,30 @@
     return 0;
   }
 
+  function matchKeyword(text, kw) {
+    if (kw.length <= 3) {
+      try {
+        var re = new RegExp('\\b' + kw + '\\b', 'i');
+        return re.test(text);
+      } catch(e) {}
+    }
+    return text.indexOf(kw) !== -1;
+  }
+
   function classifyEntry(entry) {
     var cat = String(entry.cat || entry.category || '').toLowerCase().trim();
     var desc = String(entry.desc || entry.description || entry.note || '').toLowerCase().trim();
     var text = cat + ' ' + desc;
 
+    // Prioritize discretionary wants (e.g. swiggy, zomato, restaurant) over general sustenance food
+    for (var k = 0; k < CATEGORY_MAP.wants.length; k++) {
+      if (matchKeyword(text, CATEGORY_MAP.wants[k])) return 'wants';
+    }
     for (var i = 0; i < CATEGORY_MAP.savings.length; i++) {
-      if (text.indexOf(CATEGORY_MAP.savings[i]) !== -1) return 'savings';
+      if (matchKeyword(text, CATEGORY_MAP.savings[i])) return 'savings';
     }
     for (var j = 0; j < CATEGORY_MAP.needs.length; j++) {
-      if (text.indexOf(CATEGORY_MAP.needs[j]) !== -1) return 'needs';
-    }
-    for (var k = 0; k < CATEGORY_MAP.wants.length; k++) {
-      if (text.indexOf(CATEGORY_MAP.wants[k]) !== -1) return 'wants';
+      if (matchKeyword(text, CATEGORY_MAP.needs[j])) return 'needs';
     }
 
     // Default classification: essential-sounding categories map to needs, others to wants
@@ -313,7 +337,7 @@
     var val = Math.max(100, Number(input.value) || 0);
 
     try {
-      localStorage.setItem('pockettrack_monthly_income', String(val));
+      localStorage.setItem(getUserIncomeStorageKey(), String(val));
     } catch(e) {}
 
     var modal = document.getElementById('env-modal-backdrop');

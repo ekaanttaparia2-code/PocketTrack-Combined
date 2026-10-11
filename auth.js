@@ -51,11 +51,12 @@ function handleConsentChange(el){
 }
 window.handleConsentChange = handleConsentChange;
 
-function authAction(mode){
+async function authAction(mode){
   if (window._isAuthActionRunning) return;
-  window._isAuthActionRunning = true;
-  const email=document.getElementById('auth-email').value.trim();
-  const pass=document.getElementById('auth-pass').value;
+  const emailEl = document.getElementById('auth-email');
+  const passEl = document.getElementById('auth-pass');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const pass = passEl ? passEl.value : '';
   hideAuthError();
   if(!email||!pass||pass.length<6){
     showAuthError(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड डालें।' : 'Enter a valid email and a password with 6+ characters.');
@@ -68,20 +69,22 @@ function authAction(mode){
       return;
     }
   }
+  window._isAuthActionRunning = true;
   setAuthButtonsLoading(true);
-  const action = mode==='login'
-    ? auth.signInWithEmailAndPassword(email,pass)
-    : auth.createUserWithEmailAndPassword(email,pass);
-  action.then(cred=>{
-    if(mode==='signup' && cred.user && !cred.user.emailVerified){
-      cred.user.sendEmailVerification().catch(e=>console.log('Verification email failed:',e));
+  try {
+    const action = mode==='login'
+      ? auth.signInWithEmailAndPassword(email,pass)
+      : auth.createUserWithEmailAndPassword(email,pass);
+    const cred = await action;
+    if(mode==='signup' && cred && cred.user && !cred.user.emailVerified){
+      cred.user.sendEmailVerification().catch(e => console.warn('[Auth] Verification email delivery failed:', e && e.message ? e.message : e));
     }
-  }).catch(err=>{
+  } catch(err) {
     showAuthError(err.message);
-  }).finally(()=>{
+  } finally {
     setAuthButtonsLoading(false);
     window._isAuthActionRunning = false;
-  });
+  }
 }
 
 function handleForgotPassword(){
@@ -164,12 +167,54 @@ function signInWithGoogle(){
   });
 }
 
+function purgeUserLocalStorage(uid){
+  const baseKeys = [
+    'pockettrack_debts',
+    'pockettrack_monthly_income',
+    'pockettrack_user_upi_id',
+    'pockettrack_finny_profile',
+    'pockettrack_entries_cache',
+    'pockettrack_wallets'
+  ];
+  baseKeys.forEach(k => {
+    try {
+      localStorage.removeItem(k);
+      if (uid) localStorage.removeItem(k + '_' + uid);
+    } catch(e) {}
+  });
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (uid) {
+        if (key.endsWith('_' + uid)) {
+          localStorage.removeItem(key);
+        }
+      } else {
+        if (
+          key.startsWith('pockettrack_entries_cache_') ||
+          key.startsWith('pockettrack_debts_') ||
+          key.startsWith('pockettrack_monthly_income_') ||
+          key.startsWith('pockettrack_user_upi_id_') ||
+          key.startsWith('pockettrack_finny_profile_') ||
+          key.startsWith('pockettrack_wallets_')
+        ) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
+  } catch(e) {}
+}
+window.purgeUserLocalStorage = purgeUserLocalStorage;
+
 function logOut(){
   showAppConfirm(currentLang==='hi'?'क्या आप लॉग आउट करना चाहते हैं?':'Log out?', ()=>{
+    const uidToPurge = currentUser ? currentUser.uid : null;
     if(unsubscribeEntries) unsubscribeEntries();
     if(unsubscribeEvents) unsubscribeEvents();
     if(typeof resetLedgerLocal==='function') resetLedgerLocal();
     if(typeof resetRecurringLocal==='function') resetRecurringLocal();
+    purgeUserLocalStorage(uidToPurge);
     auth.signOut();
   });
 }
@@ -258,7 +303,10 @@ if (typeof auth !== 'undefined') {
       }, 400);
     }
   } else {
+    const prevUid = currentUser ? currentUser.uid : null;
     currentUser=null;
+    window._isAuthActionRunning = false;
+    purgeUserLocalStorage(prevUid);
     document.getElementById('auth-screen').style.display='flex';
     if(typeof updateBottomBarVisibility==='function') updateBottomBarVisibility();
     if(unsubscribeEntries) unsubscribeEntries();

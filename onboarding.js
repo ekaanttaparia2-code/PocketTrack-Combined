@@ -518,7 +518,10 @@
     try {
       localStorage.setItem(ONBOARDING_FLAG, 'true');
       localStorage.setItem('pockettrack_onboarded', 'true');
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({
+      var uid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : (window.currentUser ? window.currentUser.uid : '');
+      var profKey = uid ? 'pockettrack_finny_profile_' + uid : PROFILE_KEY;
+      var incomeKey = uid ? 'pockettrack_monthly_income_' + uid : 'pockettrack_monthly_income';
+      localStorage.setItem(profKey, JSON.stringify({
         stressLevel: state.stressLevel,
         selectedTriggers: state.selectedTriggers,
         primaryGoal: state.primaryGoal,
@@ -528,7 +531,7 @@
         isExistingAccount: acct.isExisting,
         completedAt: new Date().toISOString()
       }));
-      localStorage.setItem('pockettrack_monthly_income', String(state.monthlyIncome));
+      localStorage.setItem(incomeKey, String(state.monthlyIncome));
 
       // For brand new accounts: assign starting balance to primary unified cash wallet cleanly
       if (!acct.isExisting) {
@@ -537,7 +540,7 @@
           var targetWallet = window.userWallets.find(function(w) { return w.id === 'cash'; }) || window.userWallets[0];
           if (targetWallet) {
             targetWallet.initialBalance = startAmt;
-            if (typeof window.saveWallets === 'function') window.saveWallets().catch(e => console.warn(e));
+            if (typeof window.saveWallets === 'function') window.saveWallets().catch(err => console.warn('[Onboarding] Failed to persist initial wallet starting balance:', err && err.message ? err.message : err));
             if (typeof window.renderWallets === 'function') window.renderWallets();
             if (typeof window.renderWalletSwitcher === 'function') window.renderWalletSwitcher();
           }
@@ -557,7 +560,9 @@
       if (typeof window.updateHeaderStats === 'function') {
         window.updateHeaderStats();
       }
-    } catch(e) {}
+    } catch(e) {
+      console.error('[Onboarding] Error finalizing onboarding profile/wallets:', e && e.message ? e.message : e);
+    }
 
     var screen = document.getElementById('onboarding-screen');
     if (screen) {

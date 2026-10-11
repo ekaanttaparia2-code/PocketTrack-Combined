@@ -18,9 +18,19 @@
     { id: '3', name: 'Gadget EMI', balance: 25000, rate: 16, minPayment: 2500, icon: '📱' }
   ];
 
+  function getDebtsStorageKey() {
+    var uid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '';
+    return uid ? 'pockettrack_debts_' + uid : 'pockettrack_debts';
+  }
+
   function getStoredDebts() {
     try {
-      var d = JSON.parse(localStorage.getItem('pockettrack_debts'));
+      var key = getDebtsStorageKey();
+      var raw = localStorage.getItem(key);
+      if (!raw && key !== 'pockettrack_debts') {
+        raw = localStorage.getItem('pockettrack_debts');
+      }
+      var d = JSON.parse(raw);
       if (Array.isArray(d) && d.length > 0) return d;
     } catch(e) {}
     return defaultDebts;
@@ -28,7 +38,7 @@
 
   function saveDebts(debts) {
     try {
-      localStorage.setItem('pockettrack_debts', JSON.stringify(debts));
+      localStorage.setItem(getDebtsStorageKey(), JSON.stringify(debts));
     } catch(e) {}
   }
 
@@ -57,9 +67,14 @@
       months++;
       var availableExtra = extraPayment;
 
+      // Pass 1: Apply interest and minimum payments to all debts,
+      // accumulating freed minimum payments from cleared debts and partial balances
       for (var i = 0; i < list.length; i++) {
         var d = list[i];
-        if (d.balance <= 0) continue;
+        if (d.balance <= 0) {
+          availableExtra += d.minPayment;
+          continue;
+        }
 
         var monthlyInterest = (d.balance * (d.rate / 100)) / 12;
         totalInterest += monthlyInterest;
@@ -67,8 +82,12 @@
 
         var pay = Math.min(d.balance, d.minPayment);
         d.balance -= pay;
+        availableExtra += (d.minPayment - pay);
+      }
 
-        // Apply extra payment to priority debt
+      // Pass 2: Apply accumulated extra payment pool to priority debts in order
+      for (var i = 0; i < list.length; i++) {
+        var d = list[i];
         if (availableExtra > 0 && d.balance > 0) {
           var extraPay = Math.min(d.balance, availableExtra);
           d.balance -= extraPay;
@@ -77,10 +96,20 @@
       }
     }
 
+    var hasNegativeAmortization = debts.some(function(d) {
+      var bal = Number(d.balance) || 0;
+      var rate = Number(d.rate) || 0;
+      var minPay = Number(d.minPayment) || 0;
+      return bal > 0 && minPay <= (bal * (rate / 100)) / 12;
+    });
+    var unpayable = months >= maxMonths && list.some(function(d) { return d.balance > 0; });
+
     return {
       months: months,
       totalInterest: Math.round(totalInterest),
-      strategy: strategy
+      strategy: strategy,
+      hasNegativeAmortization: hasNegativeAmortization,
+      unpayable: unpayable
     };
   }
 
@@ -104,6 +133,19 @@
       if (e.target === modal) modal.remove();
     };
 
+    var hasNegativeAmortization = resAvalanche.hasNegativeAmortization || resSnowball.hasNegativeAmortization;
+    var unpayable = resAvalanche.unpayable || resSnowball.unpayable;
+    var warningBanner = '';
+    if (hasNegativeAmortization || unpayable) {
+      warningBanner =
+        '<div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:14px;padding:12px;margin-bottom:14px;font-size:12.5px;color:#fca5a5;display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:18px;">⚠️</span>' +
+          '<div><b>' + (isHi ? 'चेतावनी: नकारात्मक परिशोधन (Negative Amortization)' : 'Warning: Negative Amortization Detected') + '</b><br>' +
+          (isHi ? 'एक या अधिक ऋणों की न्यूनतम किस्त मासिक ब्याज से कम है। अतिरिक्त भुगतान के बिना यह कर्ज लगातार बढ़ता रहेगा।' : 'Minimum payment on one or more debts is less than monthly interest. The debt will grow exponentially unless payments are increased.') +
+          '</div>' +
+        '</div>';
+    }
+
     modal.innerHTML =
       '<div class="card" style="max-width:520px;width:100%;background:linear-gradient(160deg,#190f33,#0d0822);border:1px solid rgba(239,68,68,0.35);border-radius:28px;padding:26px 22px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;color:#fff;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
@@ -120,6 +162,7 @@
           '</div>' +
           '<button onclick="document.getElementById(\'debt-payoff-modal-backdrop\').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>' +
         '</div>' +
+        warningBanner +
 
         // Summary Hero
         '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:20px;padding:16px;margin-bottom:16px;text-align:center;">' +
@@ -161,9 +204,9 @@
           debts.map(function(d) {
             return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:6px;">' +
               '<div style="display:flex;align-items:center;gap:8px;">' +
-                '<span style="font-size:18px;">' + (d.icon || '💳') + '</span>' +
+                '<span style="font-size:18px;">' + escapeHTML(d.icon || '💳') + '</span>' +
                 '<div>' +
-                  '<strong style="font-size:13px;display:block;">' + d.name + '</strong>' +
+                  '<strong style="font-size:13px;display:block;">' + escapeHTML(d.name || '') + '</strong>' +
                   '<span style="font-size:10.5px;color:#f87171;">' + d.rate + '% APR · Min ₹' + d.minPayment.toLocaleString('en-IN') + '</span>' +
                 '</div>' +
               '</div>' +

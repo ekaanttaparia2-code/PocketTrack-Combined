@@ -202,7 +202,9 @@ function resetProForPreview(){
       if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
         db.collection('users').doc(currentUser.uid)
           .update({ pro: firebase.firestore.FieldValue.delete() })
-          .catch(()=>{});
+          .catch(err => {
+            console.warn('[Monetization] Firestore reset pro sync error:', err && err.message ? err.message : err);
+          });
       }
       delete document.body.dataset.theme;
       if (typeof renderProTab === 'function') renderProTab();
@@ -242,7 +244,9 @@ function setPro(on){
   if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
     db.collection('users').doc(currentUser.uid)
       .update({ pro: on ? true : firebase.firestore.FieldValue.delete() })
-      .catch(()=>{});
+      .catch(err => {
+        console.warn('[Monetization] Firestore setPro sync notice:', err && err.message ? err.message : err);
+      });
   }
 }
 

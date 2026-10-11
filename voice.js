@@ -172,15 +172,31 @@ function extractVoiceAmount(text){
   if(m) return { text:m[0], value:parseFloat(m[1])*(m[2]?1000:1) };
   m = text.match(/(\d+(?:\.\d+)?)\s*(k)?\s*(?:₹|\brs\.?|\brupees?\b|\brupaye\b|\binr\b)/);
   if(m) return { text:m[0], value:parseFloat(m[1])*(m[2]?1000:1) };
-  m = text.match(/\b(?:for|of)\s+(?:₹|rs\.?\s*)?(\d+(?:\.\d+)?)\b/i);
-  if(m) return { text:m[0], value:parseFloat(m[1]) };
+  const forOfMatches = [...text.matchAll(/\b(?:for|of)\s+(?:₹|rs\.?\s*)?(\d+(?:\.\d+)?)\b/gi)];
+  for (const match of forOfMatches) {
+    const rawVal = match[1];
+    const val = parseFloat(rawVal);
+    const isYear = /^\d{4}$/.test(rawVal) && val >= 2020 && val <= 2035;
+    const isPhone = /^\d{10}$/.test(rawVal);
+    if (!isYear && !isPhone) {
+      return { text: match[0], value: val };
+    }
+  }
   m = text.match(/(\d+(?:\.\d+)?)\s*k\b/);
   if(m) return { text:m[0], value:parseFloat(m[1])*1000 };
   const nums=[...text.matchAll(/\d+(?:\.\d+)?/g)];
   if(!nums.length) return null;
-  let best=nums[0];
-  for(const n of nums){ if(parseFloat(n[0])>=parseFloat(best[0])) best=n; }
-  return { text:best[0], value:parseFloat(best[0]) };
+  const filteredNums = nums.filter(n => {
+    const raw = n[0];
+    const val = parseFloat(raw);
+    if (/^\d{4}$/.test(raw) && val >= 2020 && val <= 2035) return false;
+    if (/^\d{10}$/.test(raw)) return false;
+    return true;
+  });
+  if (!filteredNums.length) return null;
+  let best = filteredNums[0];
+  for(const n of filteredNums){ if(parseFloat(n[0]) >= parseFloat(best[0])) best = n; }
+  return { text: best[0], value: parseFloat(best[0]) };
 }
 
 function parseVoiceInput(text) {
@@ -213,7 +229,11 @@ function parseVoiceInput(text) {
 
   // Detect a spoken date if the user mentioned one ("yesterday", "on the 5th", "5 july", "last monday"…)
   let date = (typeof todayStr === 'function' ? todayStr() : new Date().toISOString().split('T')[0]);
-  const spoken = parseVoiceDate(rawText);
+  let textForDate = rawText;
+  if (extracted && extracted.text) {
+    textForDate = textForDate.replace(extracted.text, ' ');
+  }
+  const spoken = parseVoiceDate(textForDate);
   if (spoken) date = spoken;
 
   // Clean up note/description
@@ -340,16 +360,38 @@ function parseVoiceDate(text){
   // Differentiates between past intent ("paid on the 5th") and future/upcoming intent ("due on the 5th")
   const isFutureIntent = /\b(?:will|due|next|remind|schedule|upcoming|देना है|करना है)\b/i.test(t);
   const onThe = t.match(/\b(?:on\s+)?the\s+(\d{1,2})(?:st|nd|rd|th)?\b/) ||
-                t.match(/\bon\s+(\d{1,2})(?:st|nd|rd|th)?\b/) ||
+                t.match(/\bon\s+(\d{1,2})(?:st|nd|rd|th)?\b(?!\s*[\.\/]\s*\d)/) ||
                 t.match(/\b(\d{1,2})\s*(?:tarikh|tareekh|taareekh)\b/) ||
                 t.match(/\b(?:tarikh|tareekh|taareekh)\s+(\d{1,2})\b/);
   if (onThe){
     const day=Number(onThe[1]);
     if(day>=1 && day<=31){
-      let target=new Date(now.getFullYear(), now.getMonth(), day, 12,0,0,0);
-      if(!isFutureIntent && target > now) target.setMonth(target.getMonth()-1);
-      if(isFutureIntent && target < now) target.setMonth(target.getMonth()+1);
-      const out=validDate(target.getFullYear(), target.getMonth()+1, target.getDate());
+      let targetYear = now.getFullYear();
+      let targetMonth = now.getMonth();
+      let targetDay = day;
+      const curMonthMaxDays = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const initialTarget = new Date(targetYear, targetMonth, Math.min(day, curMonthMaxDays), 12, 0, 0, 0);
+
+      if(!isFutureIntent && initialTarget > now){
+        targetMonth--;
+        if(targetMonth < 0){
+          targetMonth = 11;
+          targetYear--;
+        }
+        const prevMonthMaxDays = new Date(targetYear, targetMonth + 1, 0).getDate();
+        targetDay = Math.min(day, prevMonthMaxDays);
+      } else if(isFutureIntent && initialTarget < now){
+        targetMonth++;
+        if(targetMonth > 11){
+          targetMonth = 0;
+          targetYear++;
+        }
+        const nextMonthMaxDays = new Date(targetYear, targetMonth + 1, 0).getDate();
+        targetDay = Math.min(day, nextMonthMaxDays);
+      } else {
+        targetDay = Math.min(day, curMonthMaxDays);
+      }
+      const out = validDate(targetYear, targetMonth + 1, targetDay);
       if(out) return out;
     }
   }

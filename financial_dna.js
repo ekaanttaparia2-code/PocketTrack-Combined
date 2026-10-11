@@ -244,10 +244,18 @@ function computeFinancialDNA() {
             totalExpenses += amt;
             expenseCount++;
 
-            if (amt < 500) expensesUnder500++;
-            if (amt < 300) expensesUnder300++;
-
             const cat = (e.cat || '').toLowerCase();
+            const text = ((e.label || '') + ' ' + (e.note || '')).toLowerCase();
+            const isEssential = ['groceries', 'bills', 'health', 'medical', 'rent', 'utilities', 'education', 'transport', 'emi', 'fuel', 'dairy', 'ration'].includes(cat);
+            const isDiscretionary = ['shopping', 'entertainment', 'leisure', 'gadgets', 'snacks', 'gaming', 'gifts', 'hobbies', 'personal'].includes(cat) ||
+                (/\b(swiggy|zomato|restaurant|cafe|coffee|bar|pub|starbucks|burger|pizza|treat|snack|gaming)\b/i.test(text));
+
+            // Only classify micro-purchases under price thresholds as impulse leaks if discretionary and non-essential
+            if (isDiscretionary && !isEssential) {
+                if (amt < 500) expensesUnder500++;
+                if (amt < 300) expensesUnder300++;
+            }
+
             if (cat === 'food' || cat === 'friends' || cat === 'entertainment') {
                 socialSpend += amt;
             }

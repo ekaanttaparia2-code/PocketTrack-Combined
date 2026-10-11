@@ -22,8 +22,8 @@ function initAudioContext() {
   }
 }
 
-function playHapticSound(type = 'click') {
-  if (!soundFxEnabled) return;
+function playHapticSound(type = 'click', force = false) {
+  if (!soundFxEnabled && !force) return;
   try {
     initAudioContext();
     if (!audioCtx) return;
@@ -44,7 +44,7 @@ function playHapticSound(type = 'click') {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc.start(now);
       osc.stop(now + 0.04);
-    } else if (type === 'success') {
+    } else if (type === 'success' || type === 'chime') {
       // Euphoric chime (dual harmonic)
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(587.33, now); // D5
@@ -75,6 +75,12 @@ function playHapticSound(type = 'click') {
   } catch (e) {
     // Silent fail if audio is not permitted
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.playHapticSound = playHapticSound;
+  window.PT = window.PT || {};
+  window.PT.playHapticSound = playHapticSound;
 }
 
 // --- 2. Rolling Number Animation (Odometer Effect) ---

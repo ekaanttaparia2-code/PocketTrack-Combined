@@ -80,6 +80,8 @@
       const script = document.createElement('script');
       script.id = 'tesseract-cdn-script';
       script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      script.integrity = 'sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F';
+      script.crossOrigin = 'anonymous';
       script.async = true;
       script.onload = () => resolve(window.Tesseract);
       script.onerror = (err) => reject(new Error('Failed to load OCR vision engine. Check internet connection.'));
@@ -557,6 +559,7 @@
       if (cameraControls) cameraControls.style.display = 'flex';
 
     } catch (err) {
+      stopLiveCamera();
       console.warn('Live camera access error:', err);
       handleCameraFallback(err.name === 'NotAllowedError'
         ? 'Camera permission was denied. Please allow camera access in browser settings, or select a photo from your device.'
@@ -567,13 +570,25 @@
   function stopLiveCamera() {
     if (activeCameraStream) {
       try {
-        activeCameraStream.getTracks().forEach(t => t.stop());
+        const tracks = (typeof activeCameraStream.getTracks === 'function') ? activeCameraStream.getTracks() : [];
+        tracks.forEach(t => {
+          try {
+            if (t && typeof t.stop === 'function') t.stop();
+          } catch (e) {}
+        });
       } catch (e) {}
       activeCameraStream = null;
     }
     const video = document.getElementById('receipt-camera-video');
     if (video) {
       try {
+        if (video.srcObject && typeof video.srcObject.getTracks === 'function') {
+          video.srcObject.getTracks().forEach(t => {
+            try {
+              if (t && typeof t.stop === 'function') t.stop();
+            } catch (e) {}
+          });
+        }
         video.pause();
         video.srcObject = null;
       } catch (e) {}
@@ -621,29 +636,38 @@
       return;
     }
 
-    const flash = document.getElementById('receipt-camera-flash');
-    if (flash) {
-      flash.style.opacity = '0.9';
-      setTimeout(() => { flash.style.opacity = '0'; }, 150);
+    let dataUrl = null;
+    try {
+      const flash = document.getElementById('receipt-camera-flash');
+      if (flash) {
+        flash.style.opacity = '0.9';
+        setTimeout(() => { flash.style.opacity = '0'; }, 150);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    } finally {
+      stopLiveCamera();
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    stopLiveCamera();
-
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    processReceiptSource(dataUrl);
+    if (dataUrl) {
+      processReceiptSource(dataUrl);
+    }
   };
 
   window.closeReceiptScannerModal = function () {
-    stopLiveCamera();
-    const modal = document.getElementById('receipt-scanner-modal-backdrop');
-    if (modal) modal.style.display = 'none';
-    isScanning = false;
+    try {
+      stopLiveCamera();
+    } finally {
+      const modal = document.getElementById('receipt-scanner-modal-backdrop');
+      if (modal) modal.style.display = 'none';
+      isScanning = false;
+    }
   };
 
   // Main processing pipeline (supports DataURL string, Blob, or File)
@@ -717,7 +741,6 @@
       });
 
       const extractedText = result.data.text || '';
-      console.log('PocketTrack OCR Raw Result:\n', extractedText);
 
       statusLabel.textContent = 'Extracting totals & merchant...';
       statusPercent.textContent = '98%';
@@ -785,6 +808,8 @@
         badge.style.color = '#fbbf24';
         badge.style.background = 'rgba(251,191,36,0.15)';
       }, 500);
+    } finally {
+      stopLiveCamera();
     }
   }
 

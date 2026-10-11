@@ -1,16 +1,152 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper: Validates user is authenticated, non-anonymous, and owns the path (REVIEW-016)
+    function isOwner(userId) {
+      return request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    // Helper: Schema validation for /users/{userId} profile document (REVIEW-015)
+    function isValidUserProfile(data) {
+      return data.keys().hasOnly([
+        'entryCount', 'email', 'displayName', 'photoURL', 'createdAt',
+        'updatedAt', 'lastLoginAt', 'monthlyIncome', 'currency', 'pro',
+        'theme', 'lang', 'onboardingDone'
+      ])
+      && (!('entryCount' in data) || (data.entryCount is number && data.entryCount >= 0))
+      && (!('email' in data) || (data.email is string && data.email.size() <= 150))
+      && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150))
+      && (!('monthlyIncome' in data) || (data.monthlyIncome is number && data.monthlyIncome >= 0));
+    }
+
+    // Helper: Schema, type, and size validation for /entries/{entryId} (REVIEW-015)
+    function isValidEntry(data) {
+      return data.keys().hasOnly([
+        'type', 'cat', 'label', 'note', 'amt', 'date', 'walletId',
+        'evId', 'event', 'recurringId', 'transferGroupId', 'transferPeerId',
+        'transferType', 'createdAt', 'receiptMerchant', 'receiptData',
+        'customCat', 'source', 'rawSpoken', 'sentiment', 'tag', 'mood',
+        'paymentMode', 'receiptUrl'
+      ])
+      && data.type is string && (data.type == 'expense' || data.type == 'income' || data.type == 'transfer')
+      && data.amt is number && data.amt >= 0 && data.amt <= 10000000000
+      && (!('label' in data) || (data.label is string && data.label.size() <= 200))
+      && (!('cat' in data) || (data.cat is string && data.cat.size() <= 100))
+      && (!('note' in data) || (data.note is string && data.note.size() <= 1000))
+      && (!('date' in data) || (data.date is string && data.date.size() <= 50))
+      && (!('walletId' in data) || (data.walletId is string && data.walletId.size() <= 100))
+      && (!('evId' in data) || (data.evId is string && data.evId.size() <= 100))
+      && (!('event' in data) || (data.event is string && data.event.size() <= 100))
+      && (!('recurringId' in data) || (data.recurringId is string && data.recurringId.size() <= 100))
+      && (!('transferGroupId' in data) || (data.transferGroupId is string && data.transferGroupId.size() <= 100))
+      && (!('transferPeerId' in data) || (data.transferPeerId is string && data.transferPeerId.size() <= 100))
+      && (!('transferType' in data) || (data.transferType is string && data.transferType.size() <= 50));
+    }
+
+    // Helper: Schema validation for /events/{eventId} (REVIEW-015)
+    function isValidEvent(data) {
+      return data.keys().hasOnly([
+        'type', 'name', 'desc', 'fromDate', 'tillDate', 'createdAt',
+        'participants', 'sharedExpenses', 'sharedIncomes'
+      ])
+      && (!('name' in data) || (data.name is string && data.name.size() <= 150))
+      && (!('type' in data) || (data.type is string && data.type.size() <= 50))
+      && (!('desc' in data) || (data.desc is string && data.desc.size() <= 1000))
+      && (!('fromDate' in data) || (data.fromDate is string && data.fromDate.size() <= 50))
+      && (!('tillDate' in data) || (data.tillDate is string && data.tillDate.size() <= 50))
+      && (!('participants' in data) || data.participants is list)
+      && (!('sharedExpenses' in data) || data.sharedExpenses is list)
+      && (!('sharedIncomes' in data) || data.sharedIncomes is list);
+    }
+
+    // Helper: Schema validation for /ledger/{personId} (REVIEW-015)
+    function isValidLedgerPerson(data) {
+      return data.keys().hasOnly(['name', 'phone', 'createdAt', 'updatedAt', 'balance'])
+      && (!('name' in data) || (data.name is string && data.name.size() <= 150))
+      && (!('phone' in data) || (data.phone is string && data.phone.size() <= 50))
+      && (!('balance' in data) || (data.balance is number && data.balance >= -10000000000 && data.balance <= 10000000000));
+    }
+
+    // Helper: Schema validation for /ledger/{personId}/transactions/{txId} (REVIEW-015)
+    function isValidLedgerTx(data) {
+      return data.keys().hasOnly(['amount', 'type', 'note', 'date', 'createdAt', 'updatedAt'])
+      && data.amount is number && data.amount >= 0 && data.amount <= 10000000000
+      && data.type is string && (data.type == 'give' || data.type == 'take' || data.type.size() <= 20)
+      && (!('note' in data) || (data.note is string && data.note.size() <= 500))
+      && (!('date' in data) || (data.date is string && data.date.size() <= 50));
+    }
+
+    // Helper: Schema validation for /spaces/{spaceId} (REVIEW-015)
+    function isValidSpace(data) {
+      return data.keys().hasOnly([
+        'id', 'name', 'icon', 'members', 'inviteCode', 'expenses', 'createdAt', 'updatedAt'
+      ])
+      && (!('name' in data) || (data.name is string && data.name.size() <= 150))
+      && (!('icon' in data) || (data.icon is string && data.icon.size() <= 50))
+      && (!('inviteCode' in data) || (data.inviteCode is string && data.inviteCode.size() <= 50))
+      && (!('members' in data) || data.members is list)
+      && (!('expenses' in data) || data.expenses is list);
+    }
+
+    // Helper: Schema validation for /recurring/{recurringId} (REVIEW-015)
+    function isValidRecurring(data) {
+      return data.keys().hasOnly([
+        'type', 'cat', 'label', 'amt', 'freq', 'walletId',
+        'nextDate', 'targetDay', 'active', 'createdAt', 'updatedAt'
+      ])
+      && (!('type' in data) || (data.type is string && data.type.size() <= 20))
+      && (!('cat' in data) || (data.cat is string && data.cat.size() <= 100))
+      && (!('label' in data) || (data.label is string && data.label.size() <= 200))
+      && (!('amt' in data) || (data.amt is number && data.amt >= 0 && data.amt <= 10000000000))
+      && (!('freq' in data) || (data.freq is string && data.freq.size() <= 50))
+      && (!('walletId' in data) || (data.walletId is string && data.walletId.size() <= 100))
+      && (!('nextDate' in data) || (data.nextDate is string && data.nextDate.size() <= 50))
+      && (!('targetDay' in data) || (data.targetDay is number && data.targetDay >= 1 && data.targetDay <= 31))
+      && (!('active' in data) || data.active is bool);
+    }
+
+    // Helper: Schema validation for /wallets/{walletId} (REVIEW-015)
+    function isValidWallet(data) {
+      return data.keys().hasOnly([
+        'id', 'name', 'type', 'icon', 'initialBalance', 'color', 'isDefault', 'createdAt', 'updatedAt'
+      ])
+      && (!('name' in data) || (data.name is string && data.name.size() <= 100))
+      && (!('type' in data) || (data.type is string && data.type.size() <= 50))
+      && (!('icon' in data) || (data.icon is string && data.icon.size() <= 50))
+      && (!('initialBalance' in data) || (data.initialBalance is number && data.initialBalance >= -1000000000 && data.initialBalance <= 10000000000))
+      && (!('color' in data) || (data.color is string && data.color.size() <= 50))
+      && (!('isDefault' in data) || data.isDefault is bool);
+    }
+
+    // Helper: Schema validation for /portfolios/{portfolioId} (REVIEW-015)
+    function isValidPortfolio(data) {
+      return data.keys().hasOnly([
+        'id', 'name', 'icon', 'members', 'expenses', 'createdAt', 'updatedAt'
+      ])
+      && (!('name' in data) || (data.name is string && data.name.size() <= 150))
+      && (!('icon' in data) || (data.icon is string && data.icon.size() <= 50))
+      && (!('members' in data) || data.members is list)
+      && (!('expenses' in data) || data.expenses is list);
+    }
+
     // Each user can only read and write their own profile and all subcollections
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId && !('pro' in request.resource.data);
-      allow update: if request.auth != null && request.auth.uid == userId && (!('pro' in request.resource.data) || request.resource.data.pro == resource.data.pro);
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && !('pro' in request.resource.data)
+        && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId)
+        && (!('pro' in request.resource.data) || request.resource.data.pro == resource.data.pro)
+        && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId);
       
       match /entries/{entryId} {
-        allow read, delete: if request.auth != null && request.auth.uid == userId;
-        allow create, update: if request.auth != null && request.auth.uid == userId
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidEntry(request.resource.data)
           && (
             request.auth.token.email_verified == true
             || request.auth.token.firebase.sign_in_provider == 'google.com'
@@ -20,8 +156,39 @@ service cloud.firestore {
           );
       }
       
-      match /{allSubcollections=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+      match /events/{eventId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidEvent(request.resource.data);
+      }
+
+      match /ledger/{personId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidLedgerPerson(request.resource.data);
+
+        match /transactions/{txId} {
+          allow read, delete: if isOwner(userId);
+          allow create, update: if isOwner(userId) && isValidLedgerTx(request.resource.data);
+        }
+      }
+
+      match /spaces/{spaceId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidSpace(request.resource.data);
+      }
+
+      match /recurring/{recurringId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidRecurring(request.resource.data);
+      }
+
+      match /wallets/{walletId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidWallet(request.resource.data);
+      }
+
+      match /portfolios/{portfolioId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidPortfolio(request.resource.data);
       }
     }
     

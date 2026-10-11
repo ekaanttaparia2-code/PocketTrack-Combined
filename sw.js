@@ -38,7 +38,19 @@ const SHELL = [
   './debt_payoff.js',
   './receipt_scanner.js',
   './wallets.js',
-  './NotoSansDevanagari-Regular.ttf'
+  './NotoSansDevanagari-Regular.ttf',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'
+];
+
+const TRUSTED_CDN_ORIGINS = [
+  'https://cdnjs.cloudflare.com',
+  'https://www.gstatic.com',
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com',
+  'https://cdn.jsdelivr.net'
 ];
 
 self.addEventListener('install', (e) => {
@@ -58,16 +70,38 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
-  // Never intercept or cache cross-origin traffic (Firebase Auth/Firestore long-polls, CDNs)
-  try { if (new URL(req.url).origin !== self.location.origin) return; } catch (err) { return; }
-  // Network-first, then cache fallback (so pushes of updated files show online, cached offline)
+
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch (err) {
+    return;
+  }
+
+  const isSameOrigin = (url.origin === self.location.origin);
+  const isTrustedCdn = TRUSTED_CDN_ORIGINS.includes(url.origin);
+
+  if (!isSameOrigin && !isTrustedCdn) return;
+
+  // Never intercept or cache dynamic Firebase Auth/Firestore streaming/REST endpoints
+  if (url.hostname.includes('firebaseio.com') ||
+      url.pathname.includes('/google.firestore.') ||
+      url.hostname.includes('identitytoolkit.googleapis.com') ||
+      url.hostname.includes('securetoken.googleapis.com')) {
+    return;
+  }
+  // Stale-While-Revalidate (SWR) strategy: instant load from cache while updating in background
   e.respondWith(
-    fetch(req)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('./')))
+    caches.match(req).then((cached) => {
+      const fetchPromise = fetch(req).then((networkRes) => {
+        if (networkRes && networkRes.status === 200) {
+          const copy = networkRes.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
+        return networkRes;
+      }).catch(() => null);
+
+      return cached || fetchPromise.then((res) => res || caches.match('./'));
+    })
   );
 });

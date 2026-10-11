@@ -1,4 +1,5 @@
 /* PocketTrack application entry point. */
+window.PT = window.PT || {};
 
 // Global error handlers for graceful degradation
 window.onerror = function(msg, source, lineno, colno, error) {
@@ -197,8 +198,10 @@ const TRANSLATIONS = {
   voice_entry_title:{en:'Voice Expense Entry',hi:'बोल कर एंट्री करें',hinglish:'Voice Expense Entry'},
 };
 window.TRANSLATIONS = TRANSLATIONS;
+window.PT.TRANSLATIONS = TRANSLATIONS;
 let currentLang = localStorage.getItem('pocketTrackLang') || localStorage.getItem('pockettrack_lang') || 'en';
 window.currentLang = currentLang;
+window.PT.currentLang = currentLang;
 
 const PLACEHOLDER_TRANSLATIONS = {
   ph_email:{en:'you@example.com',hi:'you@example.com'},
@@ -386,6 +389,7 @@ var entries = (function() {
   return [];
 })();
 window.entries = entries;
+window.PT.entries = entries;
 
 function mainEntries(){
   const list = (typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : (typeof entries !== 'undefined' && Array.isArray(entries) ? entries : []);
@@ -400,6 +404,7 @@ function mainEntries(){
   return base;
 }
 window.mainEntries = mainEntries;
+window.PT.mainEntries = mainEntries;
 function allRawMainEntries(){
   const list = (typeof window !== 'undefined' && Array.isArray(window.entries)) ? window.entries : (typeof entries !== 'undefined' && Array.isArray(entries) ? entries : []);
   return list.filter(e=>!e.event);
@@ -408,21 +413,42 @@ window.allRawMainEntries = allRawMainEntries;
 let period = 'week';
 window.period = period;
 
-function dateToStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function todayStr(){return dateToStr(new Date())}
-function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
+function dateToStr(d){
+  if (!d) return '';
+  const dateObj = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(dateObj.getTime())) return String(d);
+  return dateObj.getFullYear()+'-'+String(dateObj.getMonth()+1).padStart(2,'0')+'-'+String(dateObj.getDate()).padStart(2,'0');
+}
+function todayStr(){
+  return dateToStr(new Date());
+}
+function fmtDate(d){
+  if (!d) return '';
+  const dateObj = (d instanceof Date) ? d : new Date(String(d).includes('T') ? d : d + 'T00:00:00');
+  if (isNaN(dateObj.getTime())) return String(d);
+  return dateObj.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
 window.dateToStr = dateToStr;
 window.todayStr = todayStr;
 window.fmtDate = fmtDate;
+window.PT = window.PT || {};
+window.PT.dateToStr = dateToStr;
+window.PT.todayStr = todayStr;
+window.PT.fmtDate = fmtDate;
 
 // --- Validation & sanitization helpers ---
 const MAX_AMT = 999999999;
 function escapeHTML(str){
-  const div=document.createElement('div');
-  div.textContent=str;
-  return div.innerHTML;
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 window.escapeHTML = escapeHTML;
+window.PT.escapeHTML = escapeHTML;
 function stripHTML(str) { if (typeof str !== 'string') return ''; return str.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/<[^>]*>?/gm, '').trim(); }
 window.stripHTML = stripHTML;
 
@@ -512,8 +538,8 @@ function showAppPrompt(message, defaultValue, onConfirm, title){
   title = title || (currentLang==='hi' ? 'नया नाम' : 'Enter new name');
   document.getElementById('app-modal-title').textContent = title;
   document.getElementById('app-modal-message').innerHTML = `
-    <p style="margin-bottom:12px">${message}</p>
-    <input type="text" id="app-prompt-input" value="${escapeHTML(defaultValue)}"
+    <p style="margin-bottom:12px">${escapeHTML(message)}</p>
+    <input type="text" id="app-prompt-input" value="${escapeHTML(defaultValue || '')}"
       style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:14px"
       onkeydown="if(event.key==='Enter')document.getElementById('app-prompt-confirm-btn').click()"
     >
@@ -535,6 +561,53 @@ function showAppPrompt(message, defaultValue, onConfirm, title){
 
 function closeAppModal(){
   document.getElementById('app-modal-backdrop').style.display='none';
+}
+
+function showAppPasswordPrompt(message, onConfirm, title, onCancel){
+  title = title || (currentLang==='hi' ? 'पासवर्ड पुष्टि' : 'Password Confirmation');
+  document.getElementById('app-modal-title').textContent = title;
+  document.getElementById('app-modal-message').innerHTML = `
+    <p style="margin-bottom:12px">${escapeHTML(message)}</p>
+    <input type="password" id="app-prompt-password-input" autocomplete="current-password"
+      placeholder="${currentLang==='hi' ? 'अपना पासवर्ड दर्ज करें' : 'Enter your password'}"
+      style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-size:14px"
+      onkeydown="if(event.key==='Enter')document.getElementById('app-password-confirm-btn').click()"
+    >
+  `;
+  const okLabel = currentLang==='hi' ? 'पुष्टि करें' : 'Confirm';
+  const cancelLabel = currentLang==='hi' ? 'रद्द करें' : 'Cancel';
+  document.getElementById('app-modal-buttons').innerHTML = `
+    <button class="btn" style="flex:1" id="app-modal-cancel-btn">${cancelLabel}</button>
+    <button class="btn danger" style="flex:1" id="app-password-confirm-btn">${okLabel}</button>
+  `;
+  document.getElementById('app-modal-cancel-btn').onclick = ()=>{
+    closeAppModal();
+    if (typeof onCancel === 'function') onCancel();
+  };
+  document.getElementById('app-password-confirm-btn').onclick = ()=>{
+    const val = document.getElementById('app-prompt-password-input')?.value || '';
+    closeAppModal();
+    if (typeof onConfirm === 'function') onConfirm(val);
+  };
+  document.getElementById('app-modal-backdrop').style.display='flex';
+  setTimeout(()=>document.getElementById('app-prompt-password-input')?.focus(), 50);
+}
+
+function promptPasswordModal(message, title){
+  return new Promise((resolve) => {
+    showAppPasswordPrompt(message, (pass) => {
+      resolve(pass);
+    }, title, () => {
+      resolve(null);
+    });
+  });
+}
+
+window.showAppPasswordPrompt = showAppPasswordPrompt;
+window.promptPasswordModal = promptPasswordModal;
+if (window.PT) {
+  window.PT.showAppPasswordPrompt = showAppPasswordPrompt;
+  window.PT.promptPasswordModal = promptPasswordModal;
 }
 
 // --- Auth handling ---
@@ -674,8 +747,8 @@ function renderManageOptionsList(){
     <div class="entry-row">
       <span style="flex:1;color:var(--text)">${escapeHTML(name)}</span>
       <div class="row-actions">
-        <button class="icon-btn" onclick="startEditCustomOption('${escapeHTML(name).replace(/'/g,"\\'")}')" aria-label="edit">✏️</button>
-        <button class="icon-btn" onclick="confirmDeleteCustomOption('${escapeHTML(name).replace(/'/g,"\\'")}')" aria-label="delete">🗑️</button>
+        <button class="icon-btn" data-name="${escapeHTML(name)}" onclick="startEditCustomOption(this.dataset.name)" aria-label="edit">✏️</button>
+        <button class="icon-btn" data-name="${escapeHTML(name)}" onclick="confirmDeleteCustomOption(this.dataset.name)" aria-label="delete">🗑️</button>
       </div>
     </div>`).join('');
 }
@@ -2199,9 +2272,11 @@ function calculateSettlement(eventId){
     if (!exp.splitAmong || !exp.splitAmong.length) return;
     const share = exp.amt / exp.splitAmong.length;
     const payer = exp.paidBy;
-    if(balances[payer] !== undefined) balances[payer] += exp.amt;
+    if (payer && balances[payer] === undefined) balances[payer] = 0;
+    if (payer) balances[payer] += exp.amt;
     exp.splitAmong.forEach(person => {
-      if(balances[person] !== undefined) balances[person] -= share;
+      if (balances[person] === undefined) balances[person] = 0;
+      balances[person] -= share;
     });
   });
 
@@ -2210,19 +2285,31 @@ function calculateSettlement(eventId){
     if (!inc.splitAmong || !inc.splitAmong.length) return;
     const share = inc.amt / inc.splitAmong.length;
     const receiver = inc.receivedBy || inc.paidBy;
+    if (receiver && balances[receiver] === undefined) balances[receiver] = 0;
     inc.splitAmong.forEach(person => {
-      if(balances[person] !== undefined) balances[person] += share;
+      if (balances[person] === undefined) balances[person] = 0;
+      balances[person] += share;
     });
-    if(balances[receiver] !== undefined) balances[receiver] -= inc.amt;
+    if (receiver) balances[receiver] -= inc.amt;
   });
 
-  Object.keys(balances).forEach(p => balances[p] = Math.round(balances[p] * 100) / 100);
+  // Retain unrounded floating-point balances during calculation, then round & allocate discrepancy
+  const pKeys = Object.keys(balances);
+  let sumCents = 0;
+  pKeys.forEach(p => {
+    balances[p] = Math.round(balances[p] * 100) / 100;
+    sumCents += Math.round(balances[p] * 100);
+  });
+  if (sumCents !== 0 && pKeys.length > 0) {
+    pKeys.sort((a, b) => Math.abs(balances[b]) - Math.abs(balances[a]));
+    balances[pKeys[0]] = Math.round((balances[pKeys[0]] - (sumCents / 100)) * 100) / 100;
+  }
 
   const creditors = [];
   const debtors = [];
   Object.entries(balances).forEach(([name, balance]) => {
-    if(balance > 0.01) creditors.push({name, amount: balance});
-    else if(balance < -0.01) debtors.push({name, amount: -balance});
+    if(balance > 0.005) creditors.push({name, amount: balance});
+    else if(balance < -0.005) debtors.push({name, amount: -balance});
   });
 
   creditors.sort((a,b) => b.amount - a.amount);
@@ -2231,18 +2318,19 @@ function calculateSettlement(eventId){
   const transfers = [];
   let i = 0, j = 0;
   while(i < creditors.length && j < debtors.length){
-    const amt = Math.min(creditors[i].amount, debtors[j].amount);
-    if(amt > 0.01){
+    let amt = Math.min(creditors[i].amount, debtors[j].amount);
+    amt = Math.round(amt * 100) / 100;
+    if(amt > 0.005){
       transfers.push({
         from: debtors[j].name,
         to: creditors[i].name,
-        amount: Math.round(amt * 100) / 100
+        amount: amt
       });
     }
-    creditors[i].amount -= amt;
-    debtors[j].amount -= amt;
-    if(creditors[i].amount < 0.01) i++;
-    if(debtors[j].amount < 0.01) j++;
+    creditors[i].amount = Math.round((creditors[i].amount - amt) * 100) / 100;
+    debtors[j].amount = Math.round((debtors[j].amount - amt) * 100) / 100;
+    if(creditors[i].amount <= 0.005) i++;
+    if(debtors[j].amount <= 0.005) j++;
   }
 
   return { balances, transfers };
@@ -2639,7 +2727,10 @@ async function deleteAccountAndPurgeData(){
             const provider = new firebase.auth.GoogleAuthProvider();
             await currentUser.reauthenticateWithPopup(provider);
           } else if (passwordProvider) {
-            const pass = prompt(isHi ? 'खाता हटाने की पुष्टि के लिए अपना पासवर्ड दर्ज करें:' : 'Please enter your password to confirm account deletion:');
+            const pass = await promptPasswordModal(
+              isHi ? 'खाता हटाने की पुष्टि के लिए अपना पासवर्ड दर्ज करें:' : 'Please enter your password to confirm account deletion:',
+              isHi ? 'पासवर्ड की पुष्टि करें' : 'Confirm Password'
+            );
             if (!pass) return; // User cancelled
             const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass);
             await currentUser.reauthenticateWithCredential(cred);
@@ -2956,7 +3047,6 @@ window.triggerManualSync = async function() {
         if (typeof window !== 'undefined') window.entries = entries;
         try {
           localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
-          localStorage.setItem('pockettrack_entries_cache', JSON.stringify(entries));
         } catch(e){}
         if (typeof updateHeaderStats === 'function') updateHeaderStats();
         if (typeof renderEntries === 'function') renderEntries();

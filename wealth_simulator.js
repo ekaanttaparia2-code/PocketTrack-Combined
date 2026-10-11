@@ -68,9 +68,9 @@
     if (gainEl) gainEl.textContent = '₹' + res.wealthGained.toLocaleString('en-IN');
     if (multEl) multEl.textContent = res.multiplier + 'x Total Wealth';
 
-    if (barInvested && barGain && res.futureValue > 0) {
-      var invPct = Math.round((res.invested / res.futureValue) * 100);
-      var gainPct = 100 - invPct;
+    if (barInvested && barGain) {
+      var invPct = (res.futureValue > 0) ? Math.round((res.invested / res.futureValue) * 100) : 0;
+      var gainPct = (res.futureValue > 0) ? (100 - invPct) : 0;
       barInvested.style.width = invPct + '%';
       barGain.style.width = gainPct + '%';
     }
@@ -87,6 +87,8 @@
   function openModal() {
     var isHi = getLang() === 'hi';
     var res = calculateCompound(simState.monthly, simState.rate, simState.years);
+    var initInvPct = (res.futureValue > 0) ? Math.round((res.invested / res.futureValue) * 100) : 0;
+    var initGainPct = (res.futureValue > 0) ? (100 - initInvPct) : 0;
 
     var existing = document.getElementById('wealth-sim-modal-backdrop');
     if (existing) existing.remove();
@@ -130,8 +132,8 @@
 
           // Progress Bar: Invested vs Gain
           '<div style="width:100%;height:10px;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden;margin:16px 0 8px;display:flex;">' +
-            '<div id="sim-bar-invested" style="width:' + Math.round((res.invested / res.futureValue) * 100) + '%;background:#38bdf8;height:100%;"></div>' +
-            '<div id="sim-bar-gain" style="width:' + (100 - Math.round((res.invested / res.futureValue) * 100)) + '%;background:#34d399;height:100%;"></div>' +
+            '<div id="sim-bar-invested" style="width:' + initInvPct + '%;background:#38bdf8;height:100%;"></div>' +
+            '<div id="sim-bar-gain" style="width:' + initGainPct + '%;background:#34d399;height:100%;"></div>' +
           '</div>' +
 
           '<div style="display:flex;justify-content:space-between;font-size:12px;">' +

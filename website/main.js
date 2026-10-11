@@ -2,11 +2,23 @@
    PocketTrack Website Engine — Interactive Layer & Reality Calculator
    ===================================================================== */
 
-// --- 1. Web Audio Haptic Clicks ---
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
+// --- 1. Web Audio Haptic Clicks (Delegates to central animations.js audio engine) ---
+const AudioCtx = (typeof window !== 'undefined') ? (window.AudioContext || window.webkitAudioContext) : null;
 let audioCtx = null;
 
 function playSound(type = 'click') {
+  // Delegate to central animations.js audio synthesizer when available
+  if (typeof window !== 'undefined') {
+    const centralFn = (window.PT && typeof window.PT.playHapticSound === 'function')
+      ? window.PT.playHapticSound
+      : (typeof window.playHapticSound === 'function' ? window.playHapticSound : null);
+    if (centralFn) {
+      centralFn(type === 'chime' ? 'success' : type, true);
+      return;
+    }
+  }
+
+  // Standalone fallback if website page is loaded in isolation without animations.js
   try {
     if (!audioCtx && AudioCtx) audioCtx = new AudioCtx();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -20,13 +32,13 @@ function playSound(type = 'click') {
 
     if (type === 'click') {
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(850, now);
-      osc.frequency.exponentialRampToValueAtTime(420, now + 0.04);
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.04);
       gain.gain.setValueAtTime(0.04, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc.start(now);
       osc.stop(now + 0.04);
-    } else if (type === 'chime') {
+    } else if (type === 'chime' || type === 'success') {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(587.33, now);
       osc.frequency.setValueAtTime(880, now + 0.06);

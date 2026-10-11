@@ -73,6 +73,19 @@ function calculateFinancialVelocity() {
 }
 
 // --- 2. Interactive Holographic Canvas Orb ---
+let _cachedVelocity = null;
+let _velocityLastComputed = 0;
+
+function getCachedFinancialVelocity() {
+  const now = Date.now();
+  if (!_cachedVelocity || (now - _velocityLastComputed) > 4000) {
+    _cachedVelocity = calculateFinancialVelocity();
+    _velocityLastComputed = now;
+  }
+  return _cachedVelocity;
+}
+window.getCachedFinancialVelocity = getCachedFinancialVelocity;
+
 function initAuraSenseCanvas(canvasId = 'aurasense-orb-canvas') {
   auraCanvas = document.getElementById(canvasId);
   if (!auraCanvas) return;
@@ -80,10 +93,14 @@ function initAuraSenseCanvas(canvasId = 'aurasense-orb-canvas') {
 
   function resize() {
     if (!auraCanvas) return;
-    const rect = auraCanvas.getBoundingClientRect();
-    auraCanvas.width = rect.width * (window.devicePixelRatio || 1);
-    auraCanvas.height = rect.height * (window.devicePixelRatio || 1);
-    auraCtx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    const rect = auraCanvas.getBoundingClientRect ? auraCanvas.getBoundingClientRect() : { width: auraCanvas.width, height: auraCanvas.height };
+    const w = rect.width || auraCanvas.width || 200;
+    const h = rect.height || auraCanvas.height || 200;
+    auraCanvas.width = w * (window.devicePixelRatio || 1);
+    auraCanvas.height = h * (window.devicePixelRatio || 1);
+    if (auraCtx && auraCtx.scale) {
+      auraCtx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    }
   }
 
   if (window._auraSenseResizeListener) {
@@ -95,24 +112,67 @@ function initAuraSenseCanvas(canvasId = 'aurasense-orb-canvas') {
 
   // Interactive touch / pointer ripples
   auraCanvas.addEventListener('pointerdown', (e) => {
-    const rect = auraCanvas.getBoundingClientRect();
+    const rect = auraCanvas.getBoundingClientRect ? auraCanvas.getBoundingClientRect() : { left: 0, top: 0 };
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     auraRipples.push({ x, y, r: 5, alpha: 1 });
   });
 
-  if (!auraAnimId) {
+  // Pause/Resume on tab visibility change
+  if (!window._auraSenseVisibilityListener && typeof document !== 'undefined' && document.addEventListener) {
+    window._auraSenseVisibilityListener = () => {
+      if (!document.hidden && auraCanvas && (auraCanvas.offsetParent !== null || typeof auraCanvas.offsetParent === 'undefined') && !auraAnimId) {
+        auraAnimId = requestAnimationFrame(renderAuraSense);
+      }
+    };
+    document.addEventListener('visibilitychange', window._auraSenseVisibilityListener);
+  }
+
+  // Pause/Resume with IntersectionObserver when scrolled off-screen
+  if (typeof IntersectionObserver !== 'undefined' && auraCanvas) {
+    if (window._auraSenseObserver) {
+      window._auraSenseObserver.disconnect();
+    }
+    window._auraSenseObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !auraAnimId && !(typeof document !== 'undefined' && document.hidden)) {
+          auraAnimId = requestAnimationFrame(renderAuraSense);
+        }
+      });
+    }, { threshold: 0.05 });
+    window._auraSenseObserver.observe(auraCanvas);
+  }
+
+  if (!auraAnimId && !(typeof document !== 'undefined' && document.hidden) && (auraCanvas.offsetParent !== null || typeof auraCanvas.offsetParent === 'undefined')) {
     auraAnimId = requestAnimationFrame(renderAuraSense);
   }
 }
 
 function renderAuraSense() {
-  if (!auraCanvas || !auraCtx) return;
-  const w = auraCanvas.getBoundingClientRect().width;
-  const h = auraCanvas.getBoundingClientRect().height;
+  if (!auraCanvas || !auraCtx) {
+    auraAnimId = null;
+    return;
+  }
+  // Pause animation loop if tab is hidden or canvas is not visible in DOM
+  if (typeof document !== 'undefined' && document.hidden) {
+    auraAnimId = null;
+    return;
+  }
+  if (auraCanvas.isConnected === false || auraCanvas.offsetParent === null) {
+    auraAnimId = null;
+    return;
+  }
+
+  const rect = auraCanvas.getBoundingClientRect ? auraCanvas.getBoundingClientRect() : { width: auraCanvas.width, height: auraCanvas.height };
+  const w = rect.width || auraCanvas.width || 0;
+  const h = rect.height || auraCanvas.height || 0;
+  if (w === 0 || h === 0) {
+    auraAnimId = null;
+    return;
+  }
   auraCtx.clearRect(0, 0, w, h);
 
-  const metric = calculateFinancialVelocity();
+  const metric = getCachedFinancialVelocity();
   auraPhase += metric.speed;
 
   const cx = w / 2;
@@ -184,7 +244,8 @@ function renderAuraSenseCard(targetElId = 'aurasense-widget-container') {
   const container = document.getElementById(targetElId);
   if (!container) return;
 
-  const metric = calculateFinancialVelocity();
+  _cachedVelocity = null;
+  const metric = getCachedFinancialVelocity();
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
 
   container.innerHTML = `
@@ -220,6 +281,128 @@ function renderAuraSenseCard(targetElId = 'aurasense-widget-container') {
   setTimeout(() => initAuraSenseCanvas('aurasense-orb-canvas'), 50);
 }
 
+function getTimeMachineProjection(totalBalance, months) {
+  const base = Math.max(10000, Number(totalBalance) || 0);
+  const monthlySaveEstimate = Math.max(1500, base * 0.12);
+  const projectedGain = Math.round(monthlySaveEstimate * months);
+  const totalProjected = base + projectedGain;
+  return { base, projectedGain, totalProjected };
+}
+window.getTimeMachineProjection = getTimeMachineProjection;
+
+function getTimeMachineMilestones(totalProjected, projectedGain, months) {
+  const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
+  const metric = calculateFinancialVelocity();
+  const monthlyBurn = (metric.dailyBurnRate && metric.dailyBurnRate > 0) ? (metric.dailyBurnRate * 30) : 25000;
+  const emergencyFundTarget = Math.max(15000, monthlyBurn * 3);
+
+  // Calculate actual user debts (P2P ledger debts + tracked debts)
+  let p2pDebtOwed = 0;
+  const people = (typeof ledgerPeople !== 'undefined' && Array.isArray(ledgerPeople)) ? ledgerPeople : [];
+  people.forEach(p => {
+    let b = 0;
+    (p.transactions || []).forEach(tx => {
+      if (tx.type === 'gave') b += (Number(tx.amount) || 0);
+      else if (tx.type === 'received') b -= (Number(tx.amount) || 0);
+    });
+    if (b < -0.01) p2pDebtOwed += Math.abs(b);
+  });
+
+  let totalDebt = p2pDebtOwed;
+  try {
+    const uid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '';
+    const rawDebts = localStorage.getItem('pockettrack_debts_' + uid) || localStorage.getItem('pockettrack_debts');
+    if (rawDebts) {
+      const parsed = JSON.parse(rawDebts);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(d => { totalDebt += (parseFloat(d.balance) || 0); });
+      }
+    }
+  } catch(e) {}
+
+  const milestones = [];
+
+  // Milestone 1: 3-Month Emergency Fund
+  if (totalProjected >= emergencyFundTarget) {
+    milestones.push({
+      icon: '🛡️',
+      title: isHi ? '3 महीने का इमरजेंसी फंड सुरक्षित' : '3-Month Emergency Fund Secured',
+      detail: `₹${Math.round(totalProjected).toLocaleString('en-IN')} / ₹${Math.round(emergencyFundTarget).toLocaleString('en-IN')}`,
+      color: 'rgba(52,211,153,0.1)',
+      border: 'rgba(52,211,153,0.3)',
+      unlocked: true
+    });
+  } else {
+    const pct = Math.min(100, Math.round((totalProjected / emergencyFundTarget) * 100));
+    milestones.push({
+      icon: '⏳',
+      title: isHi ? `इमरजेंसी फंड प्रगति: ${pct}%` : `Emergency Fund In Progress (${pct}%)`,
+      detail: `₹${Math.round(totalProjected).toLocaleString('en-IN')} / ₹${Math.round(emergencyFundTarget).toLocaleString('en-IN')}`,
+      color: 'rgba(255,255,255,0.04)',
+      border: 'rgba(255,255,255,0.1)',
+      unlocked: false
+    });
+  }
+
+  // Milestone 2: Zero Debt / Debt Payoff
+  if (totalDebt <= 0) {
+    milestones.push({
+      icon: '🚀',
+      title: isHi ? 'शून्य ऋण व स्वच्छ लेज़र (0 Debt)' : 'Zero Debt & Clean Financial Slate',
+      detail: isHi ? 'कोई बकाया ऋण नहीं' : 'No outstanding liabilities',
+      color: 'rgba(251,191,36,0.1)',
+      border: 'rgba(251,191,36,0.3)',
+      unlocked: true
+    });
+  } else if (projectedGain >= totalDebt) {
+    milestones.push({
+      icon: '🚀',
+      title: isHi ? 'अनुमानित बचत से सभी ऋण चुकता' : 'Full Debt Clearance from Projected Savings',
+      detail: isHi ? `₹${Math.round(totalDebt).toLocaleString('en-IN')} का ऋण चुकता होगा` : `Clears ₹${Math.round(totalDebt).toLocaleString('en-IN')} total debt`,
+      color: 'rgba(251,191,36,0.1)',
+      border: 'rgba(251,191,36,0.3)',
+      unlocked: true
+    });
+  } else {
+    const pct = Math.min(100, Math.round((projectedGain / totalDebt) * 100));
+    milestones.push({
+      icon: '⚠️',
+      title: isHi ? `ऋण चुकता प्रगति: ${pct}%` : `Debt Payoff Trajectory (${pct}%)`,
+      detail: isHi ? `₹${Math.round(totalDebt - projectedGain).toLocaleString('en-IN')} शेष रहेगा` : `₹${Math.round(totalDebt - projectedGain).toLocaleString('en-IN')} debt remains`,
+      color: 'rgba(239,68,68,0.08)',
+      border: 'rgba(239,68,68,0.25)',
+      unlocked: false
+    });
+  }
+
+  // Milestone 3: ₹1,00,000+ Net Worth Milestone
+  if (totalProjected >= 100000) {
+    milestones.push({
+      icon: '💎',
+      title: isHi ? '₹1,00,000+ नेटवर्थ मील का पत्थर' : '₹1 Lakh+ Milestone Reached',
+      detail: isHi ? 'लक्ष्य प्राप्त' : 'Milestone achieved',
+      color: 'rgba(139,92,246,0.1)',
+      border: 'rgba(139,92,246,0.3)',
+      unlocked: true
+    });
+  }
+
+  // Milestone 4: Financial Freedom / Autonomy Level 1
+  if (totalProjected >= 500000) {
+    milestones.push({
+      icon: '👑',
+      title: isHi ? 'आर्थिक स्वतंत्रता स्तर 1 (Financial Freedom)' : 'Financial Autonomy Level 1',
+      detail: isHi ? '₹5L+ संचित संपत्ति' : '₹5 Lakh+ accumulated wealth',
+      color: 'rgba(236,72,153,0.1)',
+      border: 'rgba(236,72,153,0.3)',
+      unlocked: true
+    });
+  }
+
+  return milestones;
+}
+window.getTimeMachineMilestones = getTimeMachineMilestones;
+
 // --- 4. Interactive Future Time Machine Modal ---
 function openTimeMachineModal() {
   const metric = calculateFinancialVelocity();
@@ -228,6 +411,17 @@ function openTimeMachineModal() {
   const modal = document.createElement('div');
   modal.id = 'time-machine-modal-backdrop';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,4,20,0.85);backdrop-filter:blur(24px);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s ease;';
+
+  const proj3 = getTimeMachineProjection(metric.totalBalance, 3);
+  const initialMilestones = getTimeMachineMilestones(proj3.totalProjected, proj3.projectedGain, 3);
+  const initialMilestonesHtml = initialMilestones.map(m => `
+    <div style="background:${m.color};border:1px solid ${m.border};padding:10px 14px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span>${m.icon}</span> <b>${m.title}</b>
+      </div>
+      <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${m.detail}</span>
+    </div>
+  `).join('');
 
   modal.innerHTML = `
     <div class="card" style="max-width:480px;width:100%;background:linear-gradient(160deg,#160f33,#0f0926);border:1px solid rgba(139,92,246,0.45);border-radius:28px;padding:28px 24px;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;">
@@ -254,10 +448,10 @@ function openTimeMachineModal() {
       <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:20px;padding:22px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.08);">
         <span style="font-size:12px;color:var(--text-dim,#a1a1aa);text-transform:uppercase;letter-spacing:1px;">${isHi ? 'अनुमानित कुल संपत्ति' : 'Projected Total Wealth'}</span>
         <div id="tm-projected-val" style="font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:800;color:var(--accent-green,#34d399);margin:6px 0;">
-          ₹${Math.round(metric.totalBalance + (metric.totalBalance * 0.18 * 3)).toLocaleString('en-IN')}
+          ₹${proj3.totalProjected.toLocaleString('en-IN')}
         </div>
         <p id="tm-growth-desc" style="font-size:12px;color:var(--text-dim,#a1a1aa);margin:0;">
-          +₹${Math.round(metric.totalBalance * 0.18 * 3).toLocaleString('en-IN')} ${isHi ? 'अनुशासित बचत से अतिरिक्त लाभ' : 'retained capital growth'}
+          +₹${proj3.projectedGain.toLocaleString('en-IN')} ${isHi ? 'अनुशासित बचत से अतिरिक्त लाभ' : 'retained capital over 3 months'}
         </p>
       </div>
 
@@ -265,12 +459,7 @@ function openTimeMachineModal() {
       <div style="margin-bottom:24px;">
         <span style="font-size:12.5px;font-weight:700;display:block;margin-bottom:10px;">🏆 ${isHi ? 'भविष्य के मील के पत्थर' : 'Future Milestone Unlocks'}</span>
         <div id="tm-milestones-list" style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-          <div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;">
-            <span>🛡️</span> <b>${isHi ? '3 महीने का इमरजेंसी फंड पूरा' : '3-Month Emergency Fund Secured'}</b>
-          </div>
-          <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;">
-            <span>💎</span> <b>${isHi ? '₹1,00,000+ नेटवर्थ मील का पत्थर' : '₹1 Lakh Net Worth Trajectory'}</b>
-          </div>
+          ${initialMilestonesHtml}
         </div>
       </div>
 
@@ -297,10 +486,7 @@ function updateTimeHorizon(months, btn) {
 
   const metric = calculateFinancialVelocity();
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
-  const base = Math.max(10000, metric.totalBalance);
-  const monthlySaveEstimate = Math.max(1500, base * 0.12);
-  const projectedGain = Math.round(monthlySaveEstimate * months);
-  const totalProjected = base + projectedGain;
+  const { projectedGain, totalProjected } = getTimeMachineProjection(metric.totalBalance, months);
 
   const valEl = document.getElementById('tm-projected-val');
   const descEl = document.getElementById('tm-growth-desc');
@@ -312,20 +498,15 @@ function updateTimeHorizon(months, btn) {
   }
 
   if (milesEl) {
-    let html = '';
-    if (months >= 3) {
-      html += `<div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;"><span>🛡️</span> <b>${isHi ? '3 महीने का इमरजेंसी फंड पूरा' : '3-Month Emergency Fund Secured'}</b></div>`;
-    }
-    if (months >= 6) {
-      html += `<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;"><span>🚀</span> <b>${isHi ? 'सभी मित्र ऋण चुकता (0 Debt)' : 'Zero P2P Debt & Clean Ledger'}</b></div>`;
-    }
-    if (months >= 12) {
-      html += `<div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;"><span>💎</span> <b>${isHi ? '₹1,00,000+ नेटवर्थ मील का पत्थर' : '₹1 Lakh+ Milestone Reached'}</b></div>`;
-    }
-    if (months >= 36) {
-      html += `<div style="background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;"><span>👑</span> <b>${isHi ? 'आर्थिक स्वतंत्रता स्तर 1 (Financial Freedom)' : 'Financial Autonomy Level 1'}</b></div>`;
-    }
-    milesEl.innerHTML = html;
+    const milestones = getTimeMachineMilestones(totalProjected, projectedGain, months);
+    milesEl.innerHTML = milestones.map(m => `
+      <div style="background:${m.color};border:1px solid ${m.border};padding:10px 14px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span>${m.icon}</span> <b>${m.title}</b>
+        </div>
+        <span style="font-size:11px;color:var(--text-dim,#a1a1aa);">${m.detail}</span>
+      </div>
+    `).join('');
   }
 }
 
@@ -335,7 +516,15 @@ function closeTimeMachineModal() {
 }
 
 // Auto-render widget when DOM loads
-document.addEventListener('DOMContentLoaded', () => {
-  renderAuraSenseCard('home-aurasense-slot');
-});
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('DOMContentLoaded', () => {
+    renderAuraSenseCard('home-aurasense-slot');
+  });
+}
+
+window.initAuraSenseCanvas = initAuraSenseCanvas;
+window.renderAuraSense = renderAuraSense;
+window.renderAuraSenseCard = renderAuraSenseCard;
+window.openTimeMachineModal = openTimeMachineModal;
+window.closeTimeMachineModal = closeTimeMachineModal;
 
