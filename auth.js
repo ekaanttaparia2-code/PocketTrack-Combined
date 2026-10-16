@@ -85,7 +85,7 @@ async function authAction(mode){
       return;
     }
   }
-  const authInstance = getAuth();
+  const authInstance = (typeof auth !== 'undefined' && auth) ? auth : getAuth();
   if(!authInstance){
     showAuthError(typeof currentLang !== 'undefined' && currentLang==='hi' ? 'प्रमाणीकरण सेवा उपलब्ध नहीं है।' : 'Authentication service is unavailable. Please reload.');
     return;
@@ -316,21 +316,35 @@ if (authInit) {
       if (guestCache) {
         const guestList = JSON.parse(guestCache);
         if (Array.isArray(guestList) && guestList.length > 0 && typeof db !== 'undefined') {
-          const batch = db.batch();
           const userRef = db.collection('users').doc(user.uid);
-          let count = 0;
+          const BATCH_SIZE = 400;
+          const batches = [];
+          let currentBatch = db.batch();
+          let currentOps = 0;
+          let totalCount = 0;
+
           guestList.forEach(item => {
             const copy = { ...item };
             delete copy._id;
             delete copy._createdLocallyAt;
             const newRef = userRef.collection('entries').doc();
-            batch.set(newRef, copy);
-            count++;
+            currentBatch.set(newRef, copy);
+            currentOps++;
+            totalCount++;
+
+            if (currentOps >= BATCH_SIZE) {
+              batches.push(currentBatch);
+              currentBatch = db.batch();
+              currentOps = 0;
+            }
           });
-          batch.set(userRef, {
-            entryCount: firebase.firestore.FieldValue.increment(count)
-          }, {merge:true});
-          batch.commit().then(() => {
+
+          currentBatch.set(userRef, {
+            entryCount: firebase.firestore.FieldValue.increment(totalCount)
+          }, { merge: true });
+          batches.push(currentBatch);
+
+          Promise.all(batches.map(b => b.commit())).then(() => {
             localStorage.removeItem('pockettrack_entries_cache_guest');
             localStorage.removeItem('pockettrack_guest_mode');
             if (typeof toast === 'function') {

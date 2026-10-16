@@ -357,7 +357,7 @@
     var text = ctx.text || getDialogueText(ctx.category);
     var svg = generateFinnySVG({ pose: ctx.pose, emotion: ctx.emotion, size: 76 });
 
-    var moodBadge = 'AI COMPANION';
+    var moodBadge = 'SMART COACH';
     if (ctx.pose === 'celebrating') moodBadge = '🎉 CELEBRATING';
     else if (ctx.pose === 'thinking') moodBadge = '🤔 ADVISING';
     else if (ctx.pose === 'calculating') moodBadge = '📊 CALCULATING';

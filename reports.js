@@ -962,19 +962,43 @@ window.renderSmartInsights = function() {
     return;
   }
 
+  const now = new Date();
+  const curY = now.getFullYear();
+  const curM = now.getMonth();
+  const daysInMonth = new Date(curY, curM + 1, 0).getDate();
+  const currentDay = now.getDate();
+  const remainingDays = Math.max(1, daysInMonth - currentDay);
+
+  // Filter expenses strictly to the active calendar month for budget tracking
+  const monthExpList = expList.filter(e => {
+    if (!e.date) return false;
+    const parts = String(e.date).slice(0, 10).split('-');
+    if (parts.length < 3) return false;
+    return parseInt(parts[0], 10) === curY && (parseInt(parts[1], 10) - 1) === curM;
+  });
+
+  let currentMonthSpent = 0;
+  monthExpList.forEach(e => {
+    currentMonthSpent += (parseFloat(e.amt) || 0);
+  });
+  currentMonthSpent = Math.round(currentMonthSpent * 100) / 100;
+
+  // Use current month entries for peak day & category breakdown, or fallback to all expenses if new month
+  const activeExpList = monthExpList.length ? monthExpList : expList;
+
   // 1. Compute Day of Week Peak
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const dayNamesHi = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
   const dayTotals = [0, 0, 0, 0, 0, 0, 0];
-  let totalSpent = 0;
+  let totalPeriodSpent = 0;
 
-  expList.forEach(e => {
+  activeExpList.forEach(e => {
     if (e.date) {
       const d = new Date(e.date + 'T00:00:00');
       const dayIdx = d.getDay();
       if (!isNaN(dayIdx)) {
         dayTotals[dayIdx] += (parseFloat(e.amt) || 0);
-        totalSpent += (parseFloat(e.amt) || 0);
+        totalPeriodSpent += (parseFloat(e.amt) || 0);
       }
     }
   });
@@ -988,30 +1012,26 @@ window.renderSmartInsights = function() {
     }
   });
   const peakDayName = isHi ? dayNamesHi[peakDayIdx] : dayNames[peakDayIdx];
-  const peakDayPct = totalSpent > 0 ? Math.round((maxDaySpend / totalSpent) * 100) : 0;
+  const peakDayPct = totalPeriodSpent > 0 ? Math.round((maxDaySpend / totalPeriodSpent) * 100) : 0;
 
-  // 2. Compute Top Expense Category
+  // 2. Compute Top Expense Category (group by category, not description label)
   const catTotals = {};
-  expList.forEach(e => {
-    const c = e.label || 'Other';
-    catTotals[c] = (catTotals[c] || 0) + (parseFloat(e.amt) || 0);
+  activeExpList.forEach(e => {
+    let catKey = e.cat || 'other';
+    if (catKey === 'custom' && e.customCat) catKey = e.customCat;
+    const catLabel = (typeof CAT_LABELS !== 'undefined' && CAT_LABELS[catKey]) ? CAT_LABELS[catKey] : (catKey.charAt(0).toUpperCase() + catKey.slice(1));
+    catTotals[catLabel] = (catTotals[catLabel] || 0) + (parseFloat(e.amt) || 0);
   });
   const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
   const topCatName = sortedCats.length ? sortedCats[0][0] : 'None';
   const topCatAmount = sortedCats.length ? sortedCats[0][1] : 0;
-  const topCatPct = totalSpent > 0 ? Math.round((topCatAmount / totalSpent) * 100) : 0;
+  const topCatPct = totalPeriodSpent > 0 ? Math.round((topCatAmount / totalPeriodSpent) * 100) : 0;
 
   // 3. Simple Monthly Budget Calculation
   const totalBudget = window.getSavedTotalBudget();
-  const budgetMode = localStorage.getItem('pockettrack_budget_mode') || 'simple';
-  const budgetSpentPct = Math.min(100, Math.round((totalSpent / totalBudget) * 100));
-  const isOverBudget = totalSpent > totalBudget;
-
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const currentDay = now.getDate();
-  const remainingDays = Math.max(1, daysInMonth - currentDay);
-  const remainingBudget = Math.max(0, totalBudget - totalSpent);
+  const budgetSpentPct = totalBudget > 0 ? Math.min(100, Math.round((currentMonthSpent / totalBudget) * 100)) : 0;
+  const isOverBudget = currentMonthSpent > totalBudget;
+  const remainingBudget = Math.max(0, totalBudget - currentMonthSpent);
   const safeDailySpend = Math.round(remainingBudget / remainingDays);
 
   host.innerHTML = `
@@ -1027,7 +1047,7 @@ window.renderSmartInsights = function() {
 
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
         <div style="font-size:22px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:#fff;">
-          ₹${totalSpent.toLocaleString('en-IN')} <span style="font-size:13px;color:var(--text-dim);font-weight:500;">/ ₹${totalBudget.toLocaleString('en-IN')}</span>
+          ₹${currentMonthSpent.toLocaleString('en-IN')} <span style="font-size:13px;color:var(--text-dim);font-weight:500;">/ ₹${totalBudget.toLocaleString('en-IN')}</span>
         </div>
         <div style="font-size:14px;font-weight:800;color:${isOverBudget ? 'var(--red,#f87171)' : 'var(--green,#34d399)'};">${budgetSpentPct}%</div>
       </div>

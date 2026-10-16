@@ -273,7 +273,9 @@
         for (const m of numMatches) {
           if (!m[1]) continue;
           const cleanNum = parseFloat(m[1].replace(/,/g, ''));
-          if (cleanNum > 0 && cleanNum < 1000000 && cleanNum !== 2024 && cleanNum !== 2025 && cleanNum !== 2026) {
+          const hasCurrencyPrefix = /(?:₹|rs\.?|inr)/i.test(m[0]);
+          const isYearToken = !hasCurrencyPrefix && !m[1].includes('.') && (cleanNum >= 2020 && cleanNum <= 2030) && (date && date.includes(String(cleanNum)));
+          if (cleanNum > 0 && cleanNum < 1000000 && !isYearToken) {
             detectedAmount = cleanNum;
             break;
           }
@@ -289,7 +291,7 @@
       for (const m of currencyMatches) {
         if (!m[1]) continue;
         const num = parseFloat(m[1].replace(/,/g, ''));
-        if (num > 0 && num < 1000000 && num !== 2024 && num !== 2025 && num !== 2026) {
+        if (num > 0 && num < 1000000) {
           detectedAmount = Math.max(detectedAmount, num);
         }
       }

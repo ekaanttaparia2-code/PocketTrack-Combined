@@ -1,4 +1,4 @@
-const CACHE = 'pockettrack-v24-guestmode-integrity';
+const CACHE = 'pockettrack-v25-godmode-remediation';
 const SHELL = [
   './',
   './index.html',

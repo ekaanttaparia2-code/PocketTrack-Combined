@@ -270,9 +270,10 @@ window.computeWalletBalances = function() {
 
   allTx.forEach(tx => {
     const amt = parseFloat(tx.amt) || 0;
-    const wId = window.resolveEntryWalletId(tx) || 'cash';
+    let wId = window.resolveEntryWalletId(tx) || 'cash';
     if (balances[wId] === undefined) {
-      balances[wId] = 0;
+      wId = (userWallets && userWallets.length) ? userWallets[0].id : 'cash';
+      if (balances[wId] === undefined) balances[wId] = 0;
     }
     if (tx.type === 'income') {
       balances[wId] += amt;
@@ -682,6 +683,14 @@ window.deleteCustomWallet = async function(walletId) {
       // 2. Local State Mutation (Only if Cloud succeeded or Offline)
       const allEntriesNow = (typeof mainEntries === 'function') ? mainEntries() : [];
       allEntriesNow.forEach(e => { if (e.walletId === walletId) e.walletId = newWalletId; });
+      if (typeof entries !== 'undefined') {
+        entries.forEach(e => { if (e.walletId === walletId) e.walletId = newWalletId; });
+        if (typeof window !== 'undefined') window.entries = entries;
+        try {
+          const cacheKey = (typeof currentUser !== 'undefined' && currentUser) ? ('pockettrack_entries_cache_' + currentUser.uid) : 'pockettrack_entries_cache_guest';
+          localStorage.setItem(cacheKey, JSON.stringify(entries));
+        } catch(e) {}
+      }
 
       userWallets = userWallets.filter(w => w.id !== walletId);
       window.userWallets = userWallets;
@@ -865,6 +874,10 @@ window.submitWalletTransfer = async function() {
       if (typeof entries !== 'undefined') {
         entries.unshift({ _id: debitDoc.id, ...debitPayload });
         entries.unshift({ _id: creditDoc.id, ...creditPayload });
+        if (typeof window !== 'undefined') window.entries = entries;
+        try {
+          localStorage.setItem('pockettrack_entries_cache_' + currentUser.uid, JSON.stringify(entries));
+        } catch(e) {}
       }
     } else if (typeof entries !== 'undefined') {
       debitPayload._id = 'local_' + Date.now() + '_deb';
@@ -873,6 +886,10 @@ window.submitWalletTransfer = async function() {
       creditPayload.transferPeerId = debitPayload._id;
       entries.unshift(debitPayload);
       entries.unshift(creditPayload);
+      if (typeof window !== 'undefined') window.entries = entries;
+      try {
+        localStorage.setItem('pockettrack_entries_cache_guest', JSON.stringify(entries));
+      } catch(e) {}
     }
 
     if (typeof window.closeCustomSheet === 'function') window.closeCustomSheet();

@@ -373,7 +373,16 @@ window.openUpiQrModal = function(amount = 0, note = 'PocketTrack') {
   }
 
   const amtStr = amount > 0 ? `&am=${amount}` : '';
-  const upiPayload = `upi://pay?pa=${encodeURIComponent(currentUpi)}&pn=PocketTrack${amtStr}&tn=${encodeURIComponent(note)}&cu=INR`;
+  let safeNote = String(note || 'PocketTrack').trim();
+  let upiPayload = `upi://pay?pa=${encodeURIComponent(currentUpi)}&pn=PocketTrack${amtStr}&tn=${encodeURIComponent(safeNote)}&cu=INR`;
+  if (upiPayload.length > 210) {
+    const overhead = upiPayload.length - safeNote.length;
+    const maxNoteLen = Math.max(0, 210 - overhead);
+    safeNote = safeNote.slice(0, maxNoteLen);
+    upiPayload = safeNote
+      ? `upi://pay?pa=${encodeURIComponent(currentUpi)}&pn=PocketTrack${amtStr}&tn=${encodeURIComponent(safeNote)}&cu=INR`
+      : `upi://pay?pa=${encodeURIComponent(currentUpi)}&pn=PocketTrack${amtStr}&cu=INR`;
+  }
   const qrSvg = generateUpiQrSvg(upiPayload, 200);
 
   const modal = getOrCreateUpiModal();

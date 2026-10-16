@@ -210,32 +210,31 @@ function getSharedPortfoliosStorageKey() {
 
 function loadSharedPortfolios() {
   sharedPortfolios = [];
-  if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) {
-    try {
-      const raw = localStorage.getItem('pockettrack_shared_portfolios_' + currentUser.uid);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) sharedPortfolios = parsed;
-      }
-    } catch(e) {}
-  }
+  try {
+    const key = getSharedPortfoliosStorageKey();
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) sharedPortfolios = parsed;
+    }
+  } catch(e) {}
 }
 
 function saveSharedPortfolios() {
   try {
-    if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) {
-      const dataStr = JSON.stringify(sharedPortfolios);
-      localStorage.setItem('pockettrack_shared_portfolios_' + currentUser.uid, dataStr);
-      if (typeof db !== 'undefined') {
-        sharedPortfolios.forEach(space => {
-          db.collection('users').doc(currentUser.uid).collection('spaces').doc(space.id)
-            .set(space, { merge: true })
-            .catch((err) => {
-              if (typeof toast === 'function') toast('Cloud sync failed for space: ' + err.message, 'error');
-              console.error('Space sync error:', err);
-            });
-        });
-      }
+    const key = getSharedPortfoliosStorageKey();
+    const dataStr = JSON.stringify(sharedPortfolios);
+    localStorage.setItem(key, dataStr);
+
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.uid && typeof db !== 'undefined') {
+      sharedPortfolios.forEach(space => {
+        db.collection('users').doc(currentUser.uid).collection('spaces').doc(space.id)
+          .set(space, { merge: true })
+          .catch((err) => {
+            if (typeof toast === 'function') toast('Cloud sync failed for space: ' + err.message, 'error');
+            console.error('Space sync error:', err);
+          });
+      });
     }
   } catch (e) {
     console.error('Local save error for spaces:', e);

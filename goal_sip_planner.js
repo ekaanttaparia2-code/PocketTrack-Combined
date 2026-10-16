@@ -180,7 +180,7 @@ window.openGoalPlannerModal = function() {
         <div class="goal-slider-label">
           <span>Allocated Initial Savings (₹)</span>
         </div>
-        <input type="number" id="goal-allocated-input" value="${Number(goal.allocatedAmount) || 0}" min="0" placeholder="0" style="width:100%;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:14px;box-sizing:border-box;outline:none;">
+        <input type="number" id="goal-allocated-input" value="${Number(goal.allocatedAmount) || 0}" min="0" placeholder="0" style="width:100%;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:14px;box-sizing:border-box;outline:none;" oninput="updateGoalCalculation()">
       </div>
 
       <div class="goal-stat-row">
@@ -210,6 +210,7 @@ window.openGoalPlannerModal = function() {
 window.updateGoalCalculation = function() {
   const target = parseFloat(document.getElementById('goal-target-slider')?.value) || 50000;
   const monthly = parseFloat(document.getElementById('goal-monthly-slider')?.value) || 2000;
+  const allocatedAmount = Math.max(0, parseFloat(document.getElementById('goal-allocated-input')?.value) || 0);
   const r = (12 / 12) / 100; // 12% annual rate = 1% monthly
 
   const targetEl = document.getElementById('goal-target-display');
@@ -217,9 +218,11 @@ window.updateGoalCalculation = function() {
   if (targetEl) targetEl.textContent = `₹${target.toLocaleString('en-IN')}`;
   if (monthlyEl) monthlyEl.textContent = `₹${monthly.toLocaleString('en-IN')}/mo`;
 
-  const numerator = Math.log(1 + (target * r) / (monthly * (1 + r)));
+  // Net target remaining after initial allocated savings
+  const remainingTarget = Math.max(0, target - allocatedAmount);
+  const numerator = Math.log(1 + (remainingTarget * r) / (monthly * (1 + r)));
   const denominator = Math.log(1 + r);
-  const months = Math.max(1, Math.ceil(numerator / denominator));
+  const months = remainingTarget <= 0 ? 0 : Math.max(1, Math.ceil(numerator / denominator));
   const totalInvested = monthly * months;
   const fv = (monthly * ((Math.pow(1 + r, months) - 1) / r)) * (1 + r);
   const wealthGained = Math.max(0, fv - totalInvested);
@@ -228,9 +231,13 @@ window.updateGoalCalculation = function() {
   const growthEl = document.getElementById('goal-growth-val');
 
   if (monthsEl) {
-    const yrs = Math.floor(months / 12);
-    const remM = months % 12;
-    monthsEl.textContent = yrs > 0 ? `${yrs}y ${remM}m (${months}m)` : `${months} months`;
+    if (months === 0) {
+      monthsEl.textContent = 'Goal Achieved! 🎉';
+    } else {
+      const yrs = Math.floor(months / 12);
+      const remM = months % 12;
+      monthsEl.textContent = yrs > 0 ? `${yrs}y ${remM}m (${months}m)` : `${months} months`;
+    }
   }
   if (growthEl) {
     growthEl.textContent = `+₹${Math.round(wealthGained).toLocaleString('en-IN')}`;
@@ -274,10 +281,16 @@ window.renderActiveGoalCard = function() {
     const label = (e.label || '').toLowerCase();
     const isNameMatch = goalKeyword && (note.includes(goalKeyword) || label.includes(goalKeyword));
 
+    const amt = parseFloat(e.amt) || 0;
     if (isNameMatch) {
-      dedicatedEntriesTotal += (parseFloat(e.amt) || 0);
+      // Income or dedicated investment tagged with goal increases progress; expense decreases
+      if (e.type === 'income' || isCatMatch) {
+        dedicatedEntriesTotal += amt;
+      } else if (e.type === 'expense') {
+        dedicatedEntriesTotal -= amt;
+      }
     } else if (isCatMatch && !goal.walletId && (goalKeyword.includes('invest') || goalKeyword.includes('saving') || goalKeyword.includes('fund') || goalKeyword.includes('emergency'))) {
-      if (e.type === 'expense') dedicatedEntriesTotal += (parseFloat(e.amt) || 0);
+      if (e.type === 'income') dedicatedEntriesTotal += amt;
     }
   });
 

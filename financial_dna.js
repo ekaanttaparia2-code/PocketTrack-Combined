@@ -256,7 +256,8 @@ function computeFinancialDNA() {
                 if (amt < 300) expensesUnder300++;
             }
 
-            if (cat === 'food' || cat === 'friends' || cat === 'entertainment') {
+            const isDiningOrSocialFood = (cat === 'food' && /\b(swiggy|zomato|restaurant|cafe|coffee|bar|pub|starbucks|burger|pizza|treat|dining|party|club|outing)\b/i.test(text));
+            if (isDiningOrSocialFood || cat === 'friends' || cat === 'entertainment') {
                 socialSpend += amt;
             }
             if (cat === 'friends') {

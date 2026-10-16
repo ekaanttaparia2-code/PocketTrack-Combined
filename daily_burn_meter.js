@@ -158,7 +158,9 @@ function computeSafeToSpend() {
   if (typeof weeklyBudget !== 'undefined' && weeklyBudget > 0) {
     budgetPool = Math.max(budgetPool, weeklyBudget * (totalDays / 7));
   }
-  const storedIncome = parseFloat(localStorage.getItem('pockettrack_monthly_income')) || 0;
+  const uid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : (window.currentUser ? window.currentUser.uid : '');
+  const incomeKey = uid ? 'pockettrack_monthly_income_' + uid : 'pockettrack_monthly_income';
+  const storedIncome = parseFloat(localStorage.getItem(incomeKey) || localStorage.getItem('pockettrack_monthly_income')) || 0;
   if (storedIncome > 0) {
     budgetPool = Math.max(budgetPool, storedIncome);
   }

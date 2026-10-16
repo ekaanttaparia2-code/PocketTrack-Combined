@@ -35,7 +35,7 @@ function getLedgerPeopleList() {
 const LOCAL_LEDGER_KEY = 'pockettrack_local_ledger';
 
 function ledgerCacheKey(){
-  return (typeof currentUser !== 'undefined' && currentUser) ? LOCAL_LEDGER_KEY + '_' + currentUser.uid : null;
+  return (typeof currentUser !== 'undefined' && currentUser) ? LOCAL_LEDGER_KEY + '_' + currentUser.uid : LOCAL_LEDGER_KEY + '_guest';
 }
 
 function saveLocalLedgerCache() {
@@ -683,8 +683,17 @@ if (window.firebase && firebase.auth()) {
     } else {
       if (ledgerUnsubscribe) { ledgerUnsubscribe(); ledgerUnsubscribe = null; }
       ledgerPeople = [];
+      loadLocalLedgerCache();
+      isLedgerHydrating = false;
+      if (typeof window !== 'undefined') window.isLedgerHydrating = false;
+      renderLedger();
     }
   });
+} else {
+  loadLocalLedgerCache();
+  isLedgerHydrating = false;
+  if (typeof window !== 'undefined') window.isLedgerHydrating = false;
+  renderLedger();
 }
 
 window.sendPersonWhatsAppReminder = function(personId, amount) {
@@ -692,13 +701,14 @@ window.sendPersonWhatsAppReminder = function(personId, amount) {
   const person = list.find(p => p._id === personId);
   if (!person) return;
   const isHi = (typeof currentLang !== 'undefined' && currentLang === 'hi');
-  const userUpi = (typeof getUserUpiId === 'function' ? getUserUpiId() : '') || 'pockettrack@upi';
+  const userUpi = (typeof getUserUpiId === 'function' ? getUserUpiId() : '');
   const roundedAmount = Math.round((Number(amount) || 0) * 100) / 100;
-  const upiPayLink = `upi://pay?pa=${encodeURIComponent(userUpi)}&pn=PocketTrack&am=${roundedAmount}&cu=INR`;
+  const upiPayLinkHi = userUpi ? `\n⚡ UPI से सीधे भुगतान करें: upi://pay?pa=${encodeURIComponent(userUpi)}&pn=PocketTrack&am=${roundedAmount}&cu=INR` : '';
+  const upiPayLinkEn = userUpi ? `\n⚡ Pay instantly via UPI: upi://pay?pa=${encodeURIComponent(userUpi)}&pn=PocketTrack&am=${roundedAmount}&cu=INR` : '';
   
   const msg = isHi 
-    ? `नमस्ते ${person.name}! 🙏 PocketTrack रिमाइंडर: आपका बकाया ₹${roundedAmount.toLocaleString('en-IN')} है।\n⚡ UPI से सीधे भुगतान करें: ${upiPayLink}\n\nधन्यवाद!`
-    : `👋 Hey ${person.name}!\nQuick PocketTrack reminder: You have a pending balance of ₹${roundedAmount.toLocaleString('en-IN')}.\n⚡ Pay instantly via UPI: ${upiPayLink}\n\nThanks!`;
+    ? `नमस्ते ${person.name}! 🙏 PocketTrack रिमाइंडर: आपका बकाया ₹${roundedAmount.toLocaleString('en-IN')} है।${upiPayLinkHi}\n\nधन्यवाद!`
+    : `👋 Hey ${person.name}!\nQuick PocketTrack reminder: You have a pending balance of ₹${roundedAmount.toLocaleString('en-IN')}.${upiPayLinkEn}\n\nThanks!`;
   
   let phoneTarget = '';
   if (person.phone) {
